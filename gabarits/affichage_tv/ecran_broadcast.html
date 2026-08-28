@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+
+{% block title %}MMA Octagon Broadcast 4K Arena - JAES 2026{% endblock %}
+
+{% block extra_head %}
+<style>
+    @keyframes pulseGlow {
+        0%, 100% { transform: scale(1); filter: brightness(1); }
+        50% { transform: scale(1.03); filter: brightness(1.25); }
+    }
+    @keyframes octagonRotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .animate-winner { animation: pulseGlow 1.8s infinite ease-in-out; }
+    
+    .bg-octagon-grid {
+        background-color: #030712;
+        background-image: 
+            radial-gradient(circle at 50% 50%, rgba(220, 38, 38, 0.15) 0%, transparent 65%),
+            radial-gradient(circle at 80% 20%, rgba(37, 99, 235, 0.15) 0%, transparent 60%);
+    }
+
+    .cage-border {
+        border: 3px solid rgba(245, 158, 11, 0.4);
+        box-shadow: 0 0 35px rgba(245, 158, 11, 0.2);
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-octagon-grid text-white flex flex-col justify-between p-6 relative overflow-hidden" id="mainContainer">
+    <!-- Animated Octagon Wireframe Canvas Background -->
+    <canvas id="octagonCanvas" class="absolute inset-0 pointer-events-none opacity-20 z-0"></canvas>
+
+    <!-- Top Header Broadcast Banner -->
+    <header class="relative z-10 flex justify-between items-center bg-slate-900/90 backdrop-blur-xl px-8 py-4 rounded-3xl border border-slate-800 shadow-2xl">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-red-600 border-2 border-amber-400 text-white flex items-center justify-center font-black text-2xl shadow-lg shrink-0">
+                <i class="fa-solid fa-octagon-plus"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs uppercase font-extrabold text-amber-400 tracking-widest block" id="tvEvent">
+                        JEUX DE L'ALLIANCE DES ÉTATS DU SAHEL (JAES) 2026
+                    </span>
+                    <span class="px-2.5 py-0.5 bg-red-600/30 text-red-400 border border-red-500/50 rounded-full text-[10px] font-black uppercase">
+                        CNP-MMA/DA
+                    </span>
+                </div>
+                <h1 class="text-3xl font-black font-teko uppercase text-white tracking-wider mt-0.5" id="tvCategory">
+                    FEATHERWEIGHT (-65,8 KG) • HOMMES
+                </h1>
+            </div>
+        </div>
+
+        <div class="text-center bg-slate-950/80 px-6 py-2 rounded-2xl border border-slate-800 shadow-inner">
+            <span class="px-3 py-1 bg-red-600 text-white rounded-full text-[11px] font-black uppercase tracking-widest animate-pulse inline-block mb-1" id="tvStatus">
+                OCTAGON EN DIRECT
+            </span>
+            <div class="text-xs font-bold text-slate-300">
+                Arbitre Central: <span class="text-amber-400 font-extrabold" id="tvRef">OUEDRAOGO Issouf</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 text-right">
+            <div>
+                <span class="text-[11px] uppercase font-bold text-slate-400 block">Règlement Officiel</span>
+                <span class="text-sm font-black text-slate-200">RÈGLES GAMMA • 10-MUST</span>
+            </div>
+            <div class="text-2xl text-amber-400">
+                🇧🇫 🇲🇱 🇳🇪
+            </div>
+        </div>
+    </header>
+
+    <!-- Main View: Arena Fight Octagon -->
+    <main id="viewArena" class="relative z-10 grid grid-cols-12 gap-8 my-auto items-center">
+        <!-- Coin Rouge (Red Corner) -->
+        <div class="col-span-5 bg-gradient-to-b from-red-950/90 via-slate-900 to-slate-950 p-8 rounded-3xl border-2 border-red-600/70 shadow-2xl flex items-center gap-6 glow-red">
+            <div class="w-36 h-48 rounded-2xl bg-slate-900 overflow-hidden border-2 border-red-500 shrink-0 flex items-center justify-center text-5xl text-red-500 font-black relative shadow-lg">
+                <i class="fa-solid fa-octagon-plus"></i>
+                <div class="absolute bottom-2 left-2 right-2 bg-red-600 text-white text-[10px] font-black uppercase text-center py-0.5 rounded">
+                    ROUGE
+                </div>
+            </div>
+            <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                    <span class="px-3 py-1 bg-red-600 text-white text-xs font-black uppercase rounded-full">Coin Rouge</span>
+                    <span class="text-xs text-red-300 font-bold" id="peseeRouge">65.50 kg</span>
+                </div>
+                <h2 class="text-4xl font-black font-teko tracking-wide text-white leading-tight" id="nomRouge">
+                    IBRAHIM SAWADOGO
+                </h2>
+                <p class="text-sm font-bold text-red-300" id="clubRouge">CNP-MMA Burkina (Burkina Faso)</p>
+                <div class="pt-3 flex items-center gap-4">
+                    <div class="text-5xl font-black font-teko text-red-500 bg-slate-950/80 px-4 py-1 rounded-2xl border border-red-500/40" id="totRouge">0</div>
+                    <span class="text-xs font-bold text-slate-400">Score Cumulé Juges</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center: Round & Timer Clock -->
+        <div class="col-span-2 text-center space-y-4 bg-slate-900/80 p-6 rounded-3xl border border-slate-800 backdrop-blur-xl shadow-2xl">
+            <span class="text-xs uppercase font-extrabold text-amber-400 tracking-widest block">Rounds & Scoring</span>
+            <div class="flex justify-center items-center gap-2" id="roundBadges">
+                <span class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-black text-xs">R1</span>
+                <span class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs">R2</span>
+                <span class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs">R3</span>
+            </div>
+            <div class="text-5xl font-black font-teko text-amber-400 tracking-wider">VS</div>
+            <div class="text-xs font-mono text-slate-400 uppercase tracking-widest">3x3 MIN SENIORS</div>
+        </div>
+
+        <!-- Coin Bleu (Blue Corner) -->
+        <div class="col-span-5 bg-gradient-to-b from-blue-950/90 via-slate-900 to-slate-950 p-8 rounded-3xl border-2 border-blue-600/70 shadow-2xl flex items-center gap-6 justify-end text-right glow-blue">
+            <div class="space-y-1">
+                <div class="flex items-center gap-2 justify-end">
+                    <span class="text-xs text-blue-300 font-bold" id="peseeBleu">65.80 kg</span>
+                    <span class="px-3 py-1 bg-blue-600 text-white text-xs font-black uppercase rounded-full">Coin Bleu</span>
+                </div>
+                <h2 class="text-4xl font-black font-teko tracking-wide text-white leading-tight" id="nomBleu">
+                    BAKARY KONE
+                </h2>
+                <p class="text-sm font-bold text-blue-300" id="clubBleu">Bamako MMA Club (Mali)</p>
+                <div class="pt-3 flex items-center gap-4 justify-end">
+                    <span class="text-xs font-bold text-slate-400">Score Cumulé Juges</span>
+                    <div class="text-5xl font-black font-teko text-blue-500 bg-slate-950/80 px-4 py-1 rounded-2xl border border-blue-500/40" id="totBleu">0</div>
+                </div>
+            </div>
+            <div class="w-36 h-48 rounded-2xl bg-slate-900 overflow-hidden border-2 border-blue-500 shrink-0 flex items-center justify-center text-5xl text-blue-500 font-black relative shadow-lg">
+                <i class="fa-solid fa-octagon-plus"></i>
+                <div class="absolute bottom-2 left-2 right-2 bg-blue-600 text-white text-[10px] font-black uppercase text-center py-0.5 rounded">
+                    BLEU
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Winner Proclamation Screen -->
+    <main id="viewWinner" class="hidden relative z-20 flex-1 flex flex-col items-center justify-center text-center py-10 animate-winner">
+        <div class="w-28 h-28 rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 border-4 border-amber-300 text-slate-950 flex items-center justify-center text-6xl mb-4 shadow-2xl glow-gold">
+            <i class="fa-solid fa-trophy"></i>
+        </div>
+        <span class="px-8 py-2.5 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-slate-950 font-black text-base uppercase rounded-full tracking-widest shadow-2xl">
+            VAINQUEUR DE LA RENCONTRE MMA
+        </span>
+        <h1 class="text-8xl font-black font-teko tracking-wider uppercase text-white mt-4 glow-gold" id="winnerName">
+            IBRAHIM SAWADOGO
+        </h1>
+        <p class="text-3xl font-extrabold text-amber-400 mt-2" id="winnerClub">
+            CNP-MMA Burkina (Burkina Faso)
+        </p>
+        <div class="mt-8 px-12 py-5 bg-slate-900/90 border-2 border-amber-500/60 rounded-3xl text-2xl font-bold text-slate-200 shadow-2xl">
+            Résultat Officiel : <span class="text-emerald-400 font-black uppercase tracking-wider" id="decisionType">K.O. / SOUMISSION / POINTS</span>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="relative z-10 bg-slate-900/90 py-3 px-8 rounded-2xl border border-slate-800 flex justify-between items-center text-xs font-extrabold text-slate-400">
+        <span>BROADCAST TV 4K 16:9 • SCORING TEMPS RÉEL (GAMMA MMA)</span>
+        <span>COMITÉ NATIONAL PROVISOIRE DE MMA ET DISCIPLINES ASSOCIÉES (CNP-MMA/DA)</span>
+    </footer>
+</div>
+
+<script>
+// Draw Octagon Background Canvas Mesh
+const canvas = document.getElementById('octagonCanvas');
+const ctx = canvas.getContext('2d');
+let angle = 0;
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function drawOctagon(cx, cy, r) {
+    ctx.beginPath();
+    for (let i = 0; i < 8; i++) {
+        let a = angle + (i * Math.PI / 4);
+        let x = cx + r * Math.cos(a);
+        let y = cy + r * Math.sin(a);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = '#D97706';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+}
+
+function animateCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    angle += 0.002;
+    drawOctagon(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) * 0.38);
+    drawOctagon(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) * 0.28);
+    requestAnimationFrame(animateCanvas);
+}
+animateCanvas();
+
+// Broadcast Realtime Polling
+function raffraichirBroadcast() {
+    fetch('/api/broadcast-statut/')
+    .then(res => res.json())
+    .then(data => {
+        if(!data.actif) return;
+
+        document.getElementById('tvEvent').innerText = data.evenement;
+        document.getElementById('tvCategory').innerText = data.categorie;
+        document.getElementById('tvRef').innerText = data.arbitre_central;
+
+        document.getElementById('nomRouge').innerText = data.boxeur_rouge.nom;
+        document.getElementById('clubRouge').innerText = data.boxeur_rouge.club + ' (' + data.boxeur_rouge.pays + ')';
+        document.getElementById('totRouge').innerText = data.total_rouge;
+
+        document.getElementById('nomBleu').innerText = data.boxeur_bleu.nom;
+        document.getElementById('clubBleu').innerText = data.boxeur_bleu.club + ' (' + data.boxeur_bleu.pays + ')';
+        document.getElementById('totBleu').innerText = data.total_bleu;
+
+        let badgeHtml = '';
+        data.rounds.forEach(r => {
+            let bg = 'bg-slate-800 border-slate-700 text-slate-400';
+            if(r.gagnant === 'ROUGE') bg = 'bg-red-600 border-red-400 text-white glow-red';
+            else if(r.gagnant === 'BLEU') bg = 'bg-blue-600 border-blue-400 text-white glow-blue';
+            badgeHtml += `<span class="w-10 h-10 rounded-full ${bg} flex items-center justify-center font-black text-xs">R${r.numero}</span>`;
+        });
+        document.getElementById('roundBadges').innerHTML = badgeHtml;
+
+        if(data.statut_combat === 'TERMINE' && data.nom_vainqueur) {
+            document.getElementById('viewArena').classList.add('hidden');
+            document.getElementById('viewWinner').classList.remove('hidden');
+            document.getElementById('winnerName').innerText = data.nom_vainqueur;
+            document.getElementById('winnerClub').innerText = data.coin_vainqueur === 'ROUGE' ? data.boxeur_rouge.club : data.boxeur_bleu.club;
+            document.getElementById('decisionType').innerText = data.type_decision || 'VICTOIRE HOMOLOGUÉE';
+        } else {
+            document.getElementById('viewArena').classList.remove('hidden');
+            document.getElementById('viewWinner').classList.add('hidden');
+        }
+    });
+}
+
+setInterval(raffraichirBroadcast, 2000);
+raffraichirBroadcast();
+</script>
+{% endblock %}

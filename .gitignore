@@ -1,0 +1,22 @@
+# Python & Django
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Django Database (décommentez si vous souhaitez exclure la base locale)
+# db.sqlite3
+
+# System & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo

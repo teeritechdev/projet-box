@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}Tablette Saisie Juge{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-slate-100 text-slate-900 flex flex-col justify-between p-4 max-w-5xl mx-auto">
+    <header class="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center font-bold shadow-sm">
+                <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <div>
+                <h2 class="font-extrabold text-sm text-slate-900">{{ juge.first_name }} {{ juge.last_name }} ({{ juge.username }})</h2>
+                <span class="text-xs text-red-600 font-extrabold uppercase">Officiel de Table</span>
+            </div>
+        </div>
+        <div class="text-center">
+            <span class="text-xs uppercase text-slate-500 block font-semibold">Round Actif</span>
+            <span class="text-2xl font-black font-teko text-amber-600">
+                {% if round_actif %}ROUND {{ round_actif.numero_round }}{% else %}EN ATTENTE{% endif %}
+            </span>
+        </div>
+        <a href="{% url 'deconnexion' %}" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-bold text-slate-700 border border-slate-300">
+            <i class="fa-solid fa-power-off text-red-600"></i>
+        </a>
+    </header>
+
+    {% if combat and round_actif %}
+    <main class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6 flex-1">
+        <div class="bg-white p-6 rounded-3xl border-2 border-red-200 flex flex-col justify-between items-center shadow-sm">
+            <div class="text-center">
+                <span class="px-3 py-1 bg-red-600 text-white text-xs font-black uppercase rounded-full tracking-wider shadow-sm">Coin Rouge</span>
+                <h3 class="text-3xl font-black font-teko tracking-wide mt-2 text-slate-900">{{ combat.boxeur_rouge.prenom }} {{ combat.boxeur_rouge.nom }}</h3>
+                <p class="text-xs text-slate-500 font-semibold mt-1">{{ combat.boxeur_rouge.club }} • {{ combat.boxeur_rouge.pays }}</p>
+            </div>
+
+            <div class="w-full my-6">
+                <label class="block text-center text-xs uppercase font-extrabold text-slate-600 mb-3">Note Attribuée (Round System)</label>
+                <div class="grid grid-cols-3 gap-3">
+                    <button type="button" id="btn-rouge-10" onclick="setScore('rouge', 10)" class="py-5 bg-red-600 text-white font-black text-2xl rounded-2xl border-2 border-red-400 shadow-md">10</button>
+                    <button type="button" id="btn-rouge-9" onclick="setScore('rouge', 9)" class="py-5 bg-slate-100 text-slate-700 font-bold text-xl rounded-2xl border border-slate-300 hover:bg-slate-200">9</button>
+                    <button type="button" id="btn-rouge-8" onclick="setScore('rouge', 8)" class="py-5 bg-slate-100 text-slate-700 font-bold text-xl rounded-2xl border border-slate-300 hover:bg-slate-200">8</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-3xl border-2 border-blue-200 flex flex-col justify-between items-center shadow-sm">
+            <div class="text-center">
+                <span class="px-3.5 py-1 bg-blue-600 text-white text-xs font-black uppercase rounded-full tracking-wider shadow-sm">Coin Bleu</span>
+                <h3 class="text-3xl font-black font-teko tracking-wide mt-2 text-slate-900">{{ combat.boxeur_bleu.prenom }} {{ combat.boxeur_bleu.nom }}</h3>
+                <p class="text-xs text-slate-500 font-semibold mt-1">{{ combat.boxeur_bleu.club }} • {{ combat.boxeur_bleu.pays }}</p>
+            </div>
+
+            <div class="w-full my-6">
+                <label class="block text-center text-xs uppercase font-extrabold text-slate-600 mb-3">Note Attribuée (Round System)</label>
+                <div class="grid grid-cols-3 gap-3">
+                    <button type="button" id="btn-bleu-10" onclick="setScore('bleu', 10)" class="py-5 bg-slate-100 text-slate-700 font-bold text-xl rounded-2xl border border-slate-300 hover:bg-slate-200">10</button>
+                    <button type="button" id="btn-bleu-9" onclick="setScore('bleu', 9)" class="py-5 bg-blue-600 text-white font-black text-2xl rounded-2xl border-2 border-blue-400 shadow-md">9</button>
+                    <button type="button" id="btn-bleu-8" onclick="setScore('bleu', 8)" class="py-5 bg-slate-100 text-slate-700 font-bold text-xl rounded-2xl border border-slate-300 hover:bg-slate-200">8</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div class="text-sm font-semibold">
+            <span class="text-slate-600">Score Saisi: </span>
+            <span id="displayScore" class="font-extrabold text-slate-900">ROUGE: <span id="rVal" class="text-red-600 font-black">10</span> | BLEU: <span id="bVal" class="text-blue-600 font-black">9</span></span>
+        </div>
+        <button type="button" onclick="soumettreScore()" class="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl uppercase tracking-wider text-base shadow-md flex items-center gap-2">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>Valider le Round</span>
+        </button>
+    </footer>
+    {% else %}
+    <div class="flex-1 flex flex-col items-center justify-center text-center py-20">
+        <i class="fa-solid fa-clock text-6xl text-slate-400 mb-4"></i>
+        <h2 class="text-2xl font-bold text-slate-600">Aucun Combat en cours de scoring</h2>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+let scoreRouge = 10;
+let scoreBleu = 9;
+const roundId = {% if round_actif %}{{ round_actif.id }}{% else %}null{% endif %};
+
+function setScore(coin, pts) {
+    if (coin === 'rouge') {
+        scoreRouge = pts;
+        document.getElementById('rVal').innerText = pts;
+        [10, 9, 8].forEach(p => {
+            const btn = document.getElementById(`btn-rouge-${p}`);
+            if (btn) {
+                if (p === pts) {
+                    btn.className = "py-5 bg-red-600 text-white font-black text-2xl rounded-2xl border-2 border-red-400 shadow-md scale-[1.03] transition-all";
+                } else {
+                    btn.className = "py-5 bg-slate-100 text-slate-700 font-bold text-xl rounded-2xl border border-slate-300 hover:bg-slate-200 transition-all";
+                }
+            }
+        });
+    } else {
+        scoreBleu = pts;
+        document.getElementById('bVal').innerText = pts;
+        [10, 9, 8].forEach(p => {
+            const btn = document.getElementById(`btn-bleu-${p}`);
+            if (btn) {
+                if (p === pts) {
+                    btn.className = "py-5 bg-blue-600 text-white font-black text-2xl rounded-2xl border-2 border-blue-400 shadow-md scale-[1.03] transition-all";
+                } else {
+                    btn.className = "py-5 bg-slate-100 text-slate-700 font-bold text-xl rounded-2xl border border-slate-300 hover:bg-slate-200 transition-all";
+                }
+            }
+        });
+    }
+}
+
+function soumettreScore() {
+    if (!roundId) return;
+    fetch('/api/enregistrer-score/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            round_id: roundId,
+            points_rouge: scoreRouge,
+            points_bleu: scoreBleu
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.statut === 'succes') {
+            alert('Score transmis à la Table Centrale avec succès !');
+        } else {
+            alert('Erreur: ' + data.message);
+        }
+    });
+}
+</script>
+{% endblock %}

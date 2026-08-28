@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}Table Juge Principal - Supervision{% endblock %}
+
+{% block body %}
+<div class="min-h-screen p-4 md:p-8 flex flex-col justify-between max-w-7xl mx-auto space-y-6">
+    <header class="flex items-center justify-between bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex-wrap gap-4">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-bold text-2xl shadow-md">
+                <i class="fa-solid fa-crown"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-black font-teko uppercase text-slate-900 tracking-wider">TABLE DU JUGE PRINCIPAL</h1>
+                <span class="text-xs text-amber-700 font-extrabold uppercase tracking-widest">Supervision & Validation Officielle des Matches</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'ecran_broadcast' %}" target="_blank" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all transform hover:scale-[1.02]">
+                <i class="fa-solid fa-tv text-sm"></i>
+                <span>Écran Broadcast Arena TV</span>
+            </a>
+            <a href="{% url 'deconnexion' %}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition-all">
+                <i class="fa-solid fa-power-off text-red-600"></i>
+            </a>
+        </div>
+    </header>
+
+    {% if combat %}
+    <main class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1">
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-6">
+            <div>
+                <div class="flex justify-between items-center pb-4 border-b border-slate-100 mb-6">
+                    <span class="px-3.5 py-1 bg-amber-100 text-amber-800 border border-amber-300 text-xs font-black uppercase rounded-full tracking-wider">Match #{{ combat.numero_match }}</span>
+                    <span class="text-xs font-extrabold text-slate-700 uppercase bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">{{ combat.categorie }}</span>
+                </div>
+                <div class="space-y-4">
+                    <div class="p-5 bg-red-50/60 border-2 border-red-200 rounded-2xl flex items-center justify-between shadow-xs">
+                        <div>
+                            <span class="px-2.5 py-0.5 bg-red-600 text-white text-[10px] font-black uppercase rounded-full tracking-wider">Coin Rouge</span>
+                            <h3 class="text-2xl font-black font-teko text-slate-900 tracking-wide mt-1">{{ combat.boxeur_rouge.prenom }} {{ combat.boxeur_rouge.nom }}</h3>
+                            <p class="text-xs text-slate-500 font-medium">{{ combat.boxeur_rouge.club }} • {{ combat.boxeur_rouge.pays }}</p>
+                        </div>
+                        <span class="text-4xl font-black font-teko text-red-600 bg-white px-3.5 py-1 rounded-xl border border-red-200 shadow-xs">{{ totaux_juges.rouge }}</span>
+                    </div>
+
+                    <div class="p-5 bg-blue-50/60 border-2 border-blue-200 rounded-2xl flex items-center justify-between shadow-xs">
+                        <div>
+                            <span class="px-2.5 py-0.5 bg-blue-600 text-white text-[10px] font-black uppercase rounded-full tracking-wider">Coin Bleu</span>
+                            <h3 class="text-2xl font-black font-teko text-slate-900 tracking-wide mt-1">{{ combat.boxeur_bleu.prenom }} {{ combat.boxeur_bleu.nom }}</h3>
+                            <p class="text-xs text-slate-500 font-semibold mt-0.5">{{ combat.boxeur_bleu.club }} • {{ combat.boxeur_bleu.pays }}</p>
+                        </div>
+                        <span class="text-4xl font-black font-teko text-blue-600 bg-white px-3.5 py-1 rounded-xl border border-blue-200 shadow-xs">{{ totaux_juges.bleu }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 text-xs text-slate-600 space-y-2.5 font-semibold">
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-500">Arbitre Central:</span>
+                    <span class="font-bold text-slate-900">{{ combat.arbitre_central }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-500">Statut du Match:</span>
+                    <span class="px-2.5 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-extrabold uppercase rounded-md">{{ combat.statut }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-6">
+            <div>
+                <h2 class="text-lg font-bold font-teko text-slate-900 uppercase tracking-wider mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-amber-500"></i>
+                    <span>Notes attribuées par le Jury (Tableau des Rounds)</span>
+                </h2>
+
+                <div class="space-y-4">
+                    {% for item in scores_par_round %}
+                    <div class="p-5 bg-slate-50/80 border border-slate-200 hover:bg-white hover:border-slate-300 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all shadow-xs">
+                        <div class="flex items-center gap-4">
+                            <span class="w-12 h-12 rounded-2xl bg-white text-slate-900 flex items-center justify-center font-black font-teko text-2xl border border-slate-300 shadow-xs shrink-0">R{{ item.round.numero_round }}</span>
+                            <div>
+                                <span class="text-[11px] font-extrabold uppercase {% if item.round.statut == 'EN_COURS' %}text-emerald-600{% else %}text-slate-500{% endif %}">Statut: {{ item.round.statut }}</span>
+                                <div class="text-sm font-bold text-slate-900 mt-0.5">Score Total: <span class="text-red-600 font-extrabold">{{ item.round.total_score_rouge }}</span> - <span class="text-blue-600 font-extrabold">{{ item.round.total_score_bleu }}</span></div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 flex-wrap">
+                            {% for score in item.scores_juges %}
+                                <span class="px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-mono shadow-xs">
+                                    <span class="text-slate-700 font-bold">{{ score.juge.username }}:</span>
+                                    <span class="text-red-600 font-extrabold">{{ score.points_rouge }}</span>-<span class="text-blue-600 font-extrabold">{{ score.points_bleu }}</span>
+                                </span>
+                            {% empty %}
+                                <span class="text-xs text-slate-400 italic">En attente de la saisie des juges...</span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="flex items-center gap-2 shrink-0">
+                            {% if item.round.statut == 'EN_ATTENTE' %}
+                            <button onclick="actionRound({{ item.round.id }}, 'demarrer')" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm">Lancer Round</button>
+                            {% elif item.round.statut == 'EN_COURS' %}
+                            <button onclick="actionRound({{ item.round.id }}, 'terminer')" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm">Valider Round</button>
+                            {% else %}
+                            <span class="px-3 py-1.5 bg-emerald-100 text-emerald-700 text-xs font-extrabold rounded-xl border border-emerald-300">Round Terminé</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex justify-end">
+                {% if combat.rounds.last and combat.rounds.last.id %}
+                <button onclick="actionRound({{ combat.rounds.last.id }}, 'cloturer_combat')" class="px-8 py-4 bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black rounded-2xl uppercase tracking-wider text-xs shadow-md flex items-center gap-3 transition-all transform hover:scale-[1.02]">
+                    <i class="fa-solid fa-trophy text-base"></i>
+                    <span>Clôturer le Match & Proclamer le Vainqueur</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+    {% endif %}
+</div>
+
+<script>
+function actionRound(roundId, action) {
+    fetch('/api/valider-round/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ round_id: roundId, action: action })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.statut === 'succes') {
+            location.reload();
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,57 @@
+<!-- Header Master Pro Broadcast JAES 2026 (Pleine Largeur 100% • Rectangle Pur • Sans Jaune) -->
+<header class="w-full rounded-none shadow-md overflow-hidden relative transition-all"
+        style="background: linear-gradient(135deg, {{ evenement_actif.couleur_fond_header|default:'#991B1B' }} 0%, #7F1D1D 55%, #450A0A 100%);">
+
+    <!-- Section Principale Logos & Identité (Pleine Largeur 100%) -->
+    <div class="w-full px-6 md:px-12 py-4 md:py-5 flex flex-col lg:flex-row items-center justify-between gap-6 relative z-10">
+        <!-- Left: Discipline & Sports de Combat -->
+        <div class="flex items-center gap-4 shrink-0">
+            {% if evenement_actif.logo_discipline %}
+            <img src="{{ evenement_actif.logo_discipline.url }}" alt="Discipline Logo" class="h-14 md:h-18 object-contain filter drop-shadow-md">
+            {% else %}
+            <div class="flex flex-col">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-red-400 animate-pulse"></span>
+                    <span class="text-xs font-black uppercase tracking-widest text-red-200">SPORTS DE COMBAT</span>
+                </div>
+                <h2 class="text-3xl font-black font-teko uppercase tracking-wider text-white leading-none mt-0.5">
+                    {{ evenement_actif.nom_discipline|default:"MIXED MARTIAL ARTS (MMA)" }}
+                </h2>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Center: Logo Événement JAES 2026 (Grand Format Pro) -->
+        <div class="flex items-center justify-center shrink-0">
+            {% if evenement_actif.logo_evenement %}
+            <img src="{{ evenement_actif.logo_evenement.url }}" alt="JAES 2026 Logo" class="h-16 md:h-20 object-contain filter drop-shadow-xl transform hover:scale-105 transition-all">
+            {% else %}
+            <div class="px-8 py-3 bg-black/30 backdrop-blur-md border border-white/20 text-center shadow-inner">
+                <span class="text-sm md:text-base font-black text-white uppercase tracking-widest block">
+                    {{ evenement_actif.titre|default:"LES JEUX DE L'ALLIANCE DES ÉTATS DU SAHEL (JAES) 2026" }}
+                </span>
+                <span class="text-xs font-extrabold text-white/90 uppercase tracking-wider mt-0.5 block">
+                    {{ evenement_actif.edition|default:"OUAGADOUGOU 2026" }} • {{ evenement_actif.lieu|default:"BURKINA FASO" }}
+                </span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right: Ministère MSJE / AES (Logos Officiels Alignés) -->
+        <div class="flex items-center gap-5 shrink-0">
+            {% if evenement_actif.logo_ministere %}
+            <img src="{{ evenement_actif.logo_ministere.url }}" alt="MSJE Logo" class="h-14 md:h-18 object-contain filter drop-shadow-md">
+            {% else %}
+            <div class="text-right text-xs font-extrabold text-white/95 leading-snug max-w-[220px]">
+                <span>{{ evenement_actif.organisateur|default:"Ministère des Sports, de la Jeunesse et de l'Emploi MSJE / BURKINA FASO" }}</span>
+            </div>
+            {% endif %}
+
+            {% if evenement_actif.logo_aes %}
+            <div class="pl-4 border-l border-white/25">
+                <img src="{{ evenement_actif.logo_aes.url }}" alt="AES Logo" class="h-14 md:h-18 object-contain filter drop-shadow-md">
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</header>

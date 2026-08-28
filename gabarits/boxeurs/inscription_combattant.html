@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block title %}Inscription Officielle des Combattants MMA - JAES 2026{% endblock %}
+
+{% block body %}
+<div class="min-h-screen p-4 md:p-8 space-y-6 w-full">
+    <!-- Header Officiel JAES 2026 (Grand En-tête Unifié & Navigation Pro) -->
+    {% include 'components/header_jaes.html' %}
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-extrabold flex items-center gap-3 shadow-xs">
+                <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Grid: Form + List -->
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+        <!-- Form Section (5 Columns) -->
+        <div class="xl:col-span-5 bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+            <div class="pb-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-bold font-teko uppercase text-slate-900 tracking-wide flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus text-red-600"></i>
+                        <span>Fiche d'Engagement Combattant</span>
+                    </h2>
+                    <p class="text-xs text-slate-500">Saisie de la pesée et affectation de la catégorie de poids</p>
+                </div>
+            </div>
+
+            <form method="POST" action="" enctype="multipart/form-data" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="creer">
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-slate-700 uppercase">Nom *</label>
+                        <input type="text" name="nom" required placeholder="Ex: OUEDRAOGO" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:border-red-600 focus:outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-slate-700 uppercase">Prénom *</label>
+                        <input type="text" name="prenom" required placeholder="Ex: Ibrahim" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:border-red-600 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-slate-700 uppercase">Surnom MMA (Alias)</label>
+                        <input type="text" name="surnom" placeholder="Ex: L'Étalon Noir" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:border-red-600 focus:outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-slate-700 uppercase">Sexe *</label>
+                        <select name="sexe" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:border-red-600 focus:outline-none">
+                            <option value="Masculin">Masculin</option>
+                            <option value="Féminin">Féminin</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-slate-700 uppercase">Pays Représenté *</label>
+                        <select name="pays" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-extrabold text-slate-900 focus:bg-white focus:border-red-600 focus:outline-none">
+                            <option value="Burkina Faso" selected>🇧🇫 Burkina Faso (Hôte)</option>
+                            <option value="Mali">🇲🇱 Mali</option>
+                            <option value="Niger">🇳🇪 Niger</option>
+                            <option value="Côte d'Ivoire">🇨🇮 Côte d'Ivoire</option>
+                            <option value="Togo">🇹🇬 Togo</option>
+                            <option value="Bénin">🇧🇯 Bénin</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-slate-700 uppercase">Club / Équipe MMA *</label>
+                        <input type="text" name="club" required placeholder="Ex: CNP-MMA Burkina" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:border-red-600 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="space-y-1">
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase">Poids Pesée (kg) *</label>
+                        <input type="number" step="0.10" name="poids_pesee" required placeholder="Ex: 70.30" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono font-bold text-slate-900 focus:bg-white focus:border-red-600 focus:outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase">Taille (cm)</label>
+                        <input type="number" name="taille_cm" placeholder="Ex: 178" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono font-bold text-slate-900 focus:bg-white focus:border-red-600 focus:outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase">Âge</label>
+                        <input type="number" name="age" placeholder="Ex: 24" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono font-bold text-slate-900 focus:bg-white focus:border-red-600 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-slate-700 uppercase">Catégorie Officielle (GAMMA MMA) *</label>
+                    <select name="categorie" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-extrabold text-slate-900 focus:bg-white focus:border-red-600 focus:outline-none">
+                        <option value="">-- Auto-détection par la Pesée --</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.nom }} (Max {{ cat.poids_maximum }} kg - {{ cat.genre }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 pt-2">
+                    <div class="space-y-1">
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase">Photo du Combattant</label>
+                        <input type="file" name="photo" accept="image/*" class="w-full text-xs text-slate-600 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase">Logo du Club</label>
+                        <input type="file" name="logo_club" accept="image/*" class="w-full text-xs text-slate-600 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold rounded-xl shadow-md uppercase tracking-wider text-xs flex items-center justify-center gap-2 transition-all transform hover:scale-[1.01]">
+                    <i class="fa-solid fa-user-check text-sm"></i>
+                    <span>Valider l'Inscription du Combattant</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- List Section (7 Columns) -->
+        <div class="xl:col-span-7 bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div class="pb-3 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-bold font-teko uppercase text-slate-900 tracking-wide flex items-center gap-2">
+                        <i class="fa-solid fa-list-ol text-blue-600"></i>
+                        <span>Liste des Combattants MMA Inscrits ({{ combattants.count }})</span>
+                    </h2>
+                    <p class="text-xs text-slate-500">Athlètes homologués pour la compétition JAES 2026</p>
+                </div>
+            </div>
+
+            <div class="space-y-3 max-h-[620px] overflow-y-auto pr-1">
+                {% for b in combattants %}
+                <div class="p-4 bg-slate-50/80 border border-slate-200 hover:bg-white hover:border-slate-300 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all shadow-xs">
+                    <div class="flex items-start gap-4 min-w-0">
+                        {% if b.photo %}
+                        <img src="{{ b.photo.url }}" alt="{{ b.nom }}" class="w-14 h-14 rounded-2xl object-cover border-2 border-slate-300 shadow-xs shrink-0">
+                        {% else %}
+                        <div class="w-14 h-14 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black font-teko text-2xl shrink-0">
+                            {{ b.prenom|slice:":1" }}{{ b.nom|slice:":1" }}
+                        </div>
+                        {% endif %}
+
+                        <div class="space-y-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h4 class="font-extrabold text-base text-slate-900 leading-tight">{{ b.prenom }} {{ b.nom }}</h4>
+                                {% if b.surnom %}
+                                <span class="px-2.5 py-0.5 bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold rounded-md">
+                                    "{{ b.surnom }}"
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            <div class="text-xs text-slate-600 flex items-center gap-2 flex-wrap font-medium">
+                                <span class="font-bold text-slate-800"><i class="fa-solid fa-flag text-blue-600 mr-1"></i>{{ b.pays }}</span>
+                                <span class="text-slate-300">•</span>
+                                <span><i class="fa-solid fa-shield text-red-500 mr-1"></i>{{ b.club }}</span>
+                                {% if b.categorie %}
+                                <span class="text-slate-300">•</span>
+                                <span class="px-2 py-0.5 bg-slate-200 text-slate-800 rounded font-extrabold text-[10px]">{{ b.categorie.nom }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between sm:justify-end gap-3 pt-3 sm:pt-0 border-t sm:border-0 border-slate-200 shrink-0">
+                        <div class="text-right">
+                            <span class="px-3 py-1 bg-white text-slate-900 border border-slate-300 text-xs font-mono font-black rounded-xl block shadow-2xs">
+                                {{ b.poids_pesee|default:"--" }} kg
+                            </span>
+                        </div>
+                        <form method="POST" action="" onsubmit="return confirm('Confirmer la suppression ?');">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="supprimer">
+                            <input type="hidden" name="boxeur_id" value="{{ b.id }}">
+                            <button type="submit" class="px-3 py-1.5 bg-red-50 hover:bg-red-600 text-red-700 hover:text-white border border-red-200 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1">
+                                <i class="fa-solid fa-trash-can text-[11px]"></i>
+                                <span>Supprimer</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-12 text-center bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
+                    <i class="fa-solid fa-octagon-plus text-4xl text-slate-400 mb-3 block"></i>
+                    <p class="text-sm font-bold text-slate-600">Aucun combattant MMA inscrit pour l'instant.</p>
+                    <p class="text-xs text-slate-400 mt-1">Utilisez le formulaire ci-contre pour enregistrer la première pesée.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

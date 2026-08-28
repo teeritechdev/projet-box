@@ -1,0 +1,377 @@
+{% extends 'base.html' %}
+
+{% block title %}Panneau de Contrôle Administrateur - Boxe Scoring{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-slate-100/70 w-full pb-12">
+    <!-- Header Officiel JAES 2026 (Rectangle Pleine Largeur 100%) -->
+    {% include 'components/header_jaes.html' %}
+
+    <!-- Navigation Bar Administrateur (Noir Pleine Largeur 100% • Rectangle Pur) -->
+    <div class="bg-slate-950 text-white w-full px-6 md:px-12 py-3.5 border-b border-slate-800 shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+            <div>
+                <h1 class="text-xl font-black font-teko uppercase text-white tracking-wider leading-none">PANNEAU DE CONTRÔLE CENTRAL</h1>
+                <p class="text-xs text-slate-400 font-semibold mt-0.5">Supervision des combats, officiels, combattants et scoring en temps réel</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-6 flex-wrap w-full md:w-auto justify-end text-xs font-extrabold uppercase tracking-wider">
+            <a href="{% url 'inscription_combattant' %}" class="text-white hover:text-amber-400 flex items-center gap-2 transition-colors">
+                <i class="fa-solid fa-user-plus text-sm text-amber-400"></i>
+                <span>Inscrire</span>
+            </a>
+            <span class="text-slate-700 hidden sm:inline">•</span>
+            <a href="/admin/" target="_blank" class="text-white hover:text-slate-300 flex items-center gap-2 transition-colors">
+                <i class="fa-solid fa-gears text-sm text-slate-400"></i>
+                <span>Admin</span>
+            </a>
+            <span class="text-slate-700 hidden sm:inline">•</span>
+            <a href="{% url 'deconnexion' %}" class="text-white hover:text-red-400 flex items-center gap-2 transition-colors">
+                <i class="fa-solid fa-power-off text-sm text-red-500"></i>
+                <span>Déconnexion</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="p-4 md:p-8 space-y-6 w-full">
+
+    <!-- Top KPI Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <!-- Comptes -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+            <div class="flex justify-between items-start">
+                <div>
+                    <span class="text-[11px] font-extrabold uppercase text-slate-400 tracking-wider block">Comptes Utilisateurs</span>
+                    <h3 class="text-4xl font-black font-teko text-slate-900 mt-1">{{ utilisateurs.count }}</h3>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-red-50 border border-red-100 text-red-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+            </div>
+            <a href="/admin/comptes/utilisateur/" class="inline-flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-700 mt-4 transition-colors">
+                <span>Gérer les comptes</span>
+                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </a>
+        </div>
+
+        <!-- Boxeurs -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+            <div class="flex justify-between items-start">
+                <div>
+                    <span class="text-[11px] font-extrabold uppercase text-slate-400 tracking-wider block">Boxeurs Engagés</span>
+                    <h3 class="text-4xl font-black font-teko text-slate-900 mt-1">{{ boxeurs.count }}</h3>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-hand-fist"></i>
+                </div>
+            </div>
+            <a href="/admin/boxeurs/boxeur/" class="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 mt-4 transition-colors">
+                <span>Gérer les boxeurs</span>
+                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </a>
+        </div>
+
+        <!-- Arbitres -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+            <div class="flex justify-between items-start">
+                <div>
+                    <span class="text-[11px] font-extrabold uppercase text-slate-400 tracking-wider block">Arbitres Centraux</span>
+                    <h3 class="text-4xl font-black font-teko text-slate-900 mt-1">{{ arbitres.count }}</h3>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+            </div>
+            <a href="/admin/arbitres/arbitrecentral/" class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 hover:text-emerald-700 mt-4 transition-colors">
+                <span>Gérer les arbitres</span>
+                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </a>
+        </div>
+
+        <!-- Combats -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+            <div class="flex justify-between items-start">
+                <div>
+                    <span class="text-[11px] font-extrabold uppercase text-slate-400 tracking-wider block">Combats Programmés</span>
+                    <h3 class="text-4xl font-black font-teko text-slate-900 mt-1">{{ combats.count }}</h3>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+            </div>
+            <a href="/admin/combats/combat/" class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 hover:text-amber-700 mt-4 transition-colors">
+                <span>Gérer les combats</span>
+                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </a>
+        </div>
+    </div>
+
+
+    <!-- Main Grid Sections -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        <!-- Boxeurs Section -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-red-100 text-red-600 flex items-center justify-center font-bold shrink-0">
+                        <i class="fa-solid fa-user-ninja"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold font-teko uppercase text-slate-900 tracking-wide">Liste des Boxeurs Officiels</h2>
+                        <p class="text-[11px] text-slate-500">Répertoire complet des combattants pesés</p>
+                    </div>
+                </div>
+                <a href="/admin/boxeurs/boxeur/add/" class="px-3.5 py-1.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 shrink-0">
+                    <i class="fa-solid fa-plus text-[11px]"></i>
+                    <span>Ajouter Boxeur</span>
+                </a>
+            </div>
+
+            <div class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                {% for b in boxeurs %}
+                <div class="p-4 bg-slate-50/80 border border-slate-200 hover:bg-white hover:border-slate-300 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all shadow-xs">
+                    <div class="flex items-start gap-3.5 min-w-0">
+                        <div class="w-11 h-11 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black font-teko text-xl shrink-0">
+                            {{ b.prenom|slice:":1" }}{{ b.nom|slice:":1" }}
+                        </div>
+                        <div class="space-y-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h4 class="font-extrabold text-sm text-slate-900 leading-tight truncate">{{ b.prenom }} {{ b.nom }}</h4>
+                                {% if b.surnom %}
+                                <span class="px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold rounded-md shrink-0">
+                                    "{{ b.surnom }}"
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="text-xs text-slate-600 flex items-center gap-2 flex-wrap font-medium">
+                                <span><i class="fa-solid fa-shield text-[10px] text-red-500 mr-1"></i>{{ b.club }}</span>
+                                <span class="text-slate-300">•</span>
+                                <span><i class="fa-solid fa-flag text-[10px] text-blue-500 mr-1"></i>{{ b.pays }}</span>
+                                {% if b.categorie %}
+                                <span class="text-slate-300">•</span>
+                                <span class="text-slate-700 font-semibold">{{ b.categorie.nom }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between md:justify-end gap-2.5 pt-3 md:pt-0 border-t md:border-0 border-slate-200 shrink-0">
+                        <span class="px-2.5 py-1.5 bg-white text-slate-800 border border-slate-300 text-xs font-mono font-bold rounded-xl shadow-2xs">
+                            {{ b.poids_pesee|default:"--" }} kg
+                        </span>
+                        <div class="flex items-center gap-1.5">
+                            <a href="/admin/boxeurs/boxeur/{{ b.id }}/change/" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1">
+                                <i class="fa-solid fa-pen-to-square text-[11px]"></i>
+                                <span>Modifier</span>
+                            </a>
+                            <a href="/admin/boxeurs/boxeur/{{ b.id }}/delete/" class="px-3 py-1.5 bg-red-50 hover:bg-red-600 text-red-700 hover:text-white border border-red-200 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1">
+                                <i class="fa-solid fa-trash-can text-[11px]"></i>
+                                <span>Supprimer</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
+                    <i class="fa-solid fa-user-ninja text-3xl text-slate-400 mb-2 block"></i>
+                    <p class="text-xs text-slate-500">Aucun boxeur enregistré pour le moment.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Comptes Utilisateurs Section -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold shrink-0">
+                        <i class="fa-solid fa-id-badge"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold font-teko uppercase text-slate-900 tracking-wide">Comptes Utilisateurs & Rôles</h2>
+                        <p class="text-[11px] text-slate-500">Accès juges, administrateurs et délégués</p>
+                    </div>
+                </div>
+                <a href="/admin/comptes/utilisateur/add/" class="px-3.5 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 shrink-0">
+                    <i class="fa-solid fa-user-plus text-[11px]"></i>
+                    <span>Créer Compte</span>
+                </a>
+            </div>
+
+            <div class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                {% for u in utilisateurs %}
+                <div class="p-4 bg-slate-50/80 border border-slate-200 hover:bg-white hover:border-slate-300 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all shadow-xs">
+                    <div class="flex items-start gap-3.5 min-w-0">
+                        <div class="w-11 h-11 rounded-xl bg-slate-100 border border-slate-300 text-slate-700 flex items-center justify-center font-bold shrink-0">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div class="space-y-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h4 class="font-extrabold text-sm text-slate-900 leading-tight truncate">{{ u.username }}</h4>
+                                {% if u.role %}
+                                    {% if u.role.code == 'ADMIN' %}
+                                    <span class="px-2 py-0.5 bg-red-100 text-red-700 border border-red-200 text-[10px] font-extrabold uppercase rounded-md shrink-0">
+                                        ADMINISTRATEUR
+                                    </span>
+                                    {% elif u.role.code == 'JUGE_PRINCIPAL' %}
+                                    <span class="px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-extrabold uppercase rounded-md shrink-0">
+                                        JUGE PRINCIPAL
+                                    </span>
+                                    {% else %}
+                                    <span class="px-2 py-0.5 bg-blue-100 text-blue-700 border border-blue-200 text-[10px] font-extrabold uppercase rounded-md shrink-0">
+                                        {{ u.role.nom }}
+                                    </span>
+                                    {% endif %}
+                                {% else %}
+                                <span class="px-2 py-0.5 bg-purple-100 text-purple-700 border border-purple-200 text-[10px] font-extrabold uppercase rounded-md shrink-0">
+                                    SUPERADMIN
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="text-xs text-slate-600 flex items-center gap-2 flex-wrap font-medium">
+                                {% if u.first_name or u.last_name %}
+                                <span class="text-slate-800 font-semibold">{{ u.first_name }} {{ u.last_name }}</span>
+                                <span class="text-slate-300">•</span>
+                                {% endif %}
+                                <span><i class="fa-regular fa-envelope text-[10px] text-slate-400 mr-1"></i>{{ u.email|default:"Aucun email configuré" }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-1.5 pt-3 md:pt-0 border-t md:border-0 border-slate-200 shrink-0">
+                        <a href="/admin/comptes/utilisateur/{{ u.id }}/change/" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1">
+                            <i class="fa-solid fa-pen-to-square text-[11px]"></i>
+                            <span>Modifier</span>
+                        </a>
+                        <a href="/admin/comptes/utilisateur/{{ u.id }}/delete/" class="px-3 py-1.5 bg-red-50 hover:bg-red-600 text-red-700 hover:text-white border border-red-200 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1">
+                            <i class="fa-solid fa-trash-can text-[11px]"></i>
+                            <span>Supprimer</span>
+                        </a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
+                    <i class="fa-solid fa-users text-3xl text-slate-400 mb-2 block"></i>
+                    <p class="text-xs text-slate-500">Aucun compte utilisateur trouvé.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Secondary Row: Arbitres Centraux & Combats Programmés -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        <!-- Arbitres Centraux -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold shrink-0">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold font-teko uppercase text-slate-900 tracking-wide">Arbitres Centraux Officiels</h2>
+                        <p class="text-[11px] text-slate-500">Arbitres de ring désignés pour les rencontres</p>
+                    </div>
+                </div>
+                <a href="/admin/arbitres/arbitrecentral/add/" class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 shrink-0">
+                    <i class="fa-solid fa-plus text-[11px]"></i>
+                    <span>Ajouter Arbitre</span>
+                </a>
+            </div>
+
+            <div class="space-y-3">
+                {% for a in arbitres %}
+                <div class="p-4 bg-slate-50/80 border border-slate-200 hover:bg-white hover:border-slate-300 rounded-2xl flex items-center justify-between gap-4 transition-all shadow-xs">
+                    <div class="flex items-center gap-3.5 min-w-0">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100 border border-emerald-200 text-emerald-700 flex items-center justify-center font-bold shrink-0">
+                            <i class="fa-solid fa-whistle text-sm"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <h4 class="font-extrabold text-sm text-slate-900 truncate">{{ a.prenom }} {{ a.nom }}</h4>
+                            <span class="text-xs text-slate-600 flex items-center gap-1 font-medium mt-0.5">
+                                <i class="fa-solid fa-globe text-[10px] text-emerald-600"></i> {{ a.pays }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <a href="/admin/arbitres/arbitrecentral/{{ a.id }}/change/" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1">
+                            <i class="fa-solid fa-pen-to-square text-[11px]"></i>
+                            <span>Modifier</span>
+                        </a>
+                        <a href="/admin/arbitres/arbitrecentral/{{ a.id }}/delete/" class="px-3 py-1.5 bg-red-50 hover:bg-red-600 text-red-700 hover:text-white border border-red-200 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1">
+                            <i class="fa-solid fa-trash-can text-[11px]"></i>
+                            <span>Supprimer</span>
+                        </a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-6 text-center bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
+                    <p class="text-xs text-slate-500">Aucun arbitre central enregistré.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Combats Programmés -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold shrink-0">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold font-teko uppercase text-slate-900 tracking-wide">Combats & Programme</h2>
+                        <p class="text-[11px] text-slate-500">Planification des matchs du gala</p>
+                    </div>
+                </div>
+                <a href="/admin/combats/combat/add/" class="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 shrink-0">
+                    <i class="fa-solid fa-plus text-[11px]"></i>
+                    <span>Ajouter Match</span>
+                </a>
+            </div>
+
+            <div class="space-y-3">
+                {% for c in combats %}
+                <div class="p-4 bg-slate-50/80 border border-slate-200 hover:bg-white hover:border-slate-300 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all shadow-xs">
+                    <div class="space-y-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-black uppercase rounded shrink-0">
+                                Match #{{ c.numero_match }}
+                            </span>
+                            <span class="text-xs font-bold text-slate-700 shrink-0">{{ c.categorie.nom }}</span>
+                            <span class="px-2 py-0.5 bg-slate-200 text-slate-700 text-[10px] font-semibold rounded uppercase shrink-0">
+                                {{ c.statut }}
+                            </span>
+                        </div>
+                        <div class="text-xs font-extrabold text-slate-900">
+                            <span class="text-red-600">{{ c.boxeur_rouge.prenom }} {{ c.boxeur_rouge.nom }}</span>
+                            <span class="text-slate-400 font-normal px-1">VS</span>
+                            <span class="text-blue-600">{{ c.boxeur_bleu.prenom }} {{ c.boxeur_bleu.nom }}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-1.5 justify-end shrink-0">
+                        <a href="/admin/combats/combat/{{ c.id }}/change/" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1">
+                            <i class="fa-solid fa-pen-to-square text-[11px]"></i>
+                            <span>Modifier</span>
+                        </a>
+                        <a href="/admin/combats/combat/{{ c.id }}/delete/" class="px-3 py-1.5 bg-red-50 hover:bg-red-600 text-red-700 hover:text-white border border-red-200 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1">
+                            <i class="fa-solid fa-trash-can text-[11px]"></i>
+                            <span>Supprimer</span>
+                        </a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-6 text-center bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
+                    <p class="text-xs text-slate-500">Aucun combat programmé.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+{% endblock %}
