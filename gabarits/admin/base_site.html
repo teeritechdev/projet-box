@@ -160,41 +160,72 @@
         background: #F8FAFC !important;
     }
 
+    /* Form Grid Layout (2-Column Fieldsets Side-by-Side) */
+    #content-main form > div {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)) !important;
+        gap: 24px !important;
+        align-items: start !important;
+    }
+
+    #content-main form .submit-row {
+        grid-column: 1 / -1 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    #content-main form .inline-group {
+        grid-column: 1 / -1 !important;
+        width: 100% !important;
+    }
+
     /* Forms & Inputs */
     fieldset {
         background: #FFFFFF !important;
         border: 1px solid #E2E8F0 !important;
         border-radius: 18px !important;
         padding: 24px !important;
-        margin-bottom: 24px !important;
+        margin-bottom: 0 !important;
         box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03) !important;
+        height: 100% !important;
+        box-sizing: border-box !important;
     }
 
     fieldset h2 {
-        background: #F8FAFC !important;
-        color: #0F172A !important;
+        background: #0F172A !important;
+        color: #FFFFFF !important;
         font-size: 12px !important;
         font-weight: 900 !important;
         text-transform: uppercase !important;
-        letter-spacing: 0.06em !important;
-        padding: 10px 16px !important;
-        border-radius: 10px !important;
-        border: 1px solid #E2E8F0 !important;
+        letter-spacing: 0.08em !important;
+        padding: 12px 18px !important;
+        border-radius: 12px !important;
+        border-bottom: 3px solid #DC2626 !important;
         margin-bottom: 20px !important;
     }
 
     .form-row {
         border-bottom: 1px solid #F1F5F9 !important;
-        padding: 16px 0 !important;
+        padding: 14px 0 !important;
         overflow: visible !important;
         white-space: normal !important;
-        display: block !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 16px 20px !important;
+        align-items: flex-start !important;
+    }
+
+    .form-row .field-box {
+        flex: 1 1 180px !important;
+        min-width: 180px !important;
     }
 
     .form-row label {
         font-weight: 800 !important;
         color: #334155 !important;
-        font-size: 13px !important;
+        font-size: 12px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.04em !important;
         display: block !important;
         width: 100% !important;
         max-width: 100% !important;
@@ -205,7 +236,7 @@
     }
 
     .help, p.help, div.help {
-        font-size: 12px !important;
+        font-size: 11px !important;
         color: #64748B !important;
         font-weight: 600 !important;
         margin-top: 6px !important;
@@ -225,7 +256,6 @@
         color: #0F172A !important;
         transition: all 0.2s ease-in-out !important;
         width: 100% !important;
-        max-width: 600px !important;
         box-sizing: border-box !important;
     }
 
@@ -237,22 +267,23 @@
     }
 
     .selector {
+        grid-column: 1 / -1 !important;
         width: 100% !important;
-        max-width: 850px !important;
         display: flex !important;
         flex-wrap: wrap !important;
         gap: 16px !important;
     }
 
     .selector-available, .selector-chosen {
-        flex: 1 1 320px !important;
+        flex: 1 1 250px !important;
         width: auto !important;
     }
 
     .selector-available select, .selector-chosen select {
         max-width: 100% !important;
-        min-height: 200px !important;
+        min-height: 180px !important;
     }
+
 
 
     /* Submit Row Buttons */
