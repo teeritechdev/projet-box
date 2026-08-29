@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}MMA Octagon Broadcast 4K Arena - JAES 2026{% endblock %}
+{% block title %}Arena TV Broadcast 4K Live - Show MMA & Boxe JAES 2026{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -8,78 +8,382 @@
         0%, 100% { transform: scale(1); filter: brightness(1); }
         50% { transform: scale(1.03); filter: brightness(1.25); }
     }
-    @keyframes octagonRotate {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+    @keyframes bannerSlide {
+        0% { transform: translateY(-40px) scale(0.92); opacity: 0; }
+        100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    @keyframes zoomInFighter {
+        0% { transform: scale(0.88); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
     }
     .animate-winner { animation: pulseGlow 1.8s infinite ease-in-out; }
+    .animate-banner { animation: bannerSlide 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .animate-fighter { animation: zoomInFighter 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     
     .bg-octagon-grid {
         background-color: #030712;
         background-image: 
-            radial-gradient(circle at 50% 50%, rgba(220, 38, 38, 0.15) 0%, transparent 65%),
-            radial-gradient(circle at 80% 20%, rgba(37, 99, 235, 0.15) 0%, transparent 60%);
+            radial-gradient(circle at 50% 50%, rgba(220, 38, 38, 0.18) 0%, transparent 65%),
+            radial-gradient(circle at 80% 20%, rgba(37, 99, 235, 0.18) 0%, transparent 60%);
     }
 
-    .cage-border {
-        border: 3px solid rgba(245, 158, 11, 0.4);
-        box-shadow: 0 0 35px rgba(245, 158, 11, 0.2);
-    }
+    .glow-red { box-shadow: 0 0 45px rgba(220, 38, 38, 0.5); }
+    .glow-blue { box-shadow: 0 0 45px rgba(37, 99, 235, 0.5); }
+    .glow-gold { box-shadow: 0 0 55px rgba(245, 158, 11, 0.6); }
+    .glow-green { box-shadow: 0 0 45px rgba(16, 185, 129, 0.5); }
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="min-h-screen bg-octagon-grid text-white flex flex-col justify-between p-6 relative overflow-hidden" id="mainContainer">
+<div class="min-h-screen bg-octagon-grid text-white flex flex-col justify-between p-4 md:p-6 relative overflow-hidden" id="mainContainer">
     <!-- Animated Octagon Wireframe Canvas Background -->
     <canvas id="octagonCanvas" class="absolute inset-0 pointer-events-none opacity-20 z-0"></canvas>
+    <audio id="audioVictoirePlayer" preload="auto" class="hidden"></audio>
 
-    <!-- Top Header Broadcast Banner -->
-    <header class="relative z-10 flex justify-between items-center bg-slate-900/90 backdrop-blur-xl px-8 py-4 rounded-3xl border border-slate-800 shadow-2xl">
+    <!-- Top Header Broadcast Banner (Dynamique) -->
+    <header class="relative z-20 flex justify-between items-center bg-slate-900/90 backdrop-blur-xl px-6 md:px-8 py-3.5 rounded-3xl border border-slate-800 shadow-2xl">
         <div class="flex items-center gap-4">
-            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-red-600 border-2 border-amber-400 text-white flex items-center justify-center font-black text-2xl shadow-lg shrink-0">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-red-600 border-2 border-amber-400 text-white flex items-center justify-center font-black text-2xl shadow-lg shrink-0 overflow-hidden" id="tvHeaderLogoContainer">
                 <i class="fa-solid fa-octagon-plus"></i>
             </div>
             <div>
                 <div class="flex items-center gap-2">
                     <span class="text-xs uppercase font-extrabold text-amber-400 tracking-widest block" id="tvEvent">
-                        JEUX DE L'ALLIANCE DES ÉTATS DU SAHEL (JAES) 2026
+                        2ÉME ÉDITION DES JEUX DE L'ALLIANCE DES ÉTATS DU SAHEL (JAES 2026)
                     </span>
-                    <span class="px-2.5 py-0.5 bg-red-600/30 text-red-400 border border-red-500/50 rounded-full text-[10px] font-black uppercase">
+                    <span class="px-2.5 py-0.5 bg-red-600/30 text-red-400 border border-red-500/50 rounded-full text-[10px] font-black uppercase" id="tvFederationBadge">
                         CNP-MMA/DA
                     </span>
                 </div>
-                <h1 class="text-3xl font-black font-teko uppercase text-white tracking-wider mt-0.5" id="tvCategory">
+                <h1 class="text-2xl md:text-3xl font-black font-teko uppercase text-white tracking-wider mt-0.5" id="tvCategory">
                     FEATHERWEIGHT (-65,8 KG) • HOMMES
                 </h1>
             </div>
         </div>
 
         <div class="text-center bg-slate-950/80 px-6 py-2 rounded-2xl border border-slate-800 shadow-inner">
-            <span class="px-3 py-1 bg-red-600 text-white rounded-full text-[11px] font-black uppercase tracking-widest animate-pulse inline-block mb-1" id="tvStatus">
-                OCTAGON EN DIRECT
+            <span class="px-3 py-1 bg-red-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest inline-block mb-0.5 animate-pulse" id="tvStatusBadge">
+                OCTAGON BROADCAST
             </span>
             <div class="text-xs font-bold text-slate-300">
-                Arbitre Central: <span class="text-amber-400 font-extrabold" id="tvRef">OUEDRAOGO Issouf</span>
+                Arbitre Ring: <span class="text-amber-400 font-extrabold" id="tvRef">Arbitre Ring Officiel</span>
             </div>
         </div>
 
-        <div class="flex items-center gap-3 text-right">
+        <div class="hidden lg:flex items-center gap-3 text-right">
             <div>
-                <span class="text-[11px] uppercase font-bold text-slate-400 block">Règlement Officiel</span>
-                <span class="text-sm font-black text-slate-200">RÈGLES GAMMA • 10-MUST</span>
+                <span class="text-[10px] uppercase font-bold text-slate-400 block">Règlement Officiel</span>
+                <span class="text-xs font-black text-slate-200">RULES GAMMA • 10-MUST</span>
             </div>
-            <div class="text-2xl text-amber-400">
+            <div class="text-xl text-amber-400 font-extrabold">
                 🇧🇫 🇲🇱 🇳🇪
             </div>
         </div>
     </header>
 
-    <!-- Main View: Arena Fight Octagon -->
-    <main id="viewArena" class="relative z-10 grid grid-cols-12 gap-8 my-auto items-center">
-        <!-- Coin Rouge (Red Corner) -->
+
+    <!-- ========================================================================= -->
+    <!-- MODE 1 : ATTENTE & SPONSORS / PUBS (Dynamique BDD) -->
+    <!-- ========================================================================= -->
+    <main id="viewAttentePub" class="mode-view relative z-10 my-auto flex flex-col items-center justify-center text-center py-12 space-y-6">
+        <div class="w-24 h-24 rounded-3xl bg-gradient-to-br from-amber-400 to-red-600 p-1 shadow-2xl animate-pulse">
+            <div class="w-full h-full bg-slate-950 rounded-[22px] flex items-center justify-center text-4xl text-amber-400" id="attenteMainIcon">
+                <i class="fa-solid fa-tv"></i>
+            </div>
+        </div>
+        <div class="space-y-2">
+            <span class="px-4 py-1.5 bg-amber-500/20 text-amber-400 border border-amber-500/40 rounded-full text-xs font-black uppercase tracking-widest" id="tvAttenteSub">
+                GALA OFFICIEL DE COMBAT MMA & BOXE
+            </span>
+            <h1 class="text-6xl font-black font-teko uppercase text-white tracking-wider" id="tvAttenteTitre">
+                2ÉME ÉDITION DES JEUX DE L'ALLIANCE DES ÉTATS DU SAHEL (JAES 2026)
+            </h1>
+            <p class="text-lg font-bold text-slate-400" id="tvAttenteLieu">Palais des Sports de Ouagadougou • Burkina Faso</p>
+        </div>
+
+        <!-- Partenaires & Logos Bannières (Dynamique) -->
+        <div class="pt-8 flex items-center justify-center gap-8 flex-wrap max-w-4xl" id="tvPartnerGrid">
+            <!-- Injecté dynamiquement par JS selon la BDD -->
+        </div>
+    </main>
+
+
+    <!-- ========================================================================= -->
+    <!-- MODE 2 : CARTE DES 5 PROCHAINS COMBATS (Fight Card File) -->
+    <!-- ========================================================================= -->
+    <main id="viewCarteProgramme" class="mode-view hidden relative z-10 my-auto space-y-6 max-w-6xl mx-auto w-full">
+        <div class="text-center space-y-1">
+            <span class="px-4 py-1 bg-blue-600 text-white rounded-full text-xs font-black uppercase tracking-widest">
+                PROGRAMME DU GALA • CARTE DES COMBATS SUIVANTS
+            </span>
+            <h2 class="text-4xl font-black font-teko uppercase text-white tracking-wider">
+                LES 5 PROCHAINS COMBATS À VENIR
+            </h2>
+        </div>
+
+        <div id="listeProchainsCombats" class="space-y-3">
+            <!-- Injecté dynamiquement par JS -->
+        </div>
+    </main>
+
+
+    <!-- ========================================================================= -->
+    <!-- MODE 3.A : PRÉSENTATION SOLO COIN ROUGE (Plein Écran HD) -->
+    <!-- ========================================================================= -->
+    <main id="viewPresentationRougeSolo" class="mode-view hidden relative z-10 my-auto grid grid-cols-12 gap-8 items-center max-w-6xl mx-auto w-full animate-fighter">
+        <!-- Photo Plein Écran XL -->
+        <div class="col-span-5 flex justify-center">
+            <div class="w-72 h-96 rounded-3xl bg-slate-950 border-4 border-red-600 glow-red overflow-hidden relative flex items-center justify-center text-7xl text-red-500 font-black shadow-2xl" id="imgSoloRouge">
+                <i class="fa-solid fa-user-ninja"></i>
+                <div class="absolute bottom-4 left-4 right-4 bg-red-600 text-white text-xs font-black uppercase text-center py-1 rounded-xl shadow-lg">
+                    COIN ROUGE (RED CORNER)
+                </div>
+            </div>
+        </div>
+
+        <!-- Coordonnées Complètes -->
+        <div class="col-span-7 space-y-5 bg-gradient-to-r from-red-950/90 via-slate-900 to-slate-950 p-8 rounded-3xl border-2 border-red-600/70 shadow-2xl glow-red">
+            <div class="flex items-center gap-3">
+                <span class="px-4 py-1.5 bg-red-600 text-white text-xs font-black uppercase rounded-full shadow-md">
+                    🔴 COMBATTANT COIN ROUGE
+                </span>
+                <span class="text-sm font-bold text-red-300" id="soloRougePays">--</span>
+            </div>
+
+            <div>
+                <h1 class="text-6xl font-black font-teko tracking-wide text-white leading-tight uppercase" id="soloRougeNom">--</h1>
+                <p class="text-2xl font-extrabold text-amber-400 italic mt-1" id="soloRougeSurnom">"--"</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 text-sm font-bold text-slate-300 pt-2 border-t border-red-600/30">
+                <p><i class="fa-solid fa-shield text-red-500 mr-2"></i>Club : <span class="text-white font-extrabold" id="soloRougeClub">--</span></p>
+                <p><i class="fa-solid fa-flag text-blue-500 mr-2"></i>Pays : <span class="text-white font-extrabold" id="soloRougeNation">--</span></p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 text-center text-xs font-mono font-bold bg-slate-950/90 p-4 rounded-2xl border border-red-500/40 shadow-inner">
+                <div>
+                    <span class="text-[10px] text-slate-400 block uppercase font-sans">Poids Pesée</span>
+                    <span class="text-red-400 text-xl font-black" id="soloRougePoids">-- kg</span>
+                </div>
+                <div>
+                    <span class="text-[10px] text-slate-400 block uppercase font-sans">Taille</span>
+                    <span class="text-white text-xl font-black" id="soloRougeTaille">-- cm</span>
+                </div>
+                <div>
+                    <span class="text-[10px] text-slate-400 block uppercase font-sans">Âge</span>
+                    <span class="text-white text-xl font-black" id="soloRougeAge">-- ans</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+
+    <!-- ========================================================================= -->
+    <!-- MODE 3.B : PRÉSENTATION SOLO COIN BLEU (Plein Écran HD) -->
+    <!-- ========================================================================= -->
+    <main id="viewPresentationBleuSolo" class="mode-view hidden relative z-10 my-auto grid grid-cols-12 gap-8 items-center max-w-6xl mx-auto w-full animate-fighter">
+        <!-- Coordonnées Complètes -->
+        <div class="col-span-7 space-y-5 bg-gradient-to-l from-blue-950/90 via-slate-900 to-slate-950 p-8 rounded-3xl border-2 border-blue-600/70 shadow-2xl glow-blue">
+            <div class="flex items-center gap-3">
+                <span class="px-4 py-1.5 bg-blue-600 text-white text-xs font-black uppercase rounded-full shadow-md">
+                    🔵 COMBATTANT COIN BLEU
+                </span>
+                <span class="text-sm font-bold text-blue-300" id="soloBleuPays">--</span>
+            </div>
+
+            <div>
+                <h1 class="text-6xl font-black font-teko tracking-wide text-white leading-tight uppercase" id="soloBleuNom">--</h1>
+                <p class="text-2xl font-extrabold text-amber-400 italic mt-1" id="soloBleuSurnom">"--"</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 text-sm font-bold text-slate-300 pt-2 border-t border-blue-600/30">
+                <p><i class="fa-solid fa-shield text-blue-500 mr-2"></i>Club : <span class="text-white font-extrabold" id="soloBleuClub">--</span></p>
+                <p><i class="fa-solid fa-flag text-red-500 mr-2"></i>Pays : <span class="text-white font-extrabold" id="soloBleuNation">--</span></p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 text-center text-xs font-mono font-bold bg-slate-950/90 p-4 rounded-2xl border border-blue-500/40 shadow-inner">
+                <div>
+                    <span class="text-[10px] text-slate-400 block uppercase font-sans">Poids Pesée</span>
+                    <span class="text-blue-400 text-xl font-black" id="soloBleuPoids">-- kg</span>
+                </div>
+                <div>
+                    <span class="text-[10px] text-slate-400 block uppercase font-sans">Taille</span>
+                    <span class="text-white text-xl font-black" id="soloBleuTaille">-- cm</span>
+                </div>
+                <div>
+                    <span class="text-[10px] text-slate-400 block uppercase font-sans">Âge</span>
+                    <span class="text-white text-xl font-black" id="soloBleuAge">-- ans</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Photo Plein Écran XL -->
+        <div class="col-span-5 flex justify-center">
+            <div class="w-72 h-96 rounded-3xl bg-slate-950 border-4 border-blue-600 glow-blue overflow-hidden relative flex items-center justify-center text-7xl text-blue-500 font-black shadow-2xl" id="imgSoloBleu">
+                <i class="fa-solid fa-user-ninja"></i>
+                <div class="absolute bottom-4 left-4 right-4 bg-blue-600 text-white text-xs font-black uppercase text-center py-1 rounded-xl shadow-lg">
+                    COIN BLEU (BLUE CORNER)
+                </div>
+            </div>
+        </div>
+    </main>
+
+
+    <!-- ========================================================================= -->
+    <!-- MODE 3.C : CONFRONTATION FACE-À-FACE RING SUPER OUF -->
+    <!-- ========================================================================= -->
+    <main id="viewPresentationFaceAFace" class="mode-view hidden relative z-10 grid grid-cols-12 gap-8 my-auto items-center max-w-7xl mx-auto w-full">
+        <!-- Coin Rouge -->
         <div class="col-span-5 bg-gradient-to-b from-red-950/90 via-slate-900 to-slate-950 p-8 rounded-3xl border-2 border-red-600/70 shadow-2xl flex items-center gap-6 glow-red">
-            <div class="w-36 h-48 rounded-2xl bg-slate-900 overflow-hidden border-2 border-red-500 shrink-0 flex items-center justify-center text-5xl text-red-500 font-black relative shadow-lg">
-                <i class="fa-solid fa-octagon-plus"></i>
+            <div class="w-40 h-52 rounded-2xl bg-slate-900 overflow-hidden border-2 border-red-500 shrink-0 flex items-center justify-center text-5xl text-red-500 font-black relative shadow-lg" id="imgContainerRouge">
+                <i class="fa-solid fa-user-ninja"></i>
+                <div class="absolute bottom-2 left-2 right-2 bg-red-600 text-white text-[10px] font-black uppercase text-center py-0.5 rounded">
+                    RED CORNER
+                </div>
+            </div>
+            <div class="space-y-2">
+                <span class="px-3 py-1 bg-red-600 text-white text-xs font-black uppercase rounded-full">Coin Rouge</span>
+                <h2 class="text-4xl font-black font-teko tracking-wide text-white leading-tight" id="tapeNomRouge">--</h2>
+                <div class="text-xs font-bold text-red-300 space-y-1">
+                    <p><i class="fa-solid fa-shield mr-1"></i><span id="tapeClubRouge">--</span></p>
+                    <p><i class="fa-solid fa-flag mr-1"></i><span id="tapePaysRouge">--</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center VS Badge Ring -->
+        <div class="col-span-2 text-center space-y-2">
+            <div class="w-24 h-24 rounded-full bg-slate-900 border-4 border-amber-400 flex items-center justify-center font-black font-teko text-5xl text-amber-400 mx-auto shadow-2xl glow-gold">
+                VS
+            </div>
+            <span class="text-xs font-mono text-amber-400 font-black uppercase tracking-widest block">RING OCTOGONE HD</span>
+        </div>
+
+        <!-- Coin Bleu -->
+        <div class="col-span-5 bg-gradient-to-b from-blue-950/90 via-slate-900 to-slate-950 p-8 rounded-3xl border-2 border-blue-600/70 shadow-2xl flex items-center gap-6 justify-end text-right glow-blue">
+            <div class="space-y-2">
+                <span class="px-3 py-1 bg-blue-600 text-white text-xs font-black uppercase rounded-full">Coin Bleu</span>
+                <h2 class="text-4xl font-black font-teko tracking-wide text-white leading-tight" id="tapeNomBleu">--</h2>
+                <div class="text-xs font-bold text-blue-300 space-y-1">
+                    <p><span id="tapeClubBleu">--</span><i class="fa-solid fa-shield ml-1"></i></p>
+                    <p><span id="tapePaysBleu">--</span><i class="fa-solid fa-flag ml-1"></i></p>
+                </div>
+            </div>
+            <div class="w-40 h-52 rounded-2xl bg-slate-900 overflow-hidden border-2 border-blue-500 shrink-0 flex items-center justify-center text-5xl text-blue-500 font-black relative shadow-lg" id="imgContainerBleu">
+                <i class="fa-solid fa-user-ninja"></i>
+                <div class="absolute bottom-2 left-2 right-2 bg-blue-600 text-white text-[10px] font-black uppercase text-center py-0.5 rounded">
+                    BLUE CORNER
+                </div>
+            </div>
+        </div>
+    </main>
+
+
+    <!-- ========================================================================= -->
+    <!-- MODE 4 : PRÉSENTATION DES OFFICIELS (Arbitre Ring & Juges avec Photos XL) -->
+    <!-- ========================================================================= -->
+    <main id="viewPresentationOfficiels" class="mode-view hidden relative z-10 my-auto flex flex-col justify-center items-center max-w-7xl mx-auto w-full space-y-8 animate-fighter py-6">
+        <div class="text-center space-y-2">
+            <span class="px-6 py-2 bg-emerald-600/90 text-white rounded-full text-xs font-black uppercase tracking-widest border border-emerald-400/50 shadow-lg">
+                CORPS ARBITRAL & SUPERVISION DU MATCH EN COURS
+            </span>
+            <h1 class="text-6xl font-black font-teko uppercase text-white tracking-wider">
+                OFFICIELS ET JURY DU MATCH
+            </h1>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+            <!-- Arbitre Central Ring XL -->
+            <div class="p-8 bg-gradient-to-br from-emerald-950/90 via-slate-900 to-slate-950 border-2 border-emerald-500/70 rounded-3xl flex items-center gap-6 shadow-2xl glow-green">
+                <div class="w-36 h-48 rounded-2xl bg-slate-950 border-2 border-emerald-400 shrink-0 overflow-hidden flex items-center justify-center text-5xl text-emerald-400 shadow-xl relative" id="imgOffArbitre">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <div class="absolute bottom-2 left-2 right-2 bg-emerald-600 text-white text-[9px] font-black uppercase text-center py-0.5 rounded">
+                        RING REFEREE
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <span class="px-3 py-1 bg-emerald-600 text-white text-xs font-black uppercase rounded-full">Arbitre Central Ring</span>
+                    <h2 class="text-4xl font-black font-teko text-white tracking-wide leading-tight" id="offArbitreNom">--</h2>
+                    <p class="text-sm font-extrabold text-emerald-300"><i class="fa-solid fa-globe mr-1.5"></i><span id="offArbitrePays">Burkina Faso</span></p>
+                    <p class="text-xs text-slate-400">Responsabilité de la conduite et de la sécurité dans l'octogone</p>
+                </div>
+            </div>
+
+            <!-- Juge Principal (Chef Table) XL -->
+            <div class="p-8 bg-gradient-to-br from-amber-950/90 via-slate-900 to-slate-950 border-2 border-amber-500/70 rounded-3xl flex items-center gap-6 shadow-2xl glow-gold">
+                <div class="w-36 h-48 rounded-2xl bg-slate-950 border-2 border-amber-400 shrink-0 overflow-hidden flex items-center justify-center text-5xl text-amber-400 shadow-xl relative" id="imgOffJugePrincipal">
+                    <i class="fa-solid fa-gavel"></i>
+                    <div class="absolute bottom-2 left-2 right-2 bg-amber-600 text-slate-950 text-[9px] font-black uppercase text-center py-0.5 rounded">
+                        CHEF TABLE
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <span class="px-3 py-1 bg-amber-500 text-slate-950 text-xs font-black uppercase rounded-full">Juge Principal</span>
+                    <h2 class="text-4xl font-black font-teko text-white tracking-wide leading-tight" id="offJugePrincipalNom">--</h2>
+                    <p class="text-sm font-extrabold text-amber-300" id="offJugePrincipalFonction">Chef de Table Superviseur</p>
+                    <p class="text-xs text-slate-400">Validation et homologation officielle des scores des rounds</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Juges de Table Card Grid avec Photos -->
+        <div class="w-full bg-slate-900/80 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
+            <h3 class="text-sm font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                <i class="fa-solid fa-users text-amber-400"></i>
+                <span>JUGES DE TABLE ET JURY ACCRÉDITÉS</span>
+            </h3>
+            <div id="offJugesTableGrid" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <!-- Dynamique par JS -->
+            </div>
+        </div>
+    </main>
+
+
+    <!-- ========================================================================= -->
+    <!-- MODE 5 : ANNONCE DÉPART DE ROUND (Banner XL Fullscreen) -->
+    <!-- ========================================================================= -->
+    <main id="viewLancementRound" class="mode-view hidden relative z-10 my-auto flex flex-col items-center justify-center text-center py-12 animate-banner space-y-6 w-full">
+        <div class="px-10 py-3 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 font-black text-2xl uppercase rounded-full tracking-widest shadow-2xl">
+            DÉPART IMMINENT DANS L'OCTOGONE
+        </div>
+        <h1 class="text-9xl md:text-[13rem] font-black font-teko tracking-wider uppercase text-amber-400 glow-gold leading-none" id="bannerRoundTitle">
+            ROUND 1
+        </h1>
+        <p class="text-3xl font-black text-white tracking-widest uppercase">COMBATTANTS AU CENTRE DE LA CAGE</p>
+
+        <!-- Face-à-face XL -->
+        <div class="mt-8 flex items-center justify-center gap-12 max-w-4xl mx-auto w-full">
+            <div class="flex items-center gap-4 text-right">
+                <div>
+                    <span class="px-3 py-1 bg-red-600 text-white text-xs font-black uppercase rounded-full">Coin Rouge</span>
+                    <h3 class="text-4xl font-black font-teko text-white mt-1" id="lancementNomRouge">--</h3>
+                </div>
+                <div class="w-20 h-24 rounded-2xl bg-slate-900 border-2 border-red-500 overflow-hidden flex items-center justify-center text-3xl text-red-500 font-black shrink-0" id="lancementImgRouge">
+                    <i class="fa-solid fa-user-ninja"></i>
+                </div>
+            </div>
+            <div class="text-5xl font-black font-teko text-amber-400 glow-gold">VS</div>
+            <div class="flex items-center gap-4 text-left">
+                <div class="w-20 h-24 rounded-2xl bg-slate-900 border-2 border-blue-500 overflow-hidden flex items-center justify-center text-3xl text-blue-500 font-black shrink-0" id="lancementImgBleu">
+                    <i class="fa-solid fa-user-ninja"></i>
+                </div>
+                <div>
+                    <span class="px-3 py-1 bg-blue-600 text-white text-xs font-black uppercase rounded-full">Coin Bleu</span>
+                    <h3 class="text-4xl font-black font-teko text-white mt-1" id="lancementNomBleu">--</h3>
+                </div>
+            </div>
+        </div>
+    </main>
+
+
+    <!-- ========================================================================= -->
+    <!-- MODE 6 : COMBAT EN COURS & SCORING DIRECT -->
+    <!-- ========================================================================= -->
+    <main id="viewCombatEnCours" class="mode-view hidden relative z-10 grid grid-cols-12 gap-8 my-auto items-center">
+        <!-- Coin Rouge -->
+        <div class="col-span-5 bg-gradient-to-b from-red-950/90 via-slate-900 to-slate-950 p-8 rounded-3xl border-2 border-red-600/70 shadow-2xl flex items-center gap-6 glow-red">
+            <div class="w-36 h-48 rounded-2xl bg-slate-900 overflow-hidden border-2 border-red-500 shrink-0 flex items-center justify-center text-5xl text-red-500 font-black relative shadow-lg" id="arenaImgRouge">
+                <i class="fa-solid fa-user-ninja"></i>
                 <div class="absolute bottom-2 left-2 right-2 bg-red-600 text-white text-[10px] font-black uppercase text-center py-0.5 rounded">
                     ROUGE
                 </div>
@@ -87,12 +391,10 @@
             <div class="space-y-1">
                 <div class="flex items-center gap-2">
                     <span class="px-3 py-1 bg-red-600 text-white text-xs font-black uppercase rounded-full">Coin Rouge</span>
-                    <span class="text-xs text-red-300 font-bold" id="peseeRouge">65.50 kg</span>
+                    <span class="text-xs text-red-300 font-bold" id="peseeRouge">-- kg</span>
                 </div>
-                <h2 class="text-4xl font-black font-teko tracking-wide text-white leading-tight" id="nomRouge">
-                    IBRAHIM SAWADOGO
-                </h2>
-                <p class="text-sm font-bold text-red-300" id="clubRouge">CNP-MMA Burkina (Burkina Faso)</p>
+                <h2 class="text-4xl font-black font-teko tracking-wide text-white leading-tight" id="nomRouge">--</h2>
+                <p class="text-sm font-bold text-red-300" id="clubRouge">--</p>
                 <div class="pt-3 flex items-center gap-4">
                     <div class="text-5xl font-black font-teko text-red-500 bg-slate-950/80 px-4 py-1 rounded-2xl border border-red-500/40" id="totRouge">0</div>
                     <span class="text-xs font-bold text-slate-400">Score Cumulé Juges</span>
@@ -100,36 +402,32 @@
             </div>
         </div>
 
-        <!-- Center: Round & Timer Clock -->
+        <!-- Center: Round Badges -->
         <div class="col-span-2 text-center space-y-4 bg-slate-900/80 p-6 rounded-3xl border border-slate-800 backdrop-blur-xl shadow-2xl">
             <span class="text-xs uppercase font-extrabold text-amber-400 tracking-widest block">Rounds & Scoring</span>
             <div class="flex justify-center items-center gap-2" id="roundBadges">
-                <span class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-black text-xs">R1</span>
-                <span class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs">R2</span>
-                <span class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs">R3</span>
+                <!-- Dynamique -->
             </div>
             <div class="text-5xl font-black font-teko text-amber-400 tracking-wider">VS</div>
             <div class="text-xs font-mono text-slate-400 uppercase tracking-widest">3x3 MIN SENIORS</div>
         </div>
 
-        <!-- Coin Bleu (Blue Corner) -->
+        <!-- Coin Bleu -->
         <div class="col-span-5 bg-gradient-to-b from-blue-950/90 via-slate-900 to-slate-950 p-8 rounded-3xl border-2 border-blue-600/70 shadow-2xl flex items-center gap-6 justify-end text-right glow-blue">
             <div class="space-y-1">
                 <div class="flex items-center gap-2 justify-end">
-                    <span class="text-xs text-blue-300 font-bold" id="peseeBleu">65.80 kg</span>
+                    <span class="text-xs text-blue-300 font-bold" id="peseeBleu">-- kg</span>
                     <span class="px-3 py-1 bg-blue-600 text-white text-xs font-black uppercase rounded-full">Coin Bleu</span>
                 </div>
-                <h2 class="text-4xl font-black font-teko tracking-wide text-white leading-tight" id="nomBleu">
-                    BAKARY KONE
-                </h2>
-                <p class="text-sm font-bold text-blue-300" id="clubBleu">Bamako MMA Club (Mali)</p>
+                <h2 class="text-4xl font-black font-teko tracking-wide text-white leading-tight" id="nomBleu">--</h2>
+                <p class="text-sm font-bold text-blue-300" id="clubBleu">--</p>
                 <div class="pt-3 flex items-center gap-4 justify-end">
                     <span class="text-xs font-bold text-slate-400">Score Cumulé Juges</span>
                     <div class="text-5xl font-black font-teko text-blue-500 bg-slate-950/80 px-4 py-1 rounded-2xl border border-blue-500/40" id="totBleu">0</div>
                 </div>
             </div>
-            <div class="w-36 h-48 rounded-2xl bg-slate-900 overflow-hidden border-2 border-blue-500 shrink-0 flex items-center justify-center text-5xl text-blue-500 font-black relative shadow-lg">
-                <i class="fa-solid fa-octagon-plus"></i>
+            <div class="w-36 h-48 rounded-2xl bg-slate-900 overflow-hidden border-2 border-blue-500 shrink-0 flex items-center justify-center text-5xl text-blue-500 font-black relative shadow-lg" id="arenaImgBleu">
+                <i class="fa-solid fa-user-ninja"></i>
                 <div class="absolute bottom-2 left-2 right-2 bg-blue-600 text-white text-[10px] font-black uppercase text-center py-0.5 rounded">
                     BLEU
                 </div>
@@ -137,29 +435,115 @@
         </div>
     </main>
 
-    <!-- Winner Proclamation Screen -->
-    <main id="viewWinner" class="hidden relative z-20 flex-1 flex flex-col items-center justify-center text-center py-10 animate-winner">
-        <div class="w-28 h-28 rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 border-4 border-amber-300 text-slate-950 flex items-center justify-center text-6xl mb-4 shadow-2xl glow-gold">
+
+    <!-- ========================================================================= -->
+    <!-- MODE 7.A : RÉGIE MÉDIA / PHOTO COUP MARQUANT / REPLAY -->
+    <!-- ========================================================================= -->
+    <main id="viewMediaHighlight" class="mode-view hidden relative z-10 my-auto flex flex-col items-center justify-center text-center space-y-4 max-w-4xl mx-auto w-full">
+        <span class="px-4 py-1 bg-purple-600 text-white rounded-full text-xs font-black uppercase tracking-widest animate-pulse" id="mediaTitreHeader">
+            HIGHLIGHT / ACTION MARQUANTE DU MATCH
+        </span>
+        <div class="w-full max-h-[500px] bg-slate-950 rounded-3xl border-4 border-purple-500/70 overflow-hidden shadow-2xl flex items-center justify-center" id="mediaContainer">
+            <i class="fa-solid fa-camera text-6xl text-purple-400 p-20"></i>
+        </div>
+    </main>
+
+
+    <!-- ========================================================================= -->
+    <!-- MODE 7.B : TABLEAU RÉCAPITULATIF DES SCORES (Photos, Drapeaux & Points) -->
+    <!-- ========================================================================= -->
+    <main id="viewDecisionRecap" class="mode-view hidden relative z-10 my-auto grid grid-cols-12 gap-8 items-center max-w-7xl mx-auto w-full animate-fighter py-4">
+        <!-- Coin Rouge (Photo, Drapeau, Nom) -->
+        <div class="col-span-4 bg-gradient-to-b from-red-950/90 via-slate-900 to-slate-950 p-6 rounded-3xl border-2 border-red-600/70 shadow-2xl flex flex-col items-center text-center space-y-3 glow-red">
+            <div class="w-40 h-52 rounded-2xl bg-slate-950 border-2 border-red-500 overflow-hidden relative shadow-lg flex items-center justify-center text-5xl text-red-500 font-black" id="recapImgRouge">
+                <i class="fa-solid fa-user-ninja"></i>
+                <div class="absolute bottom-2 left-2 right-2 bg-red-600 text-white text-[10px] font-black uppercase text-center py-0.5 rounded">
+                    RED CORNER
+                </div>
+            </div>
+            <div>
+                <span class="px-3 py-1 bg-red-600 text-white text-xs font-black uppercase rounded-full">Coin Rouge</span>
+                <h2 class="text-3xl font-black font-teko tracking-wide text-white uppercase mt-1" id="recapNomRouge">--</h2>
+                <p class="text-xs font-extrabold text-red-300" id="recapClubRouge">--</p>
+                <p class="text-xs font-extrabold text-slate-300 mt-1"><i class="fa-solid fa-flag mr-1"></i><span id="recapPaysRouge">--</span></p>
+            </div>
+            <div class="pt-2 border-t border-red-600/30 w-full text-center">
+                <span class="text-[10px] text-slate-400 uppercase block font-mono">Score Cumulé</span>
+                <span class="text-4xl font-black font-teko text-red-400" id="recapTotalRouge">0</span>
+            </div>
+        </div>
+
+        <!-- Centre : Tableau Récapitulatif des Rounds -->
+        <div class="col-span-4 bg-slate-900/90 border-2 border-amber-500/70 rounded-3xl p-6 shadow-2xl space-y-4 text-center backdrop-blur-xl">
+            <div class="space-y-1">
+                <span class="px-3 py-1 bg-amber-500 text-slate-950 text-[10px] font-black uppercase tracking-widest rounded-full">
+                    DÉCISION DU JURY • SCORING 10-MUST
+                </span>
+                <h3 class="text-2xl font-black font-teko text-white tracking-wider uppercase">
+                    TABLEAU SYNTHÉTIQUE DES ROUNDS
+                </h3>
+            </div>
+
+            <div class="space-y-2 text-sm font-bold" id="recapRoundsRows">
+                <!-- Dynamique par JS (R1, R2, R3) -->
+            </div>
+
+            <div class="pt-4 border-t border-slate-800 flex justify-between items-center px-4 bg-slate-950 p-3 rounded-2xl border border-amber-500/40">
+                <span class="text-xs font-extrabold text-amber-400 uppercase">TOTAL MATCH</span>
+                <div class="text-2xl font-black font-teko text-white">
+                    <span class="text-red-400" id="recapFinalScoreRouge">0</span> - <span class="text-blue-400" id="recapFinalScoreBleu">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coin Bleu (Photo, Drapeau, Nom) -->
+        <div class="col-span-4 bg-gradient-to-b from-blue-950/90 via-slate-900 to-slate-950 p-6 rounded-3xl border-2 border-blue-600/70 shadow-2xl flex flex-col items-center text-center space-y-3 glow-blue">
+            <div class="w-40 h-52 rounded-2xl bg-slate-950 border-2 border-blue-500 overflow-hidden relative shadow-lg flex items-center justify-center text-5xl text-blue-500 font-black" id="recapImgBleu">
+                <i class="fa-solid fa-user-ninja"></i>
+                <div class="absolute bottom-2 left-2 right-2 bg-blue-600 text-white text-[10px] font-black uppercase text-center py-0.5 rounded">
+                    BLUE CORNER
+                </div>
+            </div>
+            <div>
+                <span class="px-3 py-1 bg-blue-600 text-white text-xs font-black uppercase rounded-full">Coin Bleu</span>
+                <h2 class="text-3xl font-black font-teko tracking-wide text-white uppercase mt-1" id="recapNomBleu">--</h2>
+                <p class="text-xs font-extrabold text-blue-300" id="recapClubBleu">--</p>
+                <p class="text-xs font-extrabold text-slate-300 mt-1"><i class="fa-solid fa-flag mr-1"></i><span id="recapPaysBleu">--</span></p>
+            </div>
+            <div class="pt-2 border-t border-blue-600/30 w-full text-center">
+                <span class="text-[10px] text-slate-400 uppercase block font-mono">Score Cumulé</span>
+                <span class="text-4xl font-black font-teko text-blue-400" id="recapTotalBleu">0</span>
+            </div>
+        </div>
+    </main>
+
+
+    <!-- ========================================================================= -->
+    <!-- MODE 8 : PROCLAMATION DU VAINQUEUR AVEC MUSIQUE -->
+    <!-- ========================================================================= -->
+    <main id="viewProclamationVainqueur" class="mode-view hidden relative z-20 flex-1 flex flex-col items-center justify-center text-center py-10 animate-winner space-y-6">
+        <div class="w-32 h-44 rounded-2xl bg-slate-950 border-4 border-amber-400 overflow-hidden relative shadow-2xl glow-gold flex items-center justify-center text-5xl text-amber-400" id="winnerPhotoContainer">
             <i class="fa-solid fa-trophy"></i>
         </div>
         <span class="px-8 py-2.5 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-slate-950 font-black text-base uppercase rounded-full tracking-widest shadow-2xl">
             VAINQUEUR DE LA RENCONTRE MMA
         </span>
-        <h1 class="text-8xl font-black font-teko tracking-wider uppercase text-white mt-4 glow-gold" id="winnerName">
-            IBRAHIM SAWADOGO
-        </h1>
-        <p class="text-3xl font-extrabold text-amber-400 mt-2" id="winnerClub">
-            CNP-MMA Burkina (Burkina Faso)
-        </p>
-        <div class="mt-8 px-12 py-5 bg-slate-900/90 border-2 border-amber-500/60 rounded-3xl text-2xl font-bold text-slate-200 shadow-2xl">
-            Résultat Officiel : <span class="text-emerald-400 font-black uppercase tracking-wider" id="decisionType">K.O. / SOUMISSION / POINTS</span>
+        <div>
+            <h1 class="text-8xl font-black font-teko tracking-wider uppercase text-white leading-tight glow-gold" id="winnerName">
+                --
+            </h1>
+            <p class="text-3xl font-extrabold text-amber-400 mt-1" id="winnerClub">--</p>
+        </div>
+        <div class="px-12 py-4 bg-slate-900/90 border-2 border-amber-500/60 rounded-3xl text-xl font-bold text-slate-200 shadow-2xl">
+            Résultat Officiel : <span class="text-emerald-400 font-black uppercase tracking-wider" id="decisionType">--</span>
         </div>
     </main>
 
-    <!-- Footer -->
+
+    <!-- Footer Dynamique -->
     <footer class="relative z-10 bg-slate-900/90 py-3 px-8 rounded-2xl border border-slate-800 flex justify-between items-center text-xs font-extrabold text-slate-400">
         <span>BROADCAST TV 4K 16:9 • SCORING TEMPS RÉEL (GAMMA MMA)</span>
-        <span>COMITÉ NATIONAL PROVISOIRE DE MMA ET DISCIPLINES ASSOCIÉES (CNP-MMA/DA)</span>
+        <span id="tvFooterFederation">COMITÉ NATIONAL PROVISOIRE DE MMA ET DISCIPLINES ASSOCIÉES (CNP-MMA/DA)</span>
     </footer>
 </div>
 
@@ -200,6 +584,11 @@ function animateCanvas() {
 }
 animateCanvas();
 
+
+function masquerTousLesModes() {
+    document.querySelectorAll('.mode-view').forEach(el => el.classList.add('hidden'));
+}
+
 // Broadcast Realtime Polling
 function raffraichirBroadcast() {
     fetch('/api/broadcast-statut/')
@@ -207,41 +596,293 @@ function raffraichirBroadcast() {
     .then(data => {
         if(!data.actif) return;
 
-        document.getElementById('tvEvent').innerText = data.evenement;
-        document.getElementById('tvCategory').innerText = data.categorie;
-        document.getElementById('tvRef').innerText = data.arbitre_central;
+        // Image de fond personnalisée du Ring si présente
+        if (data.image_ring_bg) {
+            document.getElementById('mainContainer').style.backgroundImage = `radial-gradient(circle at 50% 50%, rgba(3,7,18,0.85), rgba(3,7,18,0.95)), url('${data.image_ring_bg}')`;
+            document.getElementById('mainContainer').style.backgroundSize = 'cover';
+            document.getElementById('mainContainer').style.backgroundPosition = 'center';
+        }
 
-        document.getElementById('nomRouge').innerText = data.boxeur_rouge.nom;
-        document.getElementById('clubRouge').innerText = data.boxeur_rouge.club + ' (' + data.boxeur_rouge.pays + ')';
-        document.getElementById('totRouge').innerText = data.total_rouge;
+        // Mise à jour dynamique de l'en-tête depuis la BDD (Pas en dur !)
+        if(data.evenement) {
+            document.getElementById('tvEvent').innerText = data.evenement.titre;
+            if(data.evenement.federation) {
+                document.getElementById('tvFederationBadge').innerText = data.evenement.federation;
+                document.getElementById('tvFooterFederation').innerText = data.evenement.federation;
+            }
+            if(data.evenement.logo_discipline) {
+                document.getElementById('tvHeaderLogoContainer').innerHTML = `<img src="${data.evenement.logo_discipline}" class="w-full h-full object-contain p-1">`;
+            }
 
-        document.getElementById('nomBleu').innerText = data.boxeur_bleu.nom;
-        document.getElementById('clubBleu').innerText = data.boxeur_bleu.club + ' (' + data.boxeur_bleu.pays + ')';
-        document.getElementById('totBleu').innerText = data.total_bleu;
+            document.getElementById('tvAttenteTitre').innerText = data.evenement.titre;
+            document.getElementById('tvAttenteLieu').innerText = data.evenement.lieu;
+            document.getElementById('tvAttenteSub').innerText = (data.evenement.nom_discipline || 'MMA & BOXE') + ' • ' + (data.evenement.edition || 'JAES 2026');
 
-        let badgeHtml = '';
-        data.rounds.forEach(r => {
-            let bg = 'bg-slate-800 border-slate-700 text-slate-400';
-            if(r.gagnant === 'ROUGE') bg = 'bg-red-600 border-red-400 text-white glow-red';
-            else if(r.gagnant === 'BLEU') bg = 'bg-blue-600 border-blue-400 text-white glow-blue';
-            badgeHtml += `<span class="w-10 h-10 rounded-full ${bg} flex items-center justify-center font-black text-xs">R${r.numero}</span>`;
-        });
-        document.getElementById('roundBadges').innerHTML = badgeHtml;
+            // Partenaires et logos dynamiques BDD
+            let logosHtml = '';
+            if (data.evenement.logo_ministere) {
+                logosHtml += `<div class="p-4 bg-slate-900/90 border border-slate-800 rounded-2xl flex items-center gap-3"><img src="${data.evenement.logo_ministere}" class="h-12 object-contain"><div class="text-left"><span class="text-[10px] uppercase font-extrabold text-slate-400 block">Organisateur</span><span class="text-xs font-bold text-white">${data.evenement.organisateur}</span></div></div>`;
+            } else {
+                logosHtml += `<div class="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl flex items-center gap-3"><i class="fa-solid fa-flag text-2xl text-red-500"></i><div class="text-left"><span class="text-[10px] uppercase font-extrabold text-slate-400 block">Organisateur</span><span class="text-xs font-bold text-white">${data.evenement.organisateur}</span></div></div>`;
+            }
 
-        if(data.statut_combat === 'TERMINE' && data.nom_vainqueur) {
-            document.getElementById('viewArena').classList.add('hidden');
-            document.getElementById('viewWinner').classList.remove('hidden');
-            document.getElementById('winnerName').innerText = data.nom_vainqueur;
-            document.getElementById('winnerClub').innerText = data.coin_vainqueur === 'ROUGE' ? data.boxeur_rouge.club : data.boxeur_bleu.club;
-            document.getElementById('decisionType').innerText = data.type_decision || 'VICTOIRE HOMOLOGUÉE';
-        } else {
-            document.getElementById('viewArena').classList.remove('hidden');
-            document.getElementById('viewWinner').classList.add('hidden');
+            if (data.evenement.logo_evenement) {
+                logosHtml += `<div class="p-4 bg-slate-900/90 border border-slate-800 rounded-2xl flex items-center gap-3"><img src="${data.evenement.logo_evenement}" class="h-12 object-contain"><div class="text-left"><span class="text-[10px] uppercase font-extrabold text-slate-400 block">Fédération</span><span class="text-xs font-bold text-white">${data.evenement.federation}</span></div></div>`;
+            } else {
+                logosHtml += `<div class="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl flex items-center gap-3"><i class="fa-solid fa-shield-halved text-2xl text-amber-500"></i><div class="text-left"><span class="text-[10px] uppercase font-extrabold text-slate-400 block">Fédération</span><span class="text-xs font-bold text-white">${data.evenement.federation}</span></div></div>`;
+            }
+
+            if (data.evenement.logo_aes) {
+                logosHtml += `<div class="p-4 bg-slate-900/90 border border-slate-800 rounded-2xl flex items-center gap-3"><img src="${data.evenement.logo_aes}" class="h-12 object-contain"><div class="text-left"><span class="text-[10px] uppercase font-extrabold text-slate-400 block">Confédération</span><span class="text-xs font-bold text-white">ALLIANCE DES ÉTATS DU SAHEL</span></div></div>`;
+            } else {
+                logosHtml += `<div class="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl flex items-center gap-3"><i class="fa-solid fa-globe text-2xl text-blue-500"></i><div class="text-left"><span class="text-[10px] uppercase font-extrabold text-slate-400 block">Confédération</span><span class="text-xs font-bold text-white">ALLIANCE DES ÉTATS DU SAHEL</span></div></div>`;
+            }
+
+            document.getElementById('tvPartnerGrid').innerHTML = logosHtml;
+        }
+
+        document.getElementById('tvCategory').innerText = data.categorie + ' • MATCH #' + data.numero_match;
+
+        // Correct String Parsing pour Arbitre Ring
+        if(data.officiels) {
+            let refName = 'Arbitre Ring Officiel';
+            if (typeof data.officiels.arbitre_central === 'object' && data.officiels.arbitre_central !== null) {
+                refName = data.officiels.arbitre_central.nom || 'Arbitre Ring Officiel';
+            } else if (typeof data.officiels.arbitre_central === 'string') {
+                refName = data.officiels.arbitre_central;
+            }
+            document.getElementById('tvRef').innerText = refName;
+        }
+
+        // Bascule de Mode TV selon le signal de la Régie
+        masquerTousLesModes();
+        const mode = data.mode_tv || 'ATTENTE_PUB';
+
+        if (mode === 'ATTENTE_PUB') {
+            document.getElementById('viewAttentePub').classList.remove('hidden');
+        } 
+        else if (mode === 'CARTE_PROGRAMME') {
+            document.getElementById('viewCarteProgramme').classList.remove('hidden');
+            let html = '';
+            (data.prochains_combats || []).forEach((c, idx) => {
+                html += `
+                <div class="p-4 bg-slate-900/90 border border-slate-800 rounded-2xl flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 font-black text-sm flex items-center justify-center">#${c.numero_match}</span>
+                        <div>
+                            <span class="text-xs text-amber-400 font-extrabold uppercase">${c.categorie}</span>
+                            <div class="text-base font-bold text-white">
+                                <span class="text-red-400">${c.rouge_nom} (${c.rouge_pays})</span> 
+                                <span class="text-slate-400 font-normal px-2">VS</span> 
+                                <span class="text-blue-400">${c.bleu_nom} (${c.bleu_pays})</span>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg text-xs font-bold uppercase">À Venir</span>
+                </div>`;
+            });
+            document.getElementById('listeProchainsCombats').innerHTML = html || '<p class="text-center text-slate-400">Aucun combat programmé pour le moment.</p>';
+        }
+        else if (mode === 'PRESENTATION_ROUGE_SOLO') {
+            document.getElementById('viewPresentationRougeSolo').classList.remove('hidden');
+            document.getElementById('soloRougeNom').innerText = data.boxeur_rouge.nom;
+            document.getElementById('soloRougeSurnom').innerText = data.boxeur_rouge.surnom ? `"${data.boxeur_rouge.surnom}"` : '';
+            document.getElementById('soloRougeClub').innerText = data.boxeur_rouge.club;
+            document.getElementById('soloRougeNation').innerText = data.boxeur_rouge.pays;
+            document.getElementById('soloRougePays').innerText = data.boxeur_rouge.pays;
+            document.getElementById('soloRougePoids').innerText = (data.boxeur_rouge.poids || '--') + ' kg';
+            document.getElementById('soloRougeTaille').innerText = (data.boxeur_rouge.taille || '--') + ' cm';
+            document.getElementById('soloRougeAge').innerText = (data.boxeur_rouge.age || '--') + ' ans';
+            if(data.boxeur_rouge.photo) {
+                document.getElementById('imgSoloRouge').innerHTML = `<img src="${data.boxeur_rouge.photo}" class="w-full h-full object-cover">`;
+            }
+        }
+        else if (mode === 'PRESENTATION_BLEU_SOLO') {
+            document.getElementById('viewPresentationBleuSolo').classList.remove('hidden');
+            document.getElementById('soloBleuNom').innerText = data.boxeur_bleu.nom;
+            document.getElementById('soloBleuSurnom').innerText = data.boxeur_bleu.surnom ? `"${data.boxeur_bleu.surnom}"` : '';
+            document.getElementById('soloBleuClub').innerText = data.boxeur_bleu.club;
+            document.getElementById('soloBleuNation').innerText = data.boxeur_bleu.pays;
+            document.getElementById('soloBleuPays').innerText = data.boxeur_bleu.pays;
+            document.getElementById('soloBleuPoids').innerText = (data.boxeur_bleu.poids || '--') + ' kg';
+            document.getElementById('soloBleuTaille').innerText = (data.boxeur_bleu.taille || '--') + ' cm';
+            document.getElementById('soloBleuAge').innerText = (data.boxeur_bleu.age || '--') + ' ans';
+            if(data.boxeur_bleu.photo) {
+                document.getElementById('imgSoloBleu').innerHTML = `<img src="${data.boxeur_bleu.photo}" class="w-full h-full object-cover">`;
+            }
+        }
+        else if (mode === 'PRESENTATION_FACE_A_FACE' || mode === 'PRESENTATION_COMBATTANTS') {
+            document.getElementById('viewPresentationFaceAFace').classList.remove('hidden');
+            document.getElementById('tapeNomRouge').innerText = data.boxeur_rouge.nom;
+            document.getElementById('tapeClubRouge').innerText = data.boxeur_rouge.club;
+            document.getElementById('tapePaysRouge').innerText = data.boxeur_rouge.pays;
+            if(data.boxeur_rouge.photo) {
+                document.getElementById('imgContainerRouge').innerHTML = `<img src="${data.boxeur_rouge.photo}" class="w-full h-full object-cover">`;
+            }
+
+            document.getElementById('tapeNomBleu').innerText = data.boxeur_bleu.nom;
+            document.getElementById('tapeClubBleu').innerText = data.boxeur_bleu.club;
+            document.getElementById('tapePaysBleu').innerText = data.boxeur_bleu.pays;
+            if(data.boxeur_bleu.photo) {
+                document.getElementById('imgContainerBleu').innerHTML = `<img src="${data.boxeur_bleu.photo}" class="w-full h-full object-cover">`;
+            }
+        }
+        else if (mode === 'PRESENTATION_OFFICIELS') {
+            document.getElementById('viewPresentationOfficiels').classList.remove('hidden');
+            if(data.officiels) {
+                const arb = data.officiels.arbitre_central;
+                const jp = data.officiels.juge_principal;
+
+                if (typeof arb === 'object' && arb !== null) {
+                    document.getElementById('offArbitreNom').innerText = arb.nom || 'Arbitre Ring Officiel';
+                    document.getElementById('offArbitrePays').innerText = arb.pays || 'Burkina Faso';
+                    if (arb.photo) {
+                        document.getElementById('imgOffArbitre').innerHTML = `<img src="${arb.photo}" class="w-full h-full object-cover">`;
+                    }
+                } else {
+                    document.getElementById('offArbitreNom').innerText = arb || 'Arbitre Ring Officiel';
+                }
+
+                if (typeof jp === 'object' && jp !== null) {
+                    document.getElementById('offJugePrincipalNom').innerText = jp.nom || 'Chef Juge Superviseur';
+                    document.getElementById('offJugePrincipalFonction').innerText = jp.fonction || 'Juge Principal';
+                    if (jp.photo) {
+                        document.getElementById('imgOffJugePrincipal').innerHTML = `<img src="${jp.photo}" class="w-full h-full object-cover">`;
+                    }
+                } else {
+                    document.getElementById('offJugePrincipalNom').innerText = jp || 'Chef Juge Superviseur';
+                }
+
+                let jugesHtml = '';
+                (data.officiels.juges_table || []).forEach(j => {
+                    let photoHtml = j.photo ? `<img src="${j.photo}" class="w-14 h-14 rounded-2xl object-cover border border-amber-400 shrink-0">` : `<div class="w-14 h-14 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center text-xl text-amber-400 font-bold shrink-0"><i class="fa-solid fa-user"></i></div>`;
+                    jugesHtml += `
+                    <div class="p-4 bg-slate-950/90 border border-slate-800 rounded-2xl flex items-center gap-3 shadow-md">
+                        ${photoHtml}
+                        <div>
+                            <span class="font-extrabold text-sm text-white block">${j.nom}</span>
+                            <span class="text-xs text-amber-400 font-semibold">${j.fonction || 'Juge de Table'}</span>
+                        </div>
+                    </div>`;
+                });
+                document.getElementById('offJugesTableGrid').innerHTML = jugesHtml || '<p class="text-xs text-slate-500">Aucun juge de table affecté à ce match.</p>';
+            }
+        }
+        else if (mode === 'LANCEMENT_ROUND') {
+            document.getElementById('viewLancementRound').classList.remove('hidden');
+            document.getElementById('bannerRoundTitle').innerText = 'ROUND ' + (data.round_actif_num || 1);
+            document.getElementById('lancementNomRouge').innerText = data.boxeur_rouge.nom;
+            if(data.boxeur_rouge.photo) {
+                document.getElementById('lancementImgRouge').innerHTML = `<img src="${data.boxeur_rouge.photo}" class="w-full h-full object-cover">`;
+            }
+            document.getElementById('lancementNomBleu').innerText = data.boxeur_bleu.nom;
+            if(data.boxeur_bleu.photo) {
+                document.getElementById('lancementImgBleu').innerHTML = `<img src="${data.boxeur_bleu.photo}" class="w-full h-full object-cover">`;
+            }
+        }
+        else if (mode === 'MEDIA_HIGHLIGHT') {
+            document.getElementById('viewMediaHighlight').classList.remove('hidden');
+            if(data.media_regie && data.media_regie.image_url) {
+                document.getElementById('mediaContainer').innerHTML = `<img src="${data.media_regie.image_url}" class="w-full h-full object-contain">`;
+                document.getElementById('mediaTitreHeader').innerText = data.media_regie.titre || 'HIGHLIGHT / REPLAY DU MATCH';
+            }
+        }
+        else if (mode === 'DECISION_RECAP') {
+            document.getElementById('viewDecisionRecap').classList.remove('hidden');
+            
+            // Rouge
+            document.getElementById('recapNomRouge').innerText = data.boxeur_rouge.nom;
+            document.getElementById('recapClubRouge').innerText = data.boxeur_rouge.club;
+            document.getElementById('recapPaysRouge').innerText = data.boxeur_rouge.pays;
+            document.getElementById('recapTotalRouge').innerText = data.total_rouge;
+            if(data.boxeur_rouge.photo) {
+                document.getElementById('recapImgRouge').innerHTML = `<img src="${data.boxeur_rouge.photo}" class="w-full h-full object-cover">`;
+            }
+
+            // Bleu
+            document.getElementById('recapNomBleu').innerText = data.boxeur_bleu.nom;
+            document.getElementById('recapClubBleu').innerText = data.boxeur_bleu.club;
+            document.getElementById('recapPaysBleu').innerText = data.boxeur_bleu.pays;
+            document.getElementById('recapTotalBleu').innerText = data.total_bleu;
+            if(data.boxeur_bleu.photo) {
+                document.getElementById('recapImgBleu').innerHTML = `<img src="${data.boxeur_bleu.photo}" class="w-full h-full object-cover">`;
+            }
+
+            // Rounds Rows
+            let rowsHtml = '';
+            (data.rounds || []).forEach(r => {
+                rowsHtml += `
+                <div class="flex justify-between items-center p-3 bg-slate-950/80 rounded-xl border border-slate-800">
+                    <span class="w-8 h-8 rounded-lg bg-amber-500 text-slate-950 font-black flex items-center justify-center text-xs">R${r.numero}</span>
+                    <div class="text-base font-black font-teko tracking-wider">
+                        <span class="text-red-400">${r.score_rouge || 0}</span> 
+                        <span class="text-slate-500 px-2">-</span> 
+                        <span class="text-blue-400">${r.score_bleu || 0}</span>
+                    </div>
+                    <span class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded ${r.gagnant === 'ROUGE' ? 'bg-red-600/30 text-red-400' : (r.gagnant === 'BLEU' ? 'bg-blue-600/30 text-blue-400' : 'bg-slate-800 text-slate-400')}">${r.gagnant ? r.gagnant : 'EGAL'}</span>
+                </div>`;
+            });
+            document.getElementById('recapRoundsRows').innerHTML = rowsHtml;
+            document.getElementById('recapFinalScoreRouge').innerText = data.total_rouge;
+            document.getElementById('recapFinalScoreBleu').innerText = data.total_bleu;
+        }
+        else if (mode === 'PROCLAMATION_VAINQUEUR' || data.statut_combat === 'TERMINE') {
+            document.getElementById('viewProclamationVainqueur').classList.remove('hidden');
+            
+            let winnerNom = data.nom_vainqueur || (data.coin_vainqueur === 'ROUGE' ? data.boxeur_rouge.nom : data.boxeur_bleu.nom);
+            let winnerClub = data.coin_vainqueur === 'ROUGE' ? data.boxeur_rouge.club + ' (' + data.boxeur_rouge.pays + ')' : data.boxeur_bleu.club + ' (' + data.boxeur_bleu.pays + ')';
+            let winnerPhoto = data.coin_vainqueur === 'ROUGE' ? data.boxeur_rouge.photo : data.boxeur_bleu.photo;
+
+            document.getElementById('winnerName').innerText = winnerNom;
+            document.getElementById('winnerClub').innerText = winnerClub;
+            document.getElementById('decisionType').innerText = data.type_decision || 'VICTOIRE HOMOLOGUÉE PAR LE JURY';
+
+            if (winnerPhoto) {
+                document.getElementById('winnerPhotoContainer').innerHTML = `<img src="${winnerPhoto}" class="w-full h-full object-cover">`;
+            }
+
+            // Audio Player
+            const audioPlayer = document.getElementById('audioVictoirePlayer');
+            if (data.audio_victoire) {
+                if (audioPlayer.src !== data.audio_victoire) {
+                    audioPlayer.src = data.audio_victoire;
+                    audioPlayer.play().catch(err => console.log('Audio Autoplay:', err));
+                }
+            }
+        }
+        else {
+            // Mode COMBAT_EN_COURS
+            document.getElementById('viewCombatEnCours').classList.remove('hidden');
+            document.getElementById('nomRouge').innerText = data.boxeur_rouge.nom;
+            document.getElementById('clubRouge').innerText = data.boxeur_rouge.club + ' (' + data.boxeur_rouge.pays + ')';
+            document.getElementById('peseeRouge').innerText = (data.boxeur_rouge.poids || '--') + ' kg';
+            document.getElementById('totRouge').innerText = data.total_rouge;
+            if(data.boxeur_rouge.photo) {
+                document.getElementById('arenaImgRouge').innerHTML = `<img src="${data.boxeur_rouge.photo}" class="w-full h-full object-cover">`;
+            }
+
+            document.getElementById('nomBleu').innerText = data.boxeur_bleu.nom;
+            document.getElementById('clubBleu').innerText = data.boxeur_bleu.club + ' (' + data.boxeur_bleu.pays + ')';
+            document.getElementById('peseeBleu').innerText = (data.boxeur_bleu.poids || '--') + ' kg';
+            document.getElementById('totBleu').innerText = data.total_bleu;
+            if(data.boxeur_bleu.photo) {
+                document.getElementById('arenaImgBleu').innerHTML = `<img src="${data.boxeur_bleu.photo}" class="w-full h-full object-cover">`;
+            }
+
+            let badgeHtml = '';
+            (data.rounds || []).forEach(r => {
+                let bg = 'bg-slate-800 border-slate-700 text-slate-400';
+                if(r.statut === 'EN_COURS') bg = 'bg-amber-500 border-amber-300 text-slate-950 font-black animate-pulse';
+                else if(r.gagnant === 'ROUGE') bg = 'bg-red-600 border-red-400 text-white glow-red';
+                else if(r.gagnant === 'BLEU') bg = 'bg-blue-600 border-blue-400 text-white glow-blue';
+                badgeHtml += `<span class="w-10 h-10 rounded-full ${bg} flex items-center justify-center font-black text-xs">R${r.numero}</span>`;
+            });
+            document.getElementById('roundBadges').innerHTML = badgeHtml;
         }
     });
 }
 
-setInterval(raffraichirBroadcast, 2000);
+setInterval(raffraichirBroadcast, 1500);
 raffraichirBroadcast();
 </script>
 {% endblock %}

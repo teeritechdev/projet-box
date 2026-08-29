@@ -9,9 +9,19 @@ class RoleAdmin(admin.ModelAdmin):
 
 @admin.register(Utilisateur)
 class UtilisateurAdmin(UserAdmin):
-    list_display = ('id', 'username', 'first_name', 'last_name', 'email', 'role', 'is_staff', 'is_active')
+    list_display = ('id', 'username', 'first_name', 'last_name', 'fonction', 'email', 'role', 'is_staff', 'is_active')
     list_filter = ('role', 'is_staff', 'is_active', 'is_superuser')
-    search_fields = ('username', 'first_name', 'last_name', 'email')
-    fieldsets = UserAdmin.fieldsets + (
-        ('Rôle personnalisé', {'fields': ('role',)}),
+    search_fields = ('username', 'first_name', 'last_name', 'fonction', 'email')
+
+    fieldsets = (
+        ('Identifiants de Connexion', {
+            'fields': ('username', 'password')
+        }),
+        ('Informations Personnelles & Fonction', {
+            'fields': (('first_name', 'last_name'), ('fonction', 'email'))
+        }),
+        ('Rôle & Droits d\'Accès (Simplifié)', {
+            'fields': ('role', ('is_active', 'is_staff', 'is_superuser'))
+        }),
     )
+

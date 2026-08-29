@@ -56,16 +56,37 @@ class Combat(models.Model):
         ('DISQUALIFICATION', 'Disqualification'),
     ]
 
+    CHOICES_MODE_TV = [
+        ('ATTENTE_PUB', 'Écran Attente & Sponsors / Pubs'),
+        ('CARTE_PROGRAMME', 'Programme des 5 prochains combats'),
+        ('PRESENTATION_ROUGE_SOLO', 'Présentation Solo Coin Rouge (Plein Écran)'),
+        ('PRESENTATION_BLEU_SOLO', 'Présentation Solo Coin Bleu (Plein Écran)'),
+        ('PRESENTATION_FACE_A_FACE', 'Confrontation Face-à-Face dans le Ring'),
+        ('PRESENTATION_COMBATTANTS', 'Présentation Tale of the Tape Combattants'),
+        ('PRESENTATION_OFFICIELS', 'Présentation Arbitre & Jury'),
+        ('LANCEMENT_ROUND', 'Annonce Départ de Round (Grand Format)'),
+        ('COMBAT_EN_COURS', 'Scoring & Chrono Combat en Direct'),
+        ('MEDIA_HIGHLIGHT', 'Replay / Photo Coup Marquant en Direct'),
+        ('DECISION_RECAP', 'Tableau Récapitulatif des Scores (Round par Round)'),
+        ('PROCLAMATION_VAINQUEUR', 'Célébration & Décision Officielle'),
+    ]
+
     evenement = models.ForeignKey(Evenement, on_delete=models.CASCADE, related_name='combats')
     numero_match = models.PositiveIntegerField(default=1)
     categorie = models.ForeignKey(Categorie, on_delete=models.CASCADE)
     boxeur_rouge = models.ForeignKey(Boxeur, on_delete=models.CASCADE, related_name='combats_rouge')
     boxeur_bleu = models.ForeignKey(Boxeur, on_delete=models.CASCADE, related_name='combats_bleu')
     arbitre_central = models.ForeignKey(ArbitreCentral, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Arbitre Central Ring")
-    juges = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='combats_juges', blank=True, verbose_name="Juges affectés (Jury)", help_text="Juges de table affectés à ce combat")
+    juge_principal = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='combats_juge_principal', verbose_name="Juge Principal (Chef Table)", help_text="Juge Principal responsable de la supervision de ce combat")
+    juges = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='combats_juges', blank=True, verbose_name="Juges de Table (Jury)", help_text="Juges de table affectés à ce combat")
     date_combat = models.DateField(null=True, blank=True, verbose_name="Date du combat", help_text="Date programmée pour ce combat")
     heure_combat = models.TimeField(null=True, blank=True, verbose_name="Heure du combat", help_text="Heure prévue pour ce combat (ex: 16:30)")
     statut = models.CharField(max_length=20, choices=CHOICES_STATUT, default='A_VENIR')
+    mode_tv = models.CharField(max_length=35, choices=CHOICES_MODE_TV, default='ATTENTE_PUB', verbose_name="Mode d'affichage Régie TV Broadcast")
+    image_ring_bg = models.ImageField(upload_to='rings_backgrounds/', blank=True, null=True, verbose_name="Image de Fond du Ring / Octogone pour ce Combat", help_text="Image HD personnalisée de l'arrière-plan du Ring pour ce match")
+    audio_victoire = models.FileField(upload_to='audios_victoire/', blank=True, null=True, verbose_name="Musique / Hymne de Victoire Audio", help_text="Fichier audio (MP3/WAV) joué lors de la proclamation du vainqueur")
+    media_regie_image = models.ImageField(upload_to='medias_regie/', blank=True, null=True, verbose_name="Photo / Replay Coup Marquant Régie")
+    media_regie_titre = models.CharField(max_length=200, blank=True, null=True, verbose_name="Titre / Légende du Média Régie")
     vainqueur = models.ForeignKey(Boxeur, on_delete=models.SET_NULL, null=True, blank=True, related_name='combats_gagnes')
     coin_vainqueur = models.CharField(max_length=10, choices=CHOICES_COIN, null=True, blank=True)
     type_decision = models.CharField(max_length=100, choices=CHOICES_TYPE_VICTOIRE, blank=True, null=True, default='POINTS')
@@ -109,3 +130,15 @@ class ScoreJury(models.Model):
 
     def __str__(self):
         return f"{self.juge.username} - {self.round} ({self.points_rouge}-{self.points_bleu})"
+
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=Combat)
+def auto_creer_rounds(sender, instance, created, **kwargs):
+    if created and not instance.rounds.exists():
+        nb_rounds = instance.evenement.nombre_rounds if (instance.evenement and instance.evenement.nombre_rounds) else 3
+        for i in range(1, nb_rounds + 1):
+            Round.objects.create(combat=instance, numero_round=i)
+

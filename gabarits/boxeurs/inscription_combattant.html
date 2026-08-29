@@ -3,9 +3,12 @@
 {% block title %}Inscription Officielle des Combattants MMA - JAES 2026{% endblock %}
 
 {% block body %}
-<div class="min-h-screen p-4 md:p-8 space-y-6 w-full">
-    <!-- Header Officiel JAES 2026 (Grand En-tête Unifié & Navigation Pro) -->
-    {% include 'components/header_jaes.html' %}
+<div class="min-h-screen bg-slate-100/70 w-full pb-12">
+    <!-- Header & Navigation Officielle JAES 2026 -->
+    {% include 'components/navigation_officielle.html' %}
+
+    <div class="p-4 md:p-8 space-y-6 w-full">
+
 
     {% if messages %}
         {% for message in messages %}

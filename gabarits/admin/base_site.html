@@ -187,7 +187,7 @@
         padding: 24px !important;
         margin-bottom: 0 !important;
         box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03) !important;
-        height: 100% !important;
+        height: auto !important;
         box-sizing: border-box !important;
     }
 
@@ -215,12 +215,17 @@
         align-items: flex-start !important;
     }
 
-    .form-row .field-box {
-        flex: 1 1 200px !important;
-        min-width: 200px !important;
+    .form-row > div, .form-row .field-box {
+        flex: 1 1 0px !important;
+        min-width: 180px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
     }
 
     .form-row label {
+        order: 1 !important;
         font-weight: 800 !important;
         color: #334155 !important;
         font-size: 12px !important;
@@ -233,18 +238,26 @@
         word-break: break-word !important;
         margin-bottom: 6px !important;
         float: none !important;
+        min-height: 18px !important;
     }
 
-    .help, p.help, div.help {
+    .form-row input, .form-row select, .form-row textarea, .form-row .related-widget-wrapper {
+        order: 2 !important;
+    }
+
+    .help, p.help, div.help, .form-row .help {
+        order: 3 !important;
         font-size: 11px !important;
         color: #64748B !important;
         font-weight: 600 !important;
         margin-top: 6px !important;
+        margin-bottom: 0 !important;
         white-space: normal !important;
         word-break: break-word !important;
         display: block !important;
         clear: both !important;
     }
+
 
     input[type="text"], input[type="password"], input[type="email"], input[type="number"], input[type="date"], input[type="time"], select, textarea {
         background: #F8FAFC !important;
@@ -261,14 +274,19 @@
     }
 
     select, .form-row select {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 100% !important;
         height: 42px !important;
         min-height: 42px !important;
         line-height: 1.4 !important;
         appearance: auto !important;
         -webkit-appearance: auto !important;
+        box-sizing: border-box !important;
     }
 
-    /* Style Exact Pilule avec Loupe Rouge (Capture Utilisateur) */
+
+    /* Style Unique Barre Pilule avec Loupe Rouge */
     .search-pill-wrapper {
         position: relative !important;
         display: inline-flex !important;
@@ -313,6 +331,11 @@
         outline: none !important;
         box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.15) !important;
         background: #FFFFFF !important;
+    }
+
+    /* MASQUER TOTALEMENT le 2ème bouton "Rechercher" gris superflu dans Django Admin */
+    #changelist-search input[type="submit"], #changelist-search label[for="searchbar"], #changelist-search img {
+        display: none !important;
     }
 
     /* Fix for Django Related Widgets (+ / Edit / Delete icons next to selects) */
@@ -361,7 +384,7 @@
         height: auto !important;
     }
 
-    /* Capture 5 Fix: Changelist Toolbar, Search & Actions Bar */
+    /* Fix Toolbar Changelist & Actions Bar */
     #changelist-search {
         background: #FFFFFF !important;
         border: 1px solid #E2E8F0 !important;
@@ -389,19 +412,29 @@
     }
 
     .actions select {
-        max-width: 280px !important;
+        max-width: 300px !important;
+        width: auto !important;
         margin: 0 !important;
     }
 
-    .actions button.button {
+    /* Bouton d'action compact "Exécuter l'action" (remplace l'ancien gros bouton "Cours") */
+    .actions button.button, .actions button[name="index"] {
         background: #2563EB !important;
         color: #FFFFFF !important;
         font-weight: 800 !important;
         border-radius: 10px !important;
-        padding: 10px 20px !important;
+        padding: 8px 20px !important;
         border: none !important;
         cursor: pointer !important;
+        height: 42px !important;
         min-height: 42px !important;
+        width: auto !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        white-space: nowrap !important;
+        flex: 0 0 auto !important;
+        font-size: 13px !important;
     }
 
     /* Submit Row Buttons */
@@ -465,10 +498,19 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     function setupPillAutoSearch() {
+        // 1. Masquer le 2ème bouton gris "Rechercher" et renommer le bouton "Cours" -> "Exécuter l'action"
+        const actionButtons = document.querySelectorAll('.actions button[name="index"], .actions button.button, .actions button');
+        actionButtons.forEach(function(btn) {
+            const txt = btn.textContent.trim().toLowerCase();
+            if (txt === 'cours' || txt === 'go') {
+                btn.textContent = 'Exécuter l\'action';
+            }
+        });
+
         const searchInputs = document.querySelectorAll('input[name="q"], input[type="search"], .search-pill-input, .auto-search-field');
 
         searchInputs.forEach(function(input) {
-            // 1. Transformer le champ en pilule avec loupe rouge sans rechargement intempestif
+            // A. Une seule barre de recherche pilule propre avec loupe rouge
             if (!input.dataset.pillProcessed) {
                 input.dataset.pillProcessed = "true";
 
@@ -489,7 +531,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // 2. Si la page a été chargée avec une valeur de recherche, replacer le curseur DANS la zone de recherche sans perdre le focus !
+            // B. Maintien du focus curseur si valeur présente
             if (input.value && input.value.trim() !== '') {
                 setTimeout(function() {
                     input.focus();
@@ -500,11 +542,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 100);
             }
 
-            // 3. Filtrage dynamique instantané en direct (Le curseur NE QUITTE JAMAIS la zone de recherche)
+            // C. Filtrage instantané pur client sans rechargement
             input.addEventListener('input', function(e) {
                 const query = e.target.value.toLowerCase().trim();
 
-                // Filtrage pur client en temps réel sans rechargement de page
                 const items = document.querySelectorAll('#result_list tbody tr, table tbody tr, .searchable-item, .searchable-card');
                 if (items.length > 0) {
                     items.forEach(function(item) {

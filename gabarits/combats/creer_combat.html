@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}Créer & Programmer un Combat - Scoring Boxe & MMA{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-slate-100/70 w-full pb-12">
+    <!-- Header & Navigation Officielle JAES 2026 -->
+    {% include 'components/navigation_officielle.html' %}
+
+    <div class="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-extrabold flex items-center gap-3 shadow-xs">
+                    <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+            <div class="pb-4 border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-100 border border-amber-200 text-amber-600 flex items-center justify-center font-bold text-xl">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold font-teko uppercase text-slate-900 tracking-wide">Programmer un Nouveau Combat</h1>
+                        <p class="text-xs text-slate-500">Affectation des coins, de la catégorie, de l'arbitre et des juges du jury</p>
+                    </div>
+                </div>
+                <a href="{% url 'admin_dashboard' %}" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all border border-slate-300">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> Retour Dashboard
+                </a>
+            </div>
+
+            <form method="POST" action="" class="space-y-6">
+                {% csrf_token %}
+
+                <!-- Section 1 : Programmation & Événement -->
+                <div class="space-y-4">
+                    <h3 class="text-xs font-extrabold uppercase text-slate-400 tracking-wider flex items-center gap-2 border-b border-slate-100 pb-2">
+                        <i class="fa-solid fa-calendar-days text-amber-500"></i>
+                        <span>1. Événement & Programmation du Match</span>
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="block text-xs font-bold text-slate-700 uppercase">Événement Officiel *</label>
+                            <select name="evenement" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:border-amber-500 focus:outline-none">
+                                {% for ev in evenements %}
+                                <option value="{{ ev.id }}" {% if ev.est_actif %}selected{% endif %}>{{ ev.titre }} ({{ ev.nom_discipline }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="space-y-1">
+                                <label class="block text-[11px] font-bold text-slate-700 uppercase">N° Match *</label>
+                                <input type="number" name="numero_match" value="{{ prochain_numero }}" required class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono font-bold text-slate-900 focus:bg-white focus:border-amber-500 focus:outline-none">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="block text-[11px] font-bold text-slate-700 uppercase">Date</label>
+                                <input type="date" name="date_combat" class="w-full px-2.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-amber-500 focus:outline-none">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="block text-[11px] font-bold text-slate-700 uppercase">Heure</label>
+                                <input type="time" name="heure_combat" class="w-full px-2.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:border-amber-500 focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-slate-700 uppercase">Catégorie de Poids *</label>
+                        <select name="categorie" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-extrabold text-slate-900 focus:bg-white focus:border-amber-500 focus:outline-none">
+                            <option value="">-- Sélectionner la Catégorie --</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.nom }} ({{ cat.poids_maximum }} kg max - {{ cat.genre }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Section 2 : Les Combattants (Coin Rouge vs Coin Bleu) -->
+                <div class="space-y-4">
+                    <h3 class="text-xs font-extrabold uppercase text-slate-400 tracking-wider flex items-center gap-2 border-b border-slate-100 pb-2">
+                        <i class="fa-solid fa-hand-fist text-red-500"></i>
+                        <span>2. Désignation des Combattants (Coin Rouge vs Coin Bleu)</span>
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Coin Rouge -->
+                        <div class="p-4 bg-red-50/60 border-2 border-red-200 rounded-2xl space-y-2">
+                            <div class="flex items-center gap-2 text-red-700 font-extrabold text-xs uppercase tracking-wider">
+                                <span class="w-3 h-3 rounded-full bg-red-600"></span>
+                                <span>COIN ROUGE (RED CORNER) *</span>
+                            </div>
+                            <select name="boxeur_rouge" required class="w-full px-3.5 py-2.5 bg-white border border-red-300 rounded-xl text-sm font-bold text-slate-900 focus:border-red-600 focus:outline-none">
+                                <option value="">-- Choisir le Boxeur Rouge --</option>
+                                {% for b in boxeurs %}
+                                <option value="{{ b.id }}">{{ b.prenom }} {{ b.nom }} ({{ b.club }} - {{ b.pays }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Coin Bleu -->
+                        <div class="p-4 bg-blue-50/60 border-2 border-blue-200 rounded-2xl space-y-2">
+                            <div class="flex items-center gap-2 text-blue-700 font-extrabold text-xs uppercase tracking-wider">
+                                <span class="w-3 h-3 rounded-full bg-blue-600"></span>
+                                <span>COIN BLEU (BLUE CORNER) *</span>
+                            </div>
+                            <select name="boxeur_bleu" required class="w-full px-3.5 py-2.5 bg-white border border-blue-300 rounded-xl text-sm font-bold text-slate-900 focus:border-blue-600 focus:outline-none">
+                                <option value="">-- Choisir le Boxeur Bleu --</option>
+                                {% for b in boxeurs %}
+                                <option value="{{ b.id }}">{{ b.prenom }} {{ b.nom }} ({{ b.club }} - {{ b.pays }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3 : Officiels du Ring & de la Table -->
+                <div class="space-y-4">
+                    <h3 class="text-xs font-extrabold uppercase text-slate-400 tracking-wider flex items-center gap-2 border-b border-slate-100 pb-2">
+                        <i class="fa-solid fa-user-shield text-emerald-500"></i>
+                        <span>3. Corps Arbitral, Juge Principal & Juges de Table</span>
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Arbitre Central -->
+                        <div class="space-y-1">
+                            <label class="block text-xs font-bold text-slate-700 uppercase">Arbitre Central Ring</label>
+                            <select name="arbitre_central" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:border-amber-500 focus:outline-none">
+                                <option value="">-- Aucun / À désigner plus tard --</option>
+                                {% for a in arbitres %}
+                                <option value="{{ a.id }}">{{ a.prenom }} {{ a.nom }} ({{ a.pays }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Juge Principal / Chef Table -->
+                        <div class="space-y-1">
+                            <label class="block text-xs font-bold text-slate-700 uppercase">Juge Principal (Chef de Table / Superviseur) *</label>
+                            <select name="juge_principal" class="w-full px-3.5 py-2.5 bg-amber-50/70 border border-amber-300 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:border-amber-500 focus:outline-none">
+                                <option value="">-- Choisir le Juge Principal --</option>
+                                {% for jp in juges_principaux %}
+                                <option value="{{ jp.id }}">{{ jp.first_name }} {{ jp.last_name }} ({{ jp.username }}) {% if jp.fonction %}- {{ jp.fonction }}{% endif %}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Juges de Table (Checkboxes Ergonomiques) -->
+                    <div class="space-y-2 pt-2">
+                        <label class="block text-xs font-bold text-slate-700 uppercase">Juges de Table Affectés (Saisie Tablette / Jury)</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 max-h-48 overflow-y-auto p-2.5 bg-slate-50 border border-slate-300 rounded-xl">
+                            {% for j in juges_table %}
+                            <label class="flex items-center gap-2.5 p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:border-amber-500 transition-all shadow-2xs">
+                                <input type="checkbox" name="juges" value="{{ j.id }}" class="w-4 h-4 text-amber-600 rounded focus:ring-amber-500 border-slate-300">
+                                <div class="text-xs min-w-0">
+                                    <span class="font-bold text-slate-800 block truncate">{{ j.first_name }} {{ j.last_name }} <span class="text-slate-400 font-normal">({{ j.username }})</span></span>
+                                    {% if j.fonction %}
+                                    <span class="text-[10px] text-emerald-600 font-semibold block truncate"><i class="fa-solid fa-briefcase text-[9px] mr-1"></i>{{ j.fonction }}</span>
+                                    {% endif %}
+                                </div>
+                            </label>
+                            {% empty %}
+                            <p class="text-xs text-slate-400 p-2 col-span-3">Aucun juge de table disponible.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+                    <a href="{% url 'admin_dashboard' %}" class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider transition-all">
+                        Annuler
+                    </a>
+                    <button type="submit" class="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-extrabold rounded-xl shadow-md uppercase tracking-wider text-xs flex items-center gap-2 transition-all transform hover:scale-[1.01]">
+                        <i class="fa-solid fa-check text-sm"></i>
+                        <span>Enregistrer & Programmer le Combat</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

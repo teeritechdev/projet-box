@@ -28,21 +28,40 @@ class RoundInline(admin.TabularInline):
     model = Round
     extra = 0
 
+from applications.comptes.models import Utilisateur
+
 @admin.register(Combat)
 class CombatAdmin(admin.ModelAdmin):
-    list_display = ('id', 'numero_match', 'date_combat', 'heure_combat', 'evenement', 'boxeur_rouge', 'boxeur_bleu', 'categorie', 'arbitre_central', 'statut', 'coin_vainqueur')
+    list_display = ('id', 'numero_match', 'date_combat', 'heure_combat', 'evenement', 'boxeur_rouge', 'boxeur_bleu', 'categorie', 'arbitre_central', 'juge_principal', 'statut', 'coin_vainqueur')
     list_display_links = ('id', 'numero_match', 'boxeur_rouge', 'boxeur_bleu')
     list_filter = ('statut', 'date_combat', 'categorie', 'evenement', 'coin_vainqueur')
     search_fields = ('boxeur_rouge__nom', 'boxeur_rouge__prenom', 'boxeur_bleu__nom', 'boxeur_bleu__prenom')
     filter_horizontal = ('juges',)
     inlines = [RoundInline]
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "juge_principal":
+            from django.db.models import Q
+            kwargs["queryset"] = Utilisateur.objects.filter(
+                Q(role__code='JUGE_PRINCIPAL') | Q(role__nom__icontains='principal') | Q(role__nom__icontains='juge')
+            ).distinct()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == "juges":
+            from django.db.models import Q
+            kwargs["queryset"] = Utilisateur.objects.filter(
+                Q(role__code__in=['JUGE', 'JURY', '01']) | Q(role__nom__icontains='juge') | Q(role__nom__icontains='jury')
+            ).distinct()
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
+
     
     fieldsets = (
         ('Programmation du Match (Date & Heure)', {
             'fields': (('numero_match', 'evenement'), ('date_combat', 'heure_combat'))
         }),
-        ('Officiels du Ring (Arbitre & Juges du Match)', {
-            'fields': ('arbitre_central', 'juges')
+        ('Officiels du Ring & de la Table (Arbitre Central, Juge Principal & Juges de Table)', {
+            'fields': ('arbitre_central', 'juge_principal', 'juges')
         }),
         ('Les Combattants (Coin Rouge vs Coin Bleu)', {
             'fields': (('boxeur_rouge', 'boxeur_bleu'), 'categorie')

@@ -3,27 +3,11 @@
 {% block title %}Table Juge Principal - Supervision{% endblock %}
 
 {% block body %}
-<div class="min-h-screen p-4 md:p-8 flex flex-col justify-between max-w-7xl mx-auto space-y-6">
-    <header class="flex items-center justify-between bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex-wrap gap-4">
-        <div class="flex items-center gap-4">
-            <div class="w-14 h-14 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-bold text-2xl shadow-md">
-                <i class="fa-solid fa-crown"></i>
-            </div>
-            <div>
-                <h1 class="text-2xl font-black font-teko uppercase text-slate-900 tracking-wider">TABLE DU JUGE PRINCIPAL</h1>
-                <span class="text-xs text-amber-700 font-extrabold uppercase tracking-widest">Supervision & Validation Officielle des Matches</span>
-            </div>
-        </div>
-        <div class="flex items-center gap-3">
-            <a href="{% url 'ecran_broadcast' %}" target="_blank" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm transition-all transform hover:scale-[1.02]">
-                <i class="fa-solid fa-tv text-sm"></i>
-                <span>Écran Broadcast Arena TV</span>
-            </a>
-            <a href="{% url 'deconnexion' %}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition-all">
-                <i class="fa-solid fa-power-off text-red-600"></i>
-            </a>
-        </div>
-    </header>
+<div class="min-h-screen bg-slate-100/70 w-full pb-12">
+    {% include 'components/navigation_officielle.html' %}
+
+    <div class="p-4 md:p-8 flex flex-col justify-between max-w-7xl mx-auto space-y-6">
+
 
     {% if combat %}
     <main class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1">
@@ -109,11 +93,16 @@
                 </div>
             </div>
 
-            <div class="pt-4 border-t border-slate-100 flex justify-end">
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3 flex-wrap">
+                <button onclick="changerModeTV('DECISION_RECAP')" class="px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-amber-400 font-extrabold rounded-2xl uppercase tracking-wider text-xs shadow-md flex items-center gap-2 border border-amber-500/40 transition-all">
+                    <i class="fa-solid fa-chart-simple text-sm"></i>
+                    <span>📊 1. Afficher Tableau Récapitulatif Scores TV</span>
+                </button>
+
                 {% if combat.rounds.last and combat.rounds.last.id %}
-                <button onclick="actionRound({{ combat.rounds.last.id }}, 'cloturer_combat')" class="px-8 py-4 bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black rounded-2xl uppercase tracking-wider text-xs shadow-md flex items-center gap-3 transition-all transform hover:scale-[1.02]">
-                    <i class="fa-solid fa-trophy text-base"></i>
-                    <span>Clôturer le Match & Proclamer le Vainqueur</span>
+                <button onclick="actionRound({{ combat.rounds.last.id }}, 'cloturer_combat')" class="px-8 py-3.5 bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black rounded-2xl uppercase tracking-wider text-xs shadow-lg flex items-center gap-3 transition-all transform hover:scale-105">
+                    <i class="fa-solid fa-trophy text-sm"></i>
+                    <span>🏆 2. Proclamer le Vainqueur & Lancer Musique</span>
                 </button>
                 {% endif %}
             </div>
@@ -136,6 +125,27 @@ function actionRound(roundId, action) {
     .then(data => {
         if(data.statut === 'succes') {
             location.reload();
+        }
+    });
+}
+
+function changerModeTV(mode) {
+    fetch('/api/changer-mode-tv/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ mode_tv: mode, combat_id: {{ combat.id }} })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.statut === 'succes') {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 bg-emerald-600 text-white px-4 py-3 rounded-2xl font-bold text-xs shadow-2xl z-50 flex items-center gap-2 animate-bounce';
+            toast.innerHTML = '<i class="fa-solid fa-circle-check"></i> Mode TV basculé : ' + mode;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
         }
     });
 }
