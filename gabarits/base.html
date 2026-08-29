@@ -124,12 +124,22 @@
                     }
                 }
 
-                // Filtrage dynamique au clavier (Instant Keyboard Auto-search)
-                let searchTimer = null;
+                // Si le champ a une valeur, maintenir le curseur à l'intérieur à la fin
+                if (input.value && input.value.trim() !== '') {
+                    setTimeout(function() {
+                        input.focus();
+                        const len = input.value.length;
+                        if (input.setSelectionRange) {
+                            input.setSelectionRange(len, len);
+                        }
+                    }, 100);
+                }
+
+                // Filtrage dynamique instantané en direct (Sans rechargement de page pour conserver le curseur 100% dans la zone)
                 input.addEventListener('input', function(e) {
                     const query = e.target.value.toLowerCase().trim();
 
-                    // 1. Filtrer les éléments de la page en direct (cartes & lignes de tableau)
+                    // Filtrer les éléments de la page en direct (cartes & lignes de tableau)
                     const items = document.querySelectorAll('table tbody tr, .searchable-item, .searchable-card');
                     if (items.length > 0) {
                         items.forEach(function(item) {
@@ -140,14 +150,6 @@
                                 item.style.display = 'none';
                             }
                         });
-                    }
-
-                    // 2. Si c'est un formulaire de recherche backend Django, auto-submit après pause de frappe 450ms
-                    if (input.form && input.name === 'q') {
-                        clearTimeout(searchTimer);
-                        searchTimer = setTimeout(function() {
-                            input.form.submit();
-                        }, 450);
                     }
                 });
             });

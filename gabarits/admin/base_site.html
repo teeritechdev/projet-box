@@ -465,18 +465,12 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     function setupPillAutoSearch() {
-        const searchInputs = document.querySelectorAll('input[name="q"], input[type="search"], .search-pill-input');
+        const searchInputs = document.querySelectorAll('input[name="q"], input[type="search"], .search-pill-input, .auto-search-field');
 
         searchInputs.forEach(function(input) {
-            // 1. Ajouter le style de loupe rouge pilule si ce n'est pas fait
+            // 1. Transformer le champ en pilule avec loupe rouge sans rechargement intempestif
             if (!input.dataset.pillProcessed) {
                 input.dataset.pillProcessed = "true";
-
-                // Masquer les boutons "Rechercher" explicites pour privilégier l'instantanéité
-                if (input.name === 'q' && input.form) {
-                    const submitBtn = input.form.querySelector('input[type="submit"]');
-                    if (submitBtn) submitBtn.style.display = 'none';
-                }
 
                 if (!input.parentElement.classList.contains('search-pill-wrapper')) {
                     const wrapper = document.createElement('div');
@@ -490,33 +484,37 @@ document.addEventListener('DOMContentLoaded', function() {
                     wrapper.appendChild(input);
                 }
 
-                input.placeholder = "Recherche...";
+                if (!input.placeholder || input.placeholder === "") {
+                    input.placeholder = "Recherche...";
+                }
             }
 
-            // 2. Recherche automatique au clavier en temps réel (frappe instantanée)
-            let timer = null;
+            // 2. Si la page a été chargée avec une valeur de recherche, replacer le curseur DANS la zone de recherche sans perdre le focus !
+            if (input.value && input.value.trim() !== '') {
+                setTimeout(function() {
+                    input.focus();
+                    const len = input.value.length;
+                    if (input.setSelectionRange) {
+                        input.setSelectionRange(len, len);
+                    }
+                }, 100);
+            }
+
+            // 3. Filtrage dynamique instantané en direct (Le curseur NE QUITTE JAMAIS la zone de recherche)
             input.addEventListener('input', function(e) {
                 const query = e.target.value.toLowerCase().trim();
 
-                // A. Filtrage dynamique instantané dans les tableaux admin
-                const rows = document.querySelectorAll('#result_list tbody tr, table tbody tr, .searchable-item');
-                if (rows.length > 0) {
-                    rows.forEach(function(row) {
-                        const text = row.textContent.toLowerCase();
+                // Filtrage pur client en temps réel sans rechargement de page
+                const items = document.querySelectorAll('#result_list tbody tr, table tbody tr, .searchable-item, .searchable-card');
+                if (items.length > 0) {
+                    items.forEach(function(item) {
+                        const text = item.textContent.toLowerCase();
                         if (!query || text.includes(query)) {
-                            row.style.display = '';
+                            item.style.display = '';
                         } else {
-                            row.style.display = 'none';
+                            item.style.display = 'none';
                         }
                     });
-                }
-
-                // B. Auto-soumission du formulaire de recherche admin (avec pause de frappe 450ms)
-                if (input.name === 'q' && input.form) {
-                    clearTimeout(timer);
-                    timer = setTimeout(function() {
-                        input.form.submit();
-                    }, 450);
                 }
             });
         });
