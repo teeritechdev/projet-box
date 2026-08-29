@@ -163,7 +163,7 @@
     /* Form Grid Layout (2-Column Fieldsets Side-by-Side) */
     #content-main form > div {
         display: grid !important;
-        grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)) !important;
+        grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)) !important;
         gap: 24px !important;
         align-items: start !important;
     }
@@ -216,8 +216,8 @@
     }
 
     .form-row .field-box {
-        flex: 1 1 180px !important;
-        min-width: 180px !important;
+        flex: 1 1 200px !important;
+        min-width: 200px !important;
     }
 
     .form-row label {
@@ -250,20 +250,49 @@
         background: #F8FAFC !important;
         border: 1.5px solid #CBD5E1 !important;
         border-radius: 12px !important;
-        padding: 10px 14px !important;
+        padding: 8px 14px !important;
         font-size: 13px !important;
         font-weight: 700 !important;
         color: #0F172A !important;
         transition: all 0.2s ease-in-out !important;
         width: 100% !important;
+        min-height: 42px !important;
         box-sizing: border-box !important;
     }
 
-    input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus, input[type="number"]:focus, input[type="date"]:focus, input[type="time"]:focus, select:focus, textarea:focus {
-        border-color: #2563EB !important;
-        background: #FFFFFF !important;
-        outline: none !important;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+    select, .form-row select {
+        height: 42px !important;
+        min-height: 42px !important;
+        line-height: 1.4 !important;
+        appearance: auto !important;
+        -webkit-appearance: auto !important;
+    }
+
+    /* Fix for Django Related Widgets (+ / Edit / Delete icons next to selects) */
+    .related-widget-wrapper {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .related-widget-wrapper select {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        min-width: 160px !important;
+    }
+
+    .related-widget-wrapper-link {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 6px 8px !important;
+        border-radius: 8px !important;
+        background: #F1F5F9 !important;
+        border: 1px solid #CBD5E1 !important;
+        color: #0F172A !important;
+        text-decoration: none !important;
     }
 
     .selector {
@@ -275,16 +304,76 @@
     }
 
     .selector-available, .selector-chosen {
-        flex: 1 1 250px !important;
+        flex: 1 1 300px !important;
         width: auto !important;
     }
 
     .selector-available select, .selector-chosen select {
         max-width: 100% !important;
-        min-height: 180px !important;
+        min-height: 200px !important;
+        height: auto !important;
     }
 
+    /* Capture 5 Fix: Changelist Toolbar, Search & Actions Bar */
+    #changelist-search {
+        background: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 16px !important;
+        padding: 16px 20px !important;
+        margin-bottom: 20px !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 12px !important;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03) !important;
+    }
 
+    #changelist-search input[type="text"] {
+        max-width: 450px !important;
+        flex: 1 1 280px !important;
+        margin: 0 !important;
+    }
+
+    #changelist-search input[type="submit"] {
+        background: #0F172A !important;
+        color: #FFFFFF !important;
+        font-weight: 800 !important;
+        border-radius: 10px !important;
+        padding: 10px 22px !important;
+        border: none !important;
+        cursor: pointer !important;
+        width: auto !important;
+        min-height: 42px !important;
+    }
+
+    .actions {
+        background: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 16px !important;
+        padding: 14px 20px !important;
+        margin-bottom: 18px !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 12px !important;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03) !important;
+    }
+
+    .actions select {
+        max-width: 280px !important;
+        margin: 0 !important;
+    }
+
+    .actions button.button {
+        background: #2563EB !important;
+        color: #FFFFFF !important;
+        font-weight: 800 !important;
+        border-radius: 10px !important;
+        padding: 10px 20px !important;
+        border: none !important;
+        cursor: pointer !important;
+        min-height: 42px !important;
+    }
 
     /* Submit Row Buttons */
     .submit-row {
@@ -311,6 +400,7 @@
         cursor: pointer !important;
         box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3) !important;
         transition: all 0.2s !important;
+        width: auto !important;
     }
 
     .submit-row input[type="submit"]:hover {

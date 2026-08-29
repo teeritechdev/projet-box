@@ -8,9 +8,10 @@ class CategorieAdmin(admin.ModelAdmin):
     search_fields = ('nom',)
     fieldsets = (
         ('Définition de la Catégorie', {
-            'fields': ('nom', 'genre', ('poids_minimum', 'poids_maximum'))
+            'fields': (('nom', 'genre'), ('poids_minimum', 'poids_maximum'))
         }),
     )
+
 
 @admin.register(Boxeur)
 class BoxeurAdmin(admin.ModelAdmin):
