@@ -185,16 +185,37 @@
 
     .form-row {
         border-bottom: 1px solid #F1F5F9 !important;
-        padding: 14px 0 !important;
+        padding: 16px 0 !important;
+        overflow: visible !important;
+        white-space: normal !important;
+        display: block !important;
     }
 
     .form-row label {
         font-weight: 800 !important;
         color: #334155 !important;
         font-size: 13px !important;
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        margin-bottom: 6px !important;
+        float: none !important;
     }
 
-    input[type="text"], input[type="password"], input[type="email"], input[type="number"], select, textarea {
+    .help, p.help, div.help {
+        font-size: 12px !important;
+        color: #64748B !important;
+        font-weight: 600 !important;
+        margin-top: 6px !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        display: block !important;
+        clear: both !important;
+    }
+
+    input[type="text"], input[type="password"], input[type="email"], input[type="number"], input[type="date"], input[type="time"], select, textarea {
         background: #F8FAFC !important;
         border: 1.5px solid #CBD5E1 !important;
         border-radius: 12px !important;
@@ -203,14 +224,36 @@
         font-weight: 700 !important;
         color: #0F172A !important;
         transition: all 0.2s ease-in-out !important;
+        width: 100% !important;
+        max-width: 600px !important;
+        box-sizing: border-box !important;
     }
 
-    input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+    input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus, input[type="number"]:focus, input[type="date"]:focus, input[type="time"]:focus, select:focus, textarea:focus {
         border-color: #2563EB !important;
         background: #FFFFFF !important;
         outline: none !important;
         box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
     }
+
+    .selector {
+        width: 100% !important;
+        max-width: 850px !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 16px !important;
+    }
+
+    .selector-available, .selector-chosen {
+        flex: 1 1 320px !important;
+        width: auto !important;
+    }
+
+    .selector-available select, .selector-chosen select {
+        max-width: 100% !important;
+        min-height: 200px !important;
+    }
+
 
     /* Submit Row Buttons */
     .submit-row {

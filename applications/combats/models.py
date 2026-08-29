@@ -61,11 +61,15 @@ class Combat(models.Model):
     categorie = models.ForeignKey(Categorie, on_delete=models.CASCADE)
     boxeur_rouge = models.ForeignKey(Boxeur, on_delete=models.CASCADE, related_name='combats_rouge')
     boxeur_bleu = models.ForeignKey(Boxeur, on_delete=models.CASCADE, related_name='combats_bleu')
-    arbitre_central = models.ForeignKey(ArbitreCentral, on_delete=models.SET_NULL, null=True, blank=True)
+    arbitre_central = models.ForeignKey(ArbitreCentral, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Arbitre Central Ring")
+    juges = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='combats_juges', blank=True, verbose_name="Juges affectés (Jury)", help_text="Juges de table affectés à ce combat")
+    date_combat = models.DateField(null=True, blank=True, verbose_name="Date du combat", help_text="Date programmée pour ce combat")
+    heure_combat = models.TimeField(null=True, blank=True, verbose_name="Heure du combat", help_text="Heure prévue pour ce combat (ex: 16:30)")
     statut = models.CharField(max_length=20, choices=CHOICES_STATUT, default='A_VENIR')
     vainqueur = models.ForeignKey(Boxeur, on_delete=models.SET_NULL, null=True, blank=True, related_name='combats_gagnes')
     coin_vainqueur = models.CharField(max_length=10, choices=CHOICES_COIN, null=True, blank=True)
     type_decision = models.CharField(max_length=100, choices=CHOICES_TYPE_VICTOIRE, blank=True, null=True, default='POINTS')
+
 
     def __str__(self):
         return f"Match #{self.numero_match} : {self.boxeur_rouge} vs {self.boxeur_bleu}"

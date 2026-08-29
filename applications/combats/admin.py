@@ -30,23 +30,28 @@ class RoundInline(admin.TabularInline):
 
 @admin.register(Combat)
 class CombatAdmin(admin.ModelAdmin):
-    list_display = ('id', 'numero_match', 'evenement', 'boxeur_rouge', 'boxeur_bleu', 'categorie', 'arbitre_central', 'statut', 'coin_vainqueur')
+    list_display = ('id', 'numero_match', 'date_combat', 'heure_combat', 'evenement', 'boxeur_rouge', 'boxeur_bleu', 'categorie', 'arbitre_central', 'statut', 'coin_vainqueur')
     list_display_links = ('id', 'numero_match', 'boxeur_rouge', 'boxeur_bleu')
-    list_filter = ('statut', 'categorie', 'evenement', 'coin_vainqueur')
+    list_filter = ('statut', 'date_combat', 'categorie', 'evenement', 'coin_vainqueur')
     search_fields = ('boxeur_rouge__nom', 'boxeur_rouge__prenom', 'boxeur_bleu__nom', 'boxeur_bleu__prenom')
+    filter_horizontal = ('juges',)
     inlines = [RoundInline]
     
     fieldsets = (
-        ('Informations Générales du Match', {
-            'fields': (('numero_match', 'evenement'), ('categorie', 'arbitre_central'))
+        ('Programmation du Match (Date & Heure)', {
+            'fields': (('numero_match', 'evenement'), ('date_combat', 'heure_combat'))
+        }),
+        ('Officiels du Ring (Arbitre & Juges du Match)', {
+            'fields': ('arbitre_central', 'juges')
         }),
         ('Les Combattants (Coin Rouge vs Coin Bleu)', {
-            'fields': (('boxeur_rouge', 'boxeur_bleu'),)
+            'fields': (('boxeur_rouge', 'boxeur_bleu'), 'categorie')
         }),
         ('Statut & Résultat Officiel', {
-            'fields': (('statut', 'coin_vainqueur'),)
+            'fields': (('statut', 'coin_vainqueur'), ('type_decision', 'vainqueur'))
         }),
     )
+
 
 @admin.register(Round)
 class RoundAdmin(admin.ModelAdmin):

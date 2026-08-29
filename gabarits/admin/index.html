@@ -284,18 +284,25 @@
         </div>
         <div class="admin-quick-btns">
             <a href="/admin-dashboard/" class="quick-btn quick-btn-gold">
-                <i class="fa-solid fa-gauge-high"></i> Tableau de bord interactif
+                <i class="fa-solid fa-gauge-high"></i> Tableau de bord Administrateur
             </a>
+            {% if user.role and user.role.code == 'JUGE_PRINCIPAL' %}
             <a href="/table-juge-principal/" class="quick-btn">
                 <i class="fa-solid fa-gavel"></i> Table Juge Principal
             </a>
+            {% endif %}
+            {% if user.role and user.role.code == 'JURY' %}
             <a href="/tablette-juge/" class="quick-btn">
                 <i class="fa-solid fa-tablet-screen-button"></i> Tablette Juge
             </a>
+            {% endif %}
+            {% if user.is_superuser or user.role and user.role.code == 'ADMIN' %}
             <a href="/broadcast-tv/" target="_blank" class="quick-btn">
                 <i class="fa-solid fa-tv"></i> Écran TV Broadcast
             </a>
+            {% endif %}
         </div>
+
     </div>
 
     <!-- Grille Principale des Applications et Activités -->
