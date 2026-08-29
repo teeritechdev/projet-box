@@ -1,0 +1,403 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+    /* Nouveau design moderne pour l'Administration de Boxe / MMA */
+    .admin-container {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        margin-top: 10px;
+    }
+
+    /* Quick Links Bar */
+    .admin-quick-bar {
+        background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+        border-radius: 20px;
+        padding: 20px 24px;
+        color: #FFFFFF;
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        border: 1px solid #334155;
+    }
+
+    .admin-quick-title h2 {
+        margin: 0;
+        font-size: 1.4rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #FFFFFF !important;
+    }
+
+    .admin-quick-title p {
+        margin: 4px 0 0 0;
+        font-size: 12px;
+        color: #94A3B8;
+        font-weight: 600;
+    }
+
+    .admin-quick-btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .quick-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #FFFFFF !important;
+        padding: 10px 16px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 700;
+        text-decoration: none !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .quick-btn:hover {
+        background: #DC2626;
+        border-color: #EF4444;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
+    }
+
+    .quick-btn-gold {
+        background: linear-gradient(135deg, #D97706, #B45309);
+        border: none;
+    }
+
+    .quick-btn-gold:hover {
+        background: linear-gradient(135deg, #F59E0B, #D97706);
+    }
+
+    /* App Cards Grid */
+    .apps-layout {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 24px;
+    }
+
+    @media (max-width: 1024px) {
+        .apps-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .app-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 20px;
+    }
+
+    .app-card {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
+        transition: all 0.25s ease-in-out;
+    }
+
+    .app-card:hover {
+        border-color: #CBD5E1;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+        transform: translateY(-2px);
+    }
+
+    .app-card-header {
+        background: #0F172A;
+        color: #FFFFFF;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 3px solid #DC2626;
+    }
+
+    .app-card-title {
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #FFFFFF;
+    }
+
+    .model-row {
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #F1F5F9;
+        transition: background 0.15s;
+    }
+
+    .model-row:last-child {
+        border-bottom: none;
+    }
+
+    .model-row:hover {
+        background: #F8FAFC;
+    }
+
+    .model-link {
+        font-weight: 700;
+        font-size: 14px;
+        color: #1E293B !important;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none !important;
+    }
+
+    .model-link:hover {
+        color: #2563EB !important;
+    }
+
+    .model-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-action-add {
+        background: #EFF6FF;
+        color: #2563EB !important;
+        border: 1px solid #BFDBFE;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 800;
+        text-decoration: none !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.2s;
+        text-transform: uppercase;
+    }
+
+    .btn-action-add:hover {
+        background: #2563EB;
+        color: #FFFFFF !important;
+        border-color: #2563EB;
+    }
+
+    .btn-action-change {
+        background: #F8FAFC;
+        color: #64748B !important;
+        border: 1px solid #E2E8F0;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        text-decoration: none !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.2s;
+        text-transform: uppercase;
+    }
+
+    .btn-action-change:hover {
+        background: #0F172A;
+        color: #FFFFFF !important;
+        border-color: #0F172A;
+    }
+
+    /* Sidebar Actions Récentes */
+    .recent-actions-card {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
+    }
+
+    .recent-actions-header {
+        font-size: 14px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #0F172A;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #E2E8F0;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .action-item {
+        padding: 10px 0;
+        border-bottom: 1px solid #F1F5F9;
+        font-size: 12px;
+    }
+
+    .action-item:last-child {
+        border-bottom: none;
+    }
+
+    .action-link {
+        font-weight: 700;
+        color: #0F172A !important;
+        text-decoration: none !important;
+    }
+
+    .action-link:hover {
+        color: #2563EB !important;
+    }
+
+    .action-type {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-right: 6px;
+    }
+
+    .action-add { background: #DCFCE7; color: #166534; }
+    .action-change { background: #FEF3C7; color: #92400E; }
+    .action-delete { background: #FEE2E2; color: #991B1B; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    
+    <!-- En-tête / Barre d'actions rapides -->
+    <div class="admin-quick-bar">
+        <div class="admin-quick-title">
+            <h2>🏆 Administration Officielle MMA & Boxe</h2>
+            <p>Gestion centrale des athlètes, officiels, jugements et diffusion TV en direct</p>
+        </div>
+        <div class="admin-quick-btns">
+            <a href="/admin-dashboard/" class="quick-btn quick-btn-gold">
+                <i class="fa-solid fa-gauge-high"></i> Tableau de bord interactif
+            </a>
+            <a href="/table-juge-principal/" class="quick-btn">
+                <i class="fa-solid fa-gavel"></i> Table Juge Principal
+            </a>
+            <a href="/tablette-juge/" class="quick-btn">
+                <i class="fa-solid fa-tablet-screen-button"></i> Tablette Juge
+            </a>
+            <a href="/broadcast-tv/" target="_blank" class="quick-btn">
+                <i class="fa-solid fa-tv"></i> Écran TV Broadcast
+            </a>
+        </div>
+    </div>
+
+    <!-- Grille Principale des Applications et Activités -->
+    <div class="apps-layout">
+        
+        <!-- Cartes des Applications Django -->
+        <div class="app-cards-grid">
+            {% if app_list %}
+                {% for app in app_list %}
+                    <div class="app-card">
+                        <div class="app-card-header">
+                            <div class="app-card-title">
+                                {% if app.app_label == 'boxeurs' %}
+                                    <i class="fa-solid fa-hand-fist text-red-500"></i>
+                                {% elif app.app_label == 'combats' %}
+                                    <i class="fa-solid fa-trophy text-amber-500"></i>
+                                {% elif app.app_label == 'arbitres' %}
+                                    <i class="fa-solid fa-user-tie text-blue-400"></i>
+                                {% elif app.app_label == 'comptes' %}
+                                    <i class="fa-solid fa-users-gear text-emerald-400"></i>
+                                {% elif app.app_label == 'scoring' %}
+                                    <i class="fa-solid fa-chart-column text-purple-400"></i>
+                                {% else %}
+                                    <i class="fa-solid fa-folder-closed text-slate-400"></i>
+                                {% endif %}
+                                <span>{{ app.name }}</span>
+                            </div>
+                        </div>
+
+                        <div class="app-card-body">
+                            {% for model in app.models %}
+                                <div class="model-row">
+                                    {% if model.admin_url %}
+                                        <a href="{{ model.admin_url }}" class="model-link">
+                                            <i class="fa-solid fa-angle-right text-slate-400 text-xs"></i>
+                                            <span>{{ model.name }}</span>
+                                        </a>
+                                    {% else %}
+                                        <span class="model-link">{{ model.name }}</span>
+                                    {% endif %}
+
+                                    <div class="model-actions">
+                                        {% if model.add_url %}
+                                            <a href="{{ model.add_url }}" class="btn-action-add">
+                                                <i class="fa-solid fa-plus"></i> Ajouter
+                                            </a>
+                                        {% endif %}
+                                        {% if model.admin_url %}
+                                            <a href="{{ model.admin_url }}" class="btn-action-change">
+                                                <i class="fa-solid fa-pen-to-square"></i> Modifier
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>{% translate 'You don’t have permission to view or edit anything.' %}</p>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar : Actions Récentes -->
+        <div class="recent-actions-card">
+            <div class="recent-actions-header">
+                <i class="fa-solid fa-clock-rotate-left text-red-600"></i>
+                <span>Actions récentes</span>
+            </div>
+
+            {% load log %}
+            {% get_admin_log 10 as admin_log for_user user %}
+
+            {% if not admin_log %}
+                <p class="text-xs text-slate-500 font-bold">Aucune activité récente enregistrée.</p>
+            {% else %}
+                <ul class="action-list style-none p-0 m-0">
+                    {% for entry in admin_log %}
+                        <li class="action-item">
+                            {% if entry.is_addition %}
+                                <span class="action-type action-add">+ Ajout</span>
+                            {% elif entry.is_change %}
+                                <span class="action-type action-change">✎ Edit</span>
+                            {% elif entry.is_deletion %}
+                                <span class="action-type action-delete">✕ Suppr</span>
+                            {% endif %}
+
+                            {% if entry.is_deletion or not entry.get_admin_url %}
+                                <span class="action-link">{{ entry.object_repr }}</span>
+                            {% else %}
+                                <a href="{{ entry.get_admin_url }}" class="action-link">{{ entry.object_repr }}</a>
+                            {% endif %}
+                            <div class="text-[10px] text-slate-400 font-bold mt-0.5">
+                                {{ entry.content_type }}
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

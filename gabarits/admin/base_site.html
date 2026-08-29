@@ -1,19 +1,19 @@
 {% extends "admin/base.html" %}
 
-{% block title %}{{ title }} | {{ site_title|default:_('Admin Boxe Scoring') }}{% endblock %}
+{% block title %}{{ title }} | {{ site_title|default:_('Admin Boxe & MMA Scoring') }}{% endblock %}
 
 {% block branding %}
 <h1 id="site-name" style="margin: 0; padding: 4px 0;">
-    <a href="{% url 'admin:index' %}" style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.25rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; gap: 10px;">
-        <span style="background: linear-gradient(135deg, #DC2626, #E11D48); width: 36px; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: 0 4px 12px rgba(220,38,38,0.4);">🥊</span>
-        <span>FÉDÉRATION DE BOXE <span style="color: #F59E0B; font-weight: 900;">•</span> ADMINISTRATION</span>
+    <a href="{% url 'admin:index' %}" style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.25rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; gap: 12px;">
+        <span style="background: linear-gradient(135deg, #DC2626, #E11D48); width: 38px; height: 38px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 4px 14px rgba(220,38,38,0.45);">🥊</span>
+        <span>FÉDÉRATION DE BOXE & MMA <span style="color: #F59E0B; font-weight: 900;">•</span> ADMINISTRATION</span>
     </a>
 </h1>
 {% endblock %}
 
 {% block extrahead %}
 {{ block.super }}
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
@@ -40,8 +40,8 @@
     #header {
         background: #0F172A !important;
         color: #FFFFFF !important;
-        padding: 12px 24px !important;
-        box-shadow: 0 4px 20px -5px rgba(15, 23, 42, 0.15) !important;
+        padding: 14px 28px !important;
+        box-shadow: 0 4px 20px -5px rgba(15, 23, 42, 0.2) !important;
         border-bottom: 3px solid #DC2626 !important;
     }
 
@@ -50,107 +50,137 @@
     }
 
     #user-tools {
-        font-weight: 600 !important;
+        font-weight: 700 !important;
         font-size: 12px !important;
+        letter-spacing: 0.03em !important;
     }
 
     #user-tools a {
         background: rgba(255, 255, 255, 0.1) !important;
-        padding: 6px 12px !important;
-        border-radius: 8px !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        padding: 7px 14px !important;
+        border-radius: 10px !important;
         transition: all 0.2s !important;
+        color: #FFFFFF !important;
+        text-decoration: none !important;
     }
 
     #user-tools a:hover {
         background: #DC2626 !important;
+        border-color: #EF4444 !important;
         color: #FFFFFF !important;
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3) !important;
     }
 
     /* Breadcrumbs */
     div.breadcrumbs {
         background: #FFFFFF !important;
         border-bottom: 1px solid #E2E8F0 !important;
-        padding: 12px 24px !important;
+        padding: 14px 28px !important;
         font-size: 13px !important;
-        font-weight: 600 !important;
+        font-weight: 700 !important;
         color: #64748B !important;
         box-shadow: 0 1px 3px rgba(0,0,0,0.02) !important;
     }
 
     div.breadcrumbs a {
         color: #2563EB !important;
-        font-weight: 700 !important;
-    }
-
-    /* Sidebar Navigation */
-    #nav-sidebar {
-        background: #FFFFFF !important;
-        border-right: 1px solid #E2E8F0 !important;
-    }
-
-    .module th, .module td {
-        font-family: 'Plus Jakarta Sans', sans-serif !important;
-    }
-
-    #nav-sidebar .module th {
-        background: #F1F5F9 !important;
-        color: #0F172A !important;
-        font-size: 11px !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.08em !important;
         font-weight: 800 !important;
-        padding: 10px 16px !important;
+        text-decoration: none !important;
     }
 
-    #nav-sidebar .module td a {
-        color: #334155 !important;
-        font-weight: 600 !important;
-        font-size: 13px !important;
-        padding: 8px 16px !important;
-    }
-
-    #nav-sidebar .module tr.current-model {
-        background: #EFF6FF !important;
-    }
-
-    #nav-sidebar .module tr.current-model td a {
-        color: #2563EB !important;
-        font-weight: 800 !important;
+    div.breadcrumbs a:hover {
+        text-decoration: underline !important;
     }
 
     /* Content Area & Cards */
     #content {
-        padding: 24px !important;
+        padding: 28px !important;
     }
 
     #content h1 {
-        font-size: 1.6rem !important;
-        font-weight: 800 !important;
+        font-size: 1.75rem !important;
+        font-weight: 900 !important;
         color: #0F172A !important;
-        margin-bottom: 20px !important;
+        margin-bottom: 24px !important;
+        letter-spacing: -0.02em !important;
     }
 
-    /* Forms & Fieldsets */
+    /* Module & Card Containers */
+    .module {
+        background: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 18px !important;
+        margin-bottom: 24px !important;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03) !important;
+        overflow: hidden !important;
+    }
+
+    .module caption, .module h2 {
+        background: #0F172A !important;
+        color: #FFFFFF !important;
+        font-size: 12px !important;
+        font-weight: 900 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.08em !important;
+        padding: 12px 20px !important;
+        border-bottom: 3px solid #DC2626 !important;
+    }
+
+    /* Tables in Admin */
+    table {
+        width: 100% !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+    }
+
+    th, td {
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        padding: 12px 18px !important;
+    }
+
+    #result_list th {
+        background: #F8FAFC !important;
+        color: #475569 !important;
+        font-size: 11px !important;
+        text-transform: uppercase !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.06em !important;
+        border-bottom: 2px solid #E2E8F0 !important;
+    }
+
+    #result_list td {
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        color: #1E293B !important;
+        border-bottom: 1px solid #F1F5F9 !important;
+    }
+
+    #result_list tr:hover td {
+        background: #F8FAFC !important;
+    }
+
+    /* Forms & Inputs */
     fieldset {
         background: #FFFFFF !important;
         border: 1px solid #E2E8F0 !important;
-        border-radius: 16px !important;
-        padding: 20px 24px !important;
+        border-radius: 18px !important;
+        padding: 24px !important;
         margin-bottom: 24px !important;
-        box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.04) !important;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03) !important;
     }
 
     fieldset h2 {
         background: #F8FAFC !important;
         color: #0F172A !important;
-        font-size: 13px !important;
-        font-weight: 800 !important;
+        font-size: 12px !important;
+        font-weight: 900 !important;
         text-transform: uppercase !important;
         letter-spacing: 0.06em !important;
         padding: 10px 16px !important;
         border-radius: 10px !important;
         border: 1px solid #E2E8F0 !important;
-        margin-bottom: 16px !important;
+        margin-bottom: 20px !important;
     }
 
     .form-row {
@@ -158,27 +188,21 @@
         padding: 14px 0 !important;
     }
 
-    .form-row:last-child {
-        border-bottom: none !important;
-    }
-
     .form-row label {
-        font-weight: 700 !important;
+        font-weight: 800 !important;
         color: #334155 !important;
         font-size: 13px !important;
     }
 
-    /* Input Fields Styling */
     input[type="text"], input[type="password"], input[type="email"], input[type="number"], select, textarea {
         background: #F8FAFC !important;
         border: 1.5px solid #CBD5E1 !important;
-        border-radius: 10px !important;
+        border-radius: 12px !important;
         padding: 10px 14px !important;
-        font-size: 14px !important;
-        font-weight: 600 !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
         color: #0F172A !important;
         transition: all 0.2s ease-in-out !important;
-        max-width: 450px !important;
     }
 
     input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
@@ -188,36 +212,36 @@
         box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
     }
 
-    /* Submit & Action Buttons */
+    /* Submit Row Buttons */
     .submit-row {
         background: #FFFFFF !important;
         border: 1px solid #E2E8F0 !important;
-        border-radius: 16px !important;
-        padding: 16px 24px !important;
-        box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.04) !important;
+        border-radius: 18px !important;
+        padding: 18px 24px !important;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04) !important;
         display: flex !important;
         gap: 12px !important;
         align-items: center !important;
     }
 
     .submit-row input[type="submit"] {
-        background: linear-gradient(135deg, #2563EB, #1D4ED8) !important;
+        background: linear-gradient(135deg, #DC2626, #B91C1C) !important;
         color: #FFFFFF !important;
         font-weight: 800 !important;
-        font-size: 13px !important;
+        font-size: 12px !important;
         text-transform: uppercase !important;
         letter-spacing: 0.04em !important;
         border: none !important;
         border-radius: 10px !important;
         padding: 12px 24px !important;
         cursor: pointer !important;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important;
+        box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3) !important;
         transition: all 0.2s !important;
     }
 
     .submit-row input[type="submit"]:hover {
         transform: translateY(-1px) !important;
-        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35) !important;
+        box-shadow: 0 6px 18px rgba(220, 38, 38, 0.4) !important;
     }
 
     .submit-row input[name="_addanother"] {
@@ -227,71 +251,21 @@
         box-shadow: none !important;
     }
 
-    .submit-row input[name="_addanother"]:hover {
-        background: #E2E8F0 !important;
-        color: #0F172A !important;
-    }
-
-    .submit-row a.deletelink {
-        background: #FEF2F2 !important;
-        color: #DC2626 !important;
-        border: 1px solid #FCA5A5 !important;
-        font-weight: 800 !important;
-        font-size: 13px !important;
-        text-transform: uppercase !important;
-        border-radius: 10px !important;
-        padding: 10px 20px !important;
-        height: auto !important;
-        line-height: normal !important;
-        display: inline-flex !important;
-        align-items: center !important;
-    }
-
-    .submit-row a.deletelink:hover {
-        background: #DC2626 !important;
-        color: #FFFFFF !important;
-    }
-
-    /* Change List Table */
-    #changelist {
-        background: #FFFFFF !important;
-        border: 1px solid #E2E8F0 !important;
-        border-radius: 16px !important;
-        overflow: hidden !important;
-        box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.04) !important;
-    }
-
-    #result_list th {
-        background: #F8FAFC !important;
-        color: #475569 !important;
-        font-size: 12px !important;
-        text-transform: uppercase !important;
-        font-weight: 800 !important;
-        padding: 12px 16px !important;
-        border-bottom: 2px solid #E2E8F0 !important;
-    }
-
-    #result_list td {
-        padding: 14px 16px !important;
-        font-size: 14px !important;
-        font-weight: 600 !important;
-        color: #1E293B !important;
-        border-bottom: 1px solid #F1F5F9 !important;
-    }
-
-    #result_list tr:hover td {
-        background: #F8FAFC !important;
-    }
-
     .object-tools a {
-        background: linear-gradient(135deg, #DC2626, #B91C1C) !important;
+        background: linear-gradient(135deg, #2563EB, #1D4ED8) !important;
         color: #FFFFFF !important;
         font-weight: 800 !important;
-        font-size: 12px !important;
+        font-size: 11px !important;
         text-transform: uppercase !important;
         border-radius: 10px !important;
         padding: 10px 18px !important;
-        box-shadow: 0 4px 12px rgba(220,38,38,0.25) !important;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important;
+        text-decoration: none !important;
+    }
+
+    .object-tools a:hover {
+        background: linear-gradient(135deg, #1D4ED8, #1E40AF) !important;
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35) !important;
     }
 </style>
 {% endblock %}
