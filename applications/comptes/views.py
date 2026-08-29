@@ -30,15 +30,14 @@ def deconnexion_vue(request):
     return redirect('connexion')
 
 def rediriger_selon_role(user):
-    if user.role and user.role.code == 'ADMIN':
+    if user.is_superuser or user.is_staff or (user.role and user.role.code == 'ADMIN'):
         return redirect('admin_dashboard')
     elif user.role and user.role.code == 'JUGE_PRINCIPAL':
         return redirect('table_juge_principal')
     elif user.role and user.role.code == 'JURY':
         return redirect('tablette_juge')
-    elif user.is_superuser:
-        return redirect('admin_dashboard')
-    return redirect('connexion')
+    return redirect('admin_dashboard')
+
 
 @login_required
 def admin_dashboard_vue(request):
