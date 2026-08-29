@@ -44,10 +44,117 @@
         ::-webkit-scrollbar-track { background: #F1F5F9; }
         ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+        /* Style de Recherche Pilule avec Loupe Rouge (Image Référence) */
+        .search-pill-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            width: 100%;
+            max-width: 550px;
+        }
+
+        .search-pill-wrapper i.search-red-icon {
+            position: absolute;
+            left: 18px;
+            color: #DC2626; /* Loupe Rouge */
+            font-size: 16px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .search-pill-input, input[name="q"], input[type="search"], .auto-search-field {
+            border-radius: 9999px !important;
+            padding-left: 48px !important;
+            padding-right: 18px !important;
+            border: 1.5px solid #94A3B8 !important;
+            background-color: #FFFFFF !important;
+            height: 44px !important;
+            min-height: 44px !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            color: #1E293B !important;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+            transition: all 0.2s ease-in-out !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        .search-pill-input::placeholder, input[name="q"]::placeholder, input[type="search"]::placeholder, .auto-search-field::placeholder {
+            color: #64748B !important;
+            font-weight: 500 !important;
+        }
+
+        .search-pill-input:focus, input[name="q"]:focus, input[type="search"]:focus, .auto-search-field:focus {
+            border-color: #2563EB !important;
+            outline: none !important;
+            box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.15) !important;
+            background-color: #FFFFFF !important;
+        }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
 <body class="min-h-screen flex flex-col antialiased selection:bg-rose-500 selection:text-white">
     {% block body %}{% endblock %}
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function applyAutoSearchSystem() {
+            const inputs = document.querySelectorAll('input[name="q"], input[type="search"], .auto-search-field, .search-pill-input');
+
+            inputs.forEach(function(input) {
+                if (!input.dataset.pillStyled) {
+                    input.dataset.pillStyled = "true";
+
+                    // Transformer le champ en pilule avec loupe rouge si pas dans le wrapper
+                    if (!input.parentElement.classList.contains('search-pill-wrapper')) {
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'search-pill-wrapper';
+
+                        const icon = document.createElement('i');
+                        icon.className = 'fa-solid fa-magnifying-glass search-red-icon';
+
+                        input.parentNode.insertBefore(wrapper, input);
+                        wrapper.appendChild(icon);
+                        wrapper.appendChild(input);
+                    }
+
+                    if (!input.placeholder || input.placeholder === "") {
+                        input.placeholder = "Recherche...";
+                    }
+                }
+
+                // Filtrage dynamique au clavier (Instant Keyboard Auto-search)
+                let searchTimer = null;
+                input.addEventListener('input', function(e) {
+                    const query = e.target.value.toLowerCase().trim();
+
+                    // 1. Filtrer les éléments de la page en direct (cartes & lignes de tableau)
+                    const items = document.querySelectorAll('table tbody tr, .searchable-item, .searchable-card');
+                    if (items.length > 0) {
+                        items.forEach(function(item) {
+                            const text = item.textContent.toLowerCase();
+                            if (!query || text.includes(query)) {
+                                item.style.display = '';
+                            } else {
+                                item.style.display = 'none';
+                            }
+                        });
+                    }
+
+                    // 2. Si c'est un formulaire de recherche backend Django, auto-submit après pause de frappe 450ms
+                    if (input.form && input.name === 'q') {
+                        clearTimeout(searchTimer);
+                        searchTimer = setTimeout(function() {
+                            input.form.submit();
+                        }, 450);
+                    }
+                });
+            });
+        }
+
+        applyAutoSearchSystem();
+    });
+    </script>
 </body>
 </html>

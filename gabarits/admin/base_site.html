@@ -268,6 +268,53 @@
         -webkit-appearance: auto !important;
     }
 
+    /* Style Exact Pilule avec Loupe Rouge (Capture Utilisateur) */
+    .search-pill-wrapper {
+        position: relative !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        width: 100% !important;
+        max-width: 550px !important;
+    }
+
+    .search-pill-wrapper i.search-red-icon {
+        position: absolute !important;
+        left: 18px !important;
+        color: #DC2626 !important;
+        font-size: 16px !important;
+        pointer-events: none !important;
+        z-index: 10 !important;
+    }
+
+    .search-pill-input, #changelist-search input[type="text"], input[name="q"], input[type="search"] {
+        border-radius: 9999px !important;
+        padding-left: 48px !important;
+        padding-right: 18px !important;
+        border: 1.5px solid #94A3B8 !important;
+        background: #FFFFFF !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        color: #1E293B !important;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+        transition: all 0.2s ease-in-out !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .search-pill-input::placeholder, #changelist-search input[type="text"]::placeholder, input[name="q"]::placeholder, input[type="search"]::placeholder {
+        color: #64748B !important;
+        font-weight: 500 !important;
+    }
+
+    .search-pill-input:focus, #changelist-search input[type="text"]:focus, input[name="q"]:focus, input[type="search"]:focus {
+        border-color: #2563EB !important;
+        outline: none !important;
+        box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.15) !important;
+        background: #FFFFFF !important;
+    }
+
     /* Fix for Django Related Widgets (+ / Edit / Delete icons next to selects) */
     .related-widget-wrapper {
         display: flex !important;
@@ -326,24 +373,6 @@
         align-items: center !important;
         gap: 12px !important;
         box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03) !important;
-    }
-
-    #changelist-search input[type="text"] {
-        max-width: 450px !important;
-        flex: 1 1 280px !important;
-        margin: 0 !important;
-    }
-
-    #changelist-search input[type="submit"] {
-        background: #0F172A !important;
-        color: #FFFFFF !important;
-        font-weight: 800 !important;
-        border-radius: 10px !important;
-        padding: 10px 22px !important;
-        border: none !important;
-        cursor: pointer !important;
-        width: auto !important;
-        min-height: 42px !important;
     }
 
     .actions {
@@ -432,4 +461,68 @@
         box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35) !important;
     }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function setupPillAutoSearch() {
+        const searchInputs = document.querySelectorAll('input[name="q"], input[type="search"], .search-pill-input');
+
+        searchInputs.forEach(function(input) {
+            // 1. Ajouter le style de loupe rouge pilule si ce n'est pas fait
+            if (!input.dataset.pillProcessed) {
+                input.dataset.pillProcessed = "true";
+
+                // Masquer les boutons "Rechercher" explicites pour privilégier l'instantanéité
+                if (input.name === 'q' && input.form) {
+                    const submitBtn = input.form.querySelector('input[type="submit"]');
+                    if (submitBtn) submitBtn.style.display = 'none';
+                }
+
+                if (!input.parentElement.classList.contains('search-pill-wrapper')) {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'search-pill-wrapper';
+
+                    const icon = document.createElement('i');
+                    icon.className = 'fa-solid fa-magnifying-glass search-red-icon';
+
+                    input.parentNode.insertBefore(wrapper, input);
+                    wrapper.appendChild(icon);
+                    wrapper.appendChild(input);
+                }
+
+                input.placeholder = "Recherche...";
+            }
+
+            // 2. Recherche automatique au clavier en temps réel (frappe instantanée)
+            let timer = null;
+            input.addEventListener('input', function(e) {
+                const query = e.target.value.toLowerCase().trim();
+
+                // A. Filtrage dynamique instantané dans les tableaux admin
+                const rows = document.querySelectorAll('#result_list tbody tr, table tbody tr, .searchable-item');
+                if (rows.length > 0) {
+                    rows.forEach(function(row) {
+                        const text = row.textContent.toLowerCase();
+                        if (!query || text.includes(query)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                }
+
+                // B. Auto-soumission du formulaire de recherche admin (avec pause de frappe 450ms)
+                if (input.name === 'q' && input.form) {
+                    clearTimeout(timer);
+                    timer = setTimeout(function() {
+                        input.form.submit();
+                    }, 450);
+                }
+            });
+        });
+    }
+
+    setupPillAutoSearch();
+});
+</script>
 {% endblock %}
