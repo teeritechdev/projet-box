@@ -2,14 +2,80 @@ import json
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.cache import never_cache
 from django.contrib.auth.decorators import login_required
 from applications.combats.models import Combat, Evenement
 
+from django.views.decorators.clickjacking import xframe_options_exempt
+
+@never_cache
+@xframe_options_exempt
 def ecran_tv_broadcast_vue(request):
     return render(request, 'affichage_tv/ecran_broadcast.html')
 
+
+_DERNIER_COMBAT_DIFFUSION_ID = None
+
+def set_combat_diffusion_actif(combat_id):
+    global _DERNIER_COMBAT_DIFFUSION_ID
+    if combat_id:
+        try:
+            _DERNIER_COMBAT_DIFFUSION_ID = int(combat_id)
+        except (ValueError, TypeError):
+            pass
+
+def get_combat_diffusion_actif(combat_id=None):
+    """
+    Fonction unique de résolution du combat actif pour la régie et l'écran TV.
+    1. Si un combat_id est transmis explicitement, renvoyer ce combat.
+    2. Si un combat est 'EN_COURS', renvoyer ce combat 'EN_COURS'.
+    3. Si le dernier combat diffusé/sélectionné (_DERNIER_COMBAT_DIFFUSION_ID) existe, le maintenir.
+    4. Sinon, renvoyer le dernier combat 'TERMINE'.
+    5. Sinon, renvoyer le premier combat 'A_VENIR'.
+    """
+    # 1. Si un combat_id explicite est demandé
+    if combat_id:
+        try:
+            c_id = int(combat_id)
+            c = Combat.objects.filter(id=c_id).select_related('boxeur_rouge', 'boxeur_bleu', 'arbitre_central', 'juge_principal', 'evenement', 'categorie').first()
+            if c:
+                return c
+        except (ValueError, TypeError):
+            pass
+
+    # 2. Priorité absolue : Combat EN_COURS sur le ring
+    c = Combat.objects.filter(statut='EN_COURS').select_related('boxeur_rouge', 'boxeur_bleu', 'arbitre_central', 'juge_principal', 'evenement', 'categorie').first()
+    if c:
+        return c
+
+    # 3. Dernier combat sélectionné ou contrôlé (_DERNIER_COMBAT_DIFFUSION_ID)
+    global _DERNIER_COMBAT_DIFFUSION_ID
+    if _DERNIER_COMBAT_DIFFUSION_ID:
+        c = Combat.objects.filter(id=_DERNIER_COMBAT_DIFFUSION_ID).select_related('boxeur_rouge', 'boxeur_bleu', 'arbitre_central', 'juge_principal', 'evenement', 'categorie').first()
+        if c:
+            return c
+
+    # 4. Dernier combat TERMINE
+    c = Combat.objects.filter(statut='TERMINE').select_related('boxeur_rouge', 'boxeur_bleu', 'arbitre_central', 'juge_principal', 'evenement', 'categorie').order_by('-id').first()
+    if c:
+        return c
+
+    # 5. Premier combat A_VENIR
+    c = Combat.objects.filter(statut='A_VENIR').select_related('boxeur_rouge', 'boxeur_bleu', 'arbitre_central', 'juge_principal', 'evenement', 'categorie').order_by('numero_match').first()
+    if c:
+        return c
+
+    return Combat.objects.select_related('boxeur_rouge', 'boxeur_bleu', 'arbitre_central', 'juge_principal', 'evenement', 'categorie').first()
+
+
+
+
+
+@never_cache
 def api_statut_broadcast(request):
-    combat = Combat.objects.filter(statut__in=['EN_COURS', 'BROADCAST', 'A_VENIR', 'TERMINE']).select_related('boxeur_rouge', 'boxeur_bleu', 'arbitre_central', 'juge_principal', 'evenement', 'categorie').order_by('-id').first()
+
+    combat_id = request.GET.get('combat_id')
+    combat = get_combat_diffusion_actif(combat_id)
     
     if not combat:
         # Fallback si aucun combat
@@ -26,10 +92,11 @@ def api_statut_broadcast(request):
             'prochains_combats': []
         })
 
-    # Obtenir la liste des 5 prochains combats qui suivent
-    prochains_qs = Combat.objects.filter(id__gt=combat.id).select_related('boxeur_rouge', 'boxeur_bleu', 'categorie').order_by('numero_match')[:5]
-    if not prochains_qs.exists():
-        prochains_qs = Combat.objects.exclude(id=combat.id).select_related('boxeur_rouge', 'boxeur_bleu', 'categorie').order_by('numero_match')[:5]
+    # Obtenir la liste des prochains combats créés (À VENIR) ou tous les autres combats
+    prochains_qs = Combat.objects.filter(statut='A_VENIR').select_related('boxeur_rouge', 'boxeur_bleu', 'categorie').order_by('numero_match')[:10]
+    if not prochains_qs.exists() and combat:
+        prochains_qs = Combat.objects.exclude(id=combat.id).select_related('boxeur_rouge', 'boxeur_bleu', 'categorie').order_by('numero_match')[:10]
+
 
     prochains_combats = []
     for pc in prochains_qs:
@@ -46,6 +113,8 @@ def api_statut_broadcast(request):
     rounds_data = []
     tot_rouge = 0
     tot_bleu = 0
+    rounds_gagnes_rouge = 0
+    rounds_gagnes_bleu = 0
     round_actif_num = 1
 
     for r in combat.rounds.all():
@@ -59,10 +128,18 @@ def api_statut_broadcast(request):
         })
         if r.statut == 'EN_COURS':
             round_actif_num = r.numero_round
+        
+        # Addition de la somme cumulative des points de tous les rounds
+        tot_rouge += r.total_score_rouge
+        tot_bleu += r.total_score_bleu
+
+        # Décompte des rounds gagnés
         if r.coin_gagnant_round == 'ROUGE':
-            tot_rouge += 1
+            rounds_gagnes_rouge += 1
         elif r.coin_gagnant_round == 'BLEU':
-            tot_bleu += 1
+            rounds_gagnes_bleu += 1
+
+
 
     # Juges de table
     juges_list = []
@@ -120,6 +197,8 @@ def api_statut_broadcast(request):
             'surnom': combat.boxeur_rouge.surnom or "",
             'club': combat.boxeur_rouge.club,
             'pays': combat.boxeur_rouge.pays,
+            'drapeau_url': combat.boxeur_rouge.drapeau_url,
+            'drapeau_emoji': combat.boxeur_rouge.drapeau_emoji,
             'poids': float(combat.boxeur_rouge.poids_pesee) if combat.boxeur_rouge.poids_pesee else None,
             'taille': combat.boxeur_rouge.taille_cm,
             'age': combat.boxeur_rouge.age,
@@ -130,11 +209,14 @@ def api_statut_broadcast(request):
             'surnom': combat.boxeur_bleu.surnom or "",
             'club': combat.boxeur_bleu.club,
             'pays': combat.boxeur_bleu.pays,
+            'drapeau_url': combat.boxeur_bleu.drapeau_url,
+            'drapeau_emoji': combat.boxeur_bleu.drapeau_emoji,
             'poids': float(combat.boxeur_bleu.poids_pesee) if combat.boxeur_bleu.poids_pesee else None,
             'taille': combat.boxeur_bleu.taille_cm,
             'age': combat.boxeur_bleu.age,
             'photo': combat.boxeur_bleu.photo.url if combat.boxeur_bleu.photo else None,
         },
+
         'officiels': officiels_data,
         'media_regie': {
             'image_url': combat.media_regie_image.url if combat.media_regie_image else None,
@@ -142,16 +224,25 @@ def api_statut_broadcast(request):
         },
         'total_rouge': tot_rouge,
         'total_bleu': tot_bleu,
+        'rounds_gagnes_rouge': rounds_gagnes_rouge,
+        'rounds_gagnes_bleu': rounds_gagnes_bleu,
+
         'type_decision': combat.get_type_decision_display() if combat.type_decision else "Décision Officielle",
+        'round_fin': combat.round_fin,
+        'temps_fin_round': combat.temps_fin_round,
+        'details_decision': combat.details_decision or "",
+        'decision_qualification': combat.decision_qualification or combat.get_type_decision_display(),
         'rounds': rounds_data,
         'prochains_combats': prochains_combats
     }
 
     return JsonResponse(data)
 
+
+@never_cache
 @csrf_exempt
-@login_required
 def api_changer_mode_tv(request):
+
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -160,17 +251,31 @@ def api_changer_mode_tv(request):
             media_titre = data.get('media_titre')
 
             if combat_id:
-                combat = Combat.objects.get(id=combat_id)
-            else:
-                combat = Combat.objects.filter(statut__in=['EN_COURS', 'BROADCAST', 'A_VENIR']).order_by('-id').first()
+                set_combat_diffusion_actif(combat_id)
+            combat = get_combat_diffusion_actif(combat_id)
 
-            if combat and mode_tv:
-                combat.mode_tv = mode_tv
-                if media_titre:
-                    combat.media_regie_titre = media_titre
-                combat.save()
-                return JsonResponse({'statut': 'succes', 'mode_tv': combat.mode_tv, 'message': f'Mode TV mis à jour : {mode_tv}'})
+
+            if mode_tv:
+                if combat:
+                    combat.mode_tv = mode_tv
+                    if media_titre:
+                        combat.media_regie_titre = media_titre
+                    combat.save()
+
+                # Synchronisation globale instantanée : Mettre à jour mode_tv sur TOUS les combats
+                Combat.objects.all().update(mode_tv=mode_tv)
+
+                return JsonResponse({
+                    'statut': 'succes',
+                    'combat_id': combat.id if combat else None,
+                    'numero_match': combat.numero_match if combat else 1,
+                    'mode_tv': mode_tv,
+                    'message': f'Mode TV mis à jour : {mode_tv}'
+                })
+
         except Exception as e:
             return JsonResponse({'statut': 'erreur', 'message': str(e)}, status=400)
 
-    return JsonResponse({'statut': 'erreur', 'message': 'Requête invalide'}, status=400)
+    return JsonResponse({'statut': 'erreur', 'message': 'Requête invalide'}, status=400)
+
+

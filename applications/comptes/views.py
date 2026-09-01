@@ -72,6 +72,12 @@ def admin_dashboard_vue(request):
     combats = Combat.objects.all().select_related('boxeur_rouge', 'boxeur_bleu', 'evenement')
     evenements = Evenement.objects.all()
 
+    combat_actif = Combat.objects.filter(statut='EN_COURS').first()
+    if not combat_actif:
+        combat_actif = Combat.objects.filter(statut='TERMINE').order_by('-id').first()
+    if not combat_actif:
+        combat_actif = Combat.objects.first()
+
     context = {
         'utilisateurs': utilisateurs,
         'boxeurs': boxeurs,
@@ -79,5 +85,6 @@ def admin_dashboard_vue(request):
         'arbitres': arbitres,
         'combats': combats,
         'evenements': evenements,
+        'combat_actif': combat_actif,
     }
     return render(request, 'comptes/admin_dashboard.html', context)

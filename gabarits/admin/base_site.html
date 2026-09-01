@@ -222,9 +222,11 @@
         box-sizing: border-box !important;
         display: flex !important;
         flex-direction: column !important;
+        align-items: flex-start !important;
     }
 
-    .form-row label {
+    /* Force le Libellé (LABEL) TOUJOURS au tout début (order: 1) */
+    .form-row label, .field-box label, fieldset label, label {
         order: 1 !important;
         font-weight: 800 !important;
         color: #334155 !important;
@@ -236,20 +238,40 @@
         max-width: 100% !important;
         white-space: normal !important;
         word-break: break-word !important;
-        margin-bottom: 6px !important;
         float: none !important;
-        min-height: 18px !important;
+        margin-top: 0 !important;
+        margin-bottom: 6px !important;
+        clear: both !important;
     }
 
-    .form-row input, .form-row select, .form-row textarea, .form-row .related-widget-wrapper {
+    /* Force TOUS les champs de saisie, date, select, p, etc. en-dessous du libellé (order: 2) */
+    .form-row .field-box > *, .form-row input, .form-row select, .form-row textarea, .form-row .related-widget-wrapper, .form-row .readonly, .form-row div.readonly, .form-row p, p.datetime, .vDateField {
         order: 2 !important;
+        width: 100% !important;
+        float: none !important;
+        margin-top: 0 !important;
+    }
+
+
+    /* Style du champ readonly pour l'Age */
+    .form-row .readonly, .form-row div.readonly {
+        background: #FEF3C7 !important;
+        border: 1.5px solid #FCD34D !important;
+        border-radius: 12px !important;
+        padding: 10px 14px !important;
+        font-size: 14px !important;
+        font-weight: 900 !important;
+        color: #78350F !important;
+        display: inline-block !important;
+        min-height: 42px !important;
+        box-sizing: border-box !important;
     }
 
     .help, p.help, div.help, .form-row .help {
         order: 3 !important;
         font-size: 11px !important;
-        color: #64748B !important;
-        font-weight: 600 !important;
+        color: #2563EB !important;
+        font-weight: 700 !important;
         margin-top: 6px !important;
         margin-bottom: 0 !important;
         white-space: normal !important;
@@ -257,7 +279,6 @@
         display: block !important;
         clear: both !important;
     }
-
 
     input[type="text"], input[type="password"], input[type="email"], input[type="number"], input[type="date"], input[type="time"], select, textarea {
         background: #F8FAFC !important;
@@ -276,7 +297,7 @@
     select, .form-row select {
         width: 100% !important;
         max-width: 100% !important;
-        min-width: 100% !important;
+        min-width: 0 !important;
         height: 42px !important;
         min-height: 42px !important;
         line-height: 1.4 !important;
@@ -284,6 +305,84 @@
         -webkit-appearance: auto !important;
         box-sizing: border-box !important;
     }
+
+    /* Masquer DÉFINITIVEMENT toutes les icônes d'action (+ / crayon / x / oeil) à côté des listes déroulantes (Pays, Catégorie, etc.) */
+    #content-main .related-widget-wrapper-link,
+    #content-main a.related-widget-wrapper-link,
+    #content-main .related-widget-wrapper a,
+    .related-widget-wrapper-link,
+    a.related-widget-wrapper-link,
+    .change-related,
+    .add-related,
+    .delete-related,
+    .view-related,
+    a.change-related,
+    a.add-related,
+    a.delete-related,
+    a.view-related,
+    .field-pays_fk .related-widget-wrapper-link,
+    .field-pays_fk a,
+    .field-pays .related-widget-wrapper-link,
+    .field-pays a,
+    .field-categorie .related-widget-wrapper-link,
+    .field-categorie a,
+    .field-arbitre_central .related-widget-wrapper-link,
+    .field-arbitre_central a {
+        display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        height: 0 !important;
+        opacity: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        pointer-events: none !important;
+    }
+
+
+
+    /* Alignement Parfait des Champs Liés avec Liste Déroulante (ex: Pays, Catégorie) */
+    .related-widget-wrapper {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 6px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .related-widget-wrapper select {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+    }
+
+
+    .related-widget-wrapper .related-widget-wrapper-link,
+    .related-widget-wrapper a.related-widget-wrapper-link,
+    .related-widget-wrapper a {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        min-height: 36px !important;
+        border-radius: 10px !important;
+        background: #F1F5F9 !important;
+        border: 1px solid #CBD5E1 !important;
+        margin: 0 !important;
+        vertical-align: middle !important;
+        flex-shrink: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .related-widget-wrapper a:hover {
+        background: #DC2626 !important;
+        color: #FFFFFF !important;
+        border-color: #DC2626 !important;
+    }
+
 
 
     /* Style Unique Barre Pilule avec Loupe Rouge */
@@ -447,34 +546,66 @@
         display: flex !important;
         gap: 12px !important;
         align-items: center !important;
+        flex-wrap: wrap !important;
     }
 
-    .submit-row input[type="submit"] {
+    /* Bouton principal : Enregistrer et Fermer / Quitter */
+    .submit-row input[name="_save"], .submit-row input.default {
         background: linear-gradient(135deg, #DC2626, #B91C1C) !important;
         color: #FFFFFF !important;
-        font-weight: 800 !important;
-        font-size: 12px !important;
+        font-weight: 900 !important;
+        font-size: 13px !important;
         text-transform: uppercase !important;
         letter-spacing: 0.04em !important;
         border: none !important;
         border-radius: 10px !important;
-        padding: 12px 24px !important;
+        padding: 12px 26px !important;
         cursor: pointer !important;
-        box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3) !important;
+        box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35) !important;
         transition: all 0.2s !important;
         width: auto !important;
+        order: 1 !important;
     }
 
-    .submit-row input[type="submit"]:hover {
+    .submit-row input[name="_save"]:hover, .submit-row input.default:hover {
         transform: translateY(-1px) !important;
-        box-shadow: 0 6px 18px rgba(220, 38, 38, 0.4) !important;
+        box-shadow: 0 6px 18px rgba(220, 38, 38, 0.45) !important;
     }
 
-    .submit-row input[name="_addanother"] {
+    /* Bouton secondaire : Enregistrer et Rester sur la page */
+    .submit-row input[name="_continue"] {
         background: #F1F5F9 !important;
-        color: #334155 !important;
+        color: #475569 !important;
         border: 1px solid #CBD5E1 !important;
         box-shadow: none !important;
+        font-weight: 700 !important;
+        font-size: 11px !important;
+        border-radius: 10px !important;
+        padding: 10px 18px !important;
+        order: 2 !important;
+    }
+
+    .submit-row input[name="_continue"]:hover {
+        background: #E2E8F0 !important;
+        color: #0F172A !important;
+    }
+
+    /* Bouton secondaire : Sauvegarder et Ajouter un autre */
+    .submit-row input[name="_addanother"] {
+        background: #F8FAFC !important;
+        color: #64748B !important;
+        border: 1px solid #CBD5E1 !important;
+        box-shadow: none !important;
+        font-weight: 700 !important;
+        font-size: 11px !important;
+        border-radius: 10px !important;
+        padding: 10px 18px !important;
+        order: 3 !important;
+    }
+
+    .submit-row input[name="_addanother"]:hover {
+        background: #F1F5F9 !important;
+        color: #0F172A !important;
     }
 
     .object-tools a {
@@ -498,7 +629,6 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     function setupPillAutoSearch() {
-        // 1. Masquer le 2ème bouton gris "Rechercher" et renommer le bouton "Cours" -> "Exécuter l'action"
         const actionButtons = document.querySelectorAll('.actions button[name="index"], .actions button.button, .actions button');
         actionButtons.forEach(function(btn) {
             const txt = btn.textContent.trim().toLowerCase();
@@ -510,7 +640,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const searchInputs = document.querySelectorAll('input[name="q"], input[type="search"], .search-pill-input, .auto-search-field');
 
         searchInputs.forEach(function(input) {
-            // A. Une seule barre de recherche pilule propre avec loupe rouge
             if (!input.dataset.pillProcessed) {
                 input.dataset.pillProcessed = "true";
 
@@ -531,7 +660,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // B. Maintien du focus curseur si valeur présente
             if (input.value && input.value.trim() !== '') {
                 setTimeout(function() {
                     input.focus();
@@ -542,7 +670,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 100);
             }
 
-            // C. Filtrage instantané pur client sans rechargement
             input.addEventListener('input', function(e) {
                 const query = e.target.value.toLowerCase().trim();
 
@@ -561,7 +688,103 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function translateAddButtonsInNav() {
+        const addLinks = document.querySelectorAll('#nav-sidebar a.addlink, #nav-sidebar .addlink, a.addlink, a.add-another, #nav-sidebar a');
+        addLinks.forEach(function(el) {
+            const txt = el.textContent.trim();
+            if (txt === 'Add' || txt === '+ Add' || txt.toLowerCase() === 'add') {
+                el.innerHTML = '<i class="fa-solid fa-plus" style="font-size: 10px; margin-right: 3px;"></i>Ajouter';
+                el.style.color = '#059669';
+                el.style.fontWeight = '800';
+            } else if (el.innerHTML.includes('+ Add')) {
+                el.innerHTML = el.innerHTML.replace(/\+\s*Add/g, '+ Ajouter');
+            } else if (/\bAdd\b/.test(el.textContent) && !el.textContent.includes('Address') && !el.textContent.includes('Ajouter')) {
+                el.innerHTML = el.innerHTML.replace(/\bAdd\b/g, 'Ajouter');
+            }
+        });
+    }
+
+    function customizeSubmitButtons() {
+        const saveBtn = document.querySelector('.submit-row input[name="_save"]');
+        const continueBtn = document.querySelector('.submit-row input[name="_continue"]');
+
+        if (saveBtn) {
+            saveBtn.value = "ENREGISTRER ET FERMER (QUITTER)";
+        }
+        if (continueBtn) {
+            continueBtn.value = "Enregistrer et continuer l'édition";
+        }
+    }
+
+    function setupDateNaissanceAutoAge() {
+        const dobInput = document.querySelector('input[name="date_naissance"]');
+
+        if (dobInput) {
+            dobInput.placeholder = "JJ-MM-AAAA (ex: 15-08-1998)";
+
+            function updateAge() {
+                const ageInput = document.querySelector('.field-age .readonly, input[name="age"], #id_age');
+                if (dobInput.value) {
+                    const birth = new Date(dobInput.value);
+                    const today = new Date();
+                    let age = today.getFullYear() - birth.getFullYear();
+                    const m = today.getMonth() - birth.getMonth();
+                    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+                        age--;
+                    }
+                    if (age >= 0 && ageInput) {
+                        if (ageInput.tagName === 'INPUT') {
+                            ageInput.value = age;
+                        } else {
+                            ageInput.textContent = age + ' ans';
+                        }
+                    }
+                } else if (ageInput) {
+                    if (ageInput.tagName === 'INPUT') {
+                        ageInput.value = '';
+                    } else {
+                        ageInput.textContent = '-';
+                    }
+                }
+            }
+
+            ['change', 'input', 'keyup', 'blur'].forEach(function(evt) {
+                dobInput.addEventListener(evt, updateAge);
+            });
+            updateAge();
+        }
+    }
+
+
+
+    function forceRemoveRelatedActionIcons() {
+        const actionLinks = document.querySelectorAll(
+            '.related-widget-wrapper-link, a.add-related, a.change-related, a.delete-related, a.view-related, .change-related, .add-related, .delete-related, .view-related, .field-pays_fk a, .field-categorie a, .field-arbitre_central a'
+        );
+        actionLinks.forEach(function(link) {
+            link.style.display = 'none';
+            link.remove();
+        });
+    }
+
     setupPillAutoSearch();
+    translateAddButtonsInNav();
+    customizeSubmitButtons();
+    setupDateNaissanceAutoAge();
+    forceRemoveRelatedActionIcons();
+
+    [100, 300, 500, 1000].forEach(function(delay) {
+        setTimeout(function() {
+            translateAddButtonsInNav();
+            customizeSubmitButtons();
+            setupDateNaissanceAutoAge();
+            forceRemoveRelatedActionIcons();
+        }, delay);
+    });
 });
+
 </script>
 {% endblock %}
+
+
+

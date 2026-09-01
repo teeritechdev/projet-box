@@ -8,110 +8,615 @@
 
     <div class="p-4 md:p-8 flex flex-col justify-between max-w-7xl mx-auto space-y-6">
 
+        <!-- Barre de Sélection & Lancement Dynamique des Matches -->
+        <div class="p-4 bg-slate-950 text-white rounded-3xl border border-slate-800 shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3.5">
+                <span class="w-11 h-11 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center font-black text-xl shadow-xs">
+                    <i class="fa-solid fa-list-ol"></i>
+                </span>
+                <div>
+                    <span class="text-xs uppercase font-black text-amber-400 tracking-wider block">Choix du Match Officiel à Lancer</span>
+                    <span class="text-xs font-semibold text-slate-300">
+                        Match Sélectionné : <strong class="text-white font-extrabold font-teko text-base">MATCH #{{ combat.numero_match }} — {{ combat.boxeur_rouge.nom }} VS {{ combat.boxeur_bleu.nom }}</strong>
+                    </span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2.5 w-full md:w-auto">
+                <select id="select-match-officiel" onchange="voirCombatSelectionne(this.value)" class="px-4 py-2.5 bg-slate-900 text-white border border-slate-700 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-amber-500 flex-1 md:w-80 shadow-inner">
+                    {% for m in tous_les_combats %}
+                    <option value="{{ m.id }}" {% if m.id == combat.id %}selected{% endif %}>
+                        MATCH #{{ m.numero_match }} — {{ m.boxeur_rouge.nom }} VS {{ m.boxeur_bleu.nom }} ({% if m.statut == 'EN_COURS' %}🟢 EN COURS{% elif m.statut == 'TERMINE' %}✅ TERMINÉ{% else %}⏳ À VENIR{% endif %})
+                    </option>
+                    {% endfor %}
+                </select>
+
+                {% if combat.statut == 'EN_COURS' %}
+                <button onclick="lancerCeMatchOfficiel()" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white font-black text-xs uppercase rounded-xl shadow-md flex items-center gap-2 shrink-0 border border-emerald-400">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-300 animate-ping"></span>
+                    <i class="fa-solid fa-circle-check text-xs text-emerald-200"></i>
+                    <span>MATCH #{{ combat.numero_match }} EN DIRECT (LANCÉ)</span>
+                </button>
+                {% elif combat.statut == 'TERMINE' %}
+                <button disabled class="px-5 py-2.5 bg-slate-800 text-slate-400 font-black text-xs uppercase rounded-xl shadow-inner cursor-not-allowed flex items-center gap-1.5 shrink-0 border border-slate-700">
+                    <i class="fa-solid fa-lock text-xs text-amber-500"></i> MATCH TERMINÉ & CLÔTURÉ
+                </button>
+                {% else %}
+                <button onclick="lancerCeMatchOfficiel()" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs uppercase rounded-xl shadow-md flex items-center gap-1.5 shrink-0 transition-all transform hover:scale-[1.02]">
+                    <i class="fa-solid fa-play text-xs"></i> Lancer ce Match
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Signal Visuel Fort de Statut de Match (En Direct, En Attente ou Terminé) -->
+        {% if combat.statut == 'EN_COURS' %}
+        <div class="p-4 bg-emerald-500/10 border-2 border-emerald-500/30 rounded-2xl flex items-center justify-between text-emerald-900 shadow-xs">
+            <div class="flex items-center gap-3">
+                <span class="w-3.5 h-3.5 rounded-full bg-emerald-500 animate-ping"></span>
+                <div>
+                    <span class="text-[10px] font-black uppercase text-emerald-800 tracking-wider">Signal d'Émission en Direct</span>
+                    <h4 class="text-xs font-extrabold text-slate-900 uppercase">SIGNAL RÉGIE ACTIVÉ : MATCH #{{ combat.numero_match }} EN DIRECT SUR TOUS LES ÉCRANS & TABLETTES</h4>
+                </div>
+            </div>
+            <span class="px-3 py-1 bg-emerald-600 text-white font-extrabold text-xs uppercase rounded-xl shadow-xs flex items-center gap-1.5">
+                <i class="fa-solid fa-tower-broadcast animate-pulse"></i>
+                <span>EN DIRECT</span>
+            </span>
+        </div>
+        {% elif combat.statut == 'TERMINE' %}
+        <div class="p-4 bg-slate-900 border-2 border-slate-800 rounded-2xl flex items-center justify-between text-slate-300 shadow-xs">
+            <div class="flex items-center gap-3">
+                <span class="w-3.5 h-3.5 rounded-full bg-slate-600"></span>
+                <div>
+                    <h4 class="text-xs font-extrabold text-white uppercase flex items-center gap-1 flex-wrap">
+                        <span>MATCH #{{ combat.numero_match }} CLÔTURÉ — {{ combat.decision_qualification|default:"Victoire Officielle" }}</span>
+                        {% if combat.round_fin and combat.temps_fin_round and combat.temps_fin_round != "Fin du combat" %}
+                            <span>(ROUND {{ combat.round_fin }} À {{ combat.temps_fin_round }})</span>
+                        {% endif %}
+                        <span class="ml-1 font-extrabold text-slate-300">(<span class="text-red-400 font-extrabold">{{ totaux_juges.rouge }}</span> - <span class="text-blue-400 font-extrabold">{{ totaux_juges.bleu }}</span>)</span>
+                    </h4>
+
+                </div>
+            </div>
+            <span class="px-3 py-1 bg-slate-800 text-amber-400 font-extrabold text-xs uppercase rounded-xl shadow-xs flex items-center gap-1.5 border border-slate-700">
+                <i class="fa-solid fa-lock text-amber-500"></i>
+                <span>MATCH CLÔTURÉ</span>
+            </span>
+        </div>
+        {% else %}
+        <div class="p-4 bg-amber-500/10 border-2 border-amber-500/30 rounded-2xl flex items-center justify-between text-amber-900 shadow-xs">
+            <div class="flex items-center gap-3">
+                <span class="w-3.5 h-3.5 rounded-full bg-amber-500"></span>
+                <div>
+                    <span class="text-[10px] font-black uppercase text-amber-800 tracking-wider">Signal de Préparation</span>
+                    <h4 class="text-xs font-extrabold text-slate-900 uppercase">MATCH #{{ combat.numero_match }} EN ATTENTE DE LANCEMENT (Cliquez sur "▶ LANCER CE MATCH")</h4>
+                </div>
+            </div>
+            <span class="px-3 py-1 bg-amber-500 text-white font-extrabold text-xs uppercase rounded-xl shadow-xs flex items-center gap-1.5">
+                <i class="fa-solid fa-clock"></i>
+                <span>EN ATTENTE</span>
+            </span>
+        </div>
+        {% endif %}
+
+        <!-- Moniteur d'Aperçu en Direct de l'Écran TV Broadcast pour le Chef Juge -->
+        <div class="p-4 bg-slate-950 text-white border border-slate-800 rounded-3xl space-y-2 shadow-md">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-black uppercase text-amber-400 tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-tv"></i>
+                    <span>MONITEUR D'APERÇU EN DIRECT DU SIGNAL TV (MATCH #{{ combat.numero_match }})</span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                </span>
+                <a href="{% url 'ecran_broadcast' %}" target="_blank" class="px-3.5 py-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md">
+                    <i class="fa-solid fa-expand"></i>
+                    <span>Ouvrir en plein écran TV</span>
+                </a>
+            </div>
+            <div class="w-full h-[320px] rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 relative shadow-2xl">
+                <iframe id="previewTvIframe" src="{% url 'ecran_broadcast' %}" class="w-full h-full border-0"></iframe>
+            </div>
+        </div>
+
+
 
     {% if combat %}
+
     <main class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1">
+        <!-- Colonne Gauche : Carte Officielle des Combattants & Chronomètre -->
         <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-6">
             <div>
                 <div class="flex justify-between items-center pb-4 border-b border-slate-100 mb-6">
                     <span class="px-3.5 py-1 bg-amber-100 text-amber-800 border border-amber-300 text-xs font-black uppercase rounded-full tracking-wider">Match #{{ combat.numero_match }}</span>
                     <span class="text-xs font-extrabold text-slate-700 uppercase bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">{{ combat.categorie }}</span>
                 </div>
+                
+                <!-- Cartes Visuelles des Combattants avec Photos & Drapeaux -->
                 <div class="space-y-4">
-                    <div class="p-5 bg-red-50/60 border-2 border-red-200 rounded-2xl flex items-center justify-between shadow-xs">
-                        <div>
-                            <span class="px-2.5 py-0.5 bg-red-600 text-white text-[10px] font-black uppercase rounded-full tracking-wider">Coin Rouge</span>
-                            <h3 class="text-2xl font-black font-teko text-slate-900 tracking-wide mt-1">{{ combat.boxeur_rouge.prenom }} {{ combat.boxeur_rouge.nom }}</h3>
-                            <p class="text-xs text-slate-500 font-medium">{{ combat.boxeur_rouge.club }} • {{ combat.boxeur_rouge.pays }}</p>
+                    <!-- Coin Rouge -->
+                    <div class="p-4 bg-red-50/70 border-2 border-red-200 rounded-2xl flex items-center justify-between shadow-xs gap-3">
+                        <div class="flex items-center gap-3.5 min-w-0">
+                            {% if combat.boxeur_rouge.photo %}
+                                <img src="{{ combat.boxeur_rouge.photo.url }}" alt="{{ combat.boxeur_rouge.nom }}" class="w-14 h-14 rounded-2xl object-cover border-2 border-red-500 shadow-md shrink-0">
+                            {% else %}
+                                <div class="w-14 h-14 rounded-2xl bg-red-600 text-white flex items-center justify-center font-black font-teko text-2xl border-2 border-red-400 shadow-md shrink-0">
+                                    {{ combat.boxeur_rouge.prenom|slice:":1" }}{{ combat.boxeur_rouge.nom|slice:":1" }}
+                                </div>
+                            {% endif %}
+                            <div class="min-w-0 space-y-0.5">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="px-2 py-0.5 bg-red-600 text-white text-[9px] font-black uppercase rounded-md tracking-wider">Coin Rouge</span>
+                                    <span class="text-sm font-bold text-slate-800">{{ combat.boxeur_rouge.drapeau_emoji }}</span>
+                                </div>
+                                <h3 class="text-xl font-black font-teko text-slate-900 tracking-wide truncate leading-tight mt-0.5">
+                                    {{ combat.boxeur_rouge.prenom }} {{ combat.boxeur_rouge.nom }}
+                                </h3>
+                                <p class="text-[11px] text-slate-500 font-semibold truncate">
+                                    {{ combat.boxeur_rouge.club }} • <span class="text-slate-700 font-bold">{{ combat.boxeur_rouge.pays }}</span>
+                                </p>
+                                <p class="text-[10px] text-slate-400 font-mono">
+                                    {{ combat.boxeur_rouge.poids_pesee|default:"--" }} kg {% if combat.boxeur_rouge.age %}• {{ combat.boxeur_rouge.age }} ans{% endif %}
+                                </p>
+                            </div>
                         </div>
-                        <span class="text-4xl font-black font-teko text-red-600 bg-white px-3.5 py-1 rounded-xl border border-red-200 shadow-xs">{{ totaux_juges.rouge }}</span>
+                        <span class="text-4xl font-black font-teko text-red-600 bg-white px-3 py-1 rounded-xl border border-red-200 shadow-xs shrink-0">{{ totaux_juges.rouge }}</span>
                     </div>
 
-                    <div class="p-5 bg-blue-50/60 border-2 border-blue-200 rounded-2xl flex items-center justify-between shadow-xs">
-                        <div>
-                            <span class="px-2.5 py-0.5 bg-blue-600 text-white text-[10px] font-black uppercase rounded-full tracking-wider">Coin Bleu</span>
-                            <h3 class="text-2xl font-black font-teko text-slate-900 tracking-wide mt-1">{{ combat.boxeur_bleu.prenom }} {{ combat.boxeur_bleu.nom }}</h3>
-                            <p class="text-xs text-slate-500 font-semibold mt-0.5">{{ combat.boxeur_bleu.club }} • {{ combat.boxeur_bleu.pays }}</p>
+                    <!-- Coin Bleu -->
+                    <div class="p-4 bg-blue-50/70 border-2 border-blue-200 rounded-2xl flex items-center justify-between shadow-xs gap-3">
+                        <div class="flex items-center gap-3.5 min-w-0">
+                            {% if combat.boxeur_bleu.photo %}
+                                <img src="{{ combat.boxeur_bleu.photo.url }}" alt="{{ combat.boxeur_bleu.nom }}" class="w-14 h-14 rounded-2xl object-cover border-2 border-blue-500 shadow-md shrink-0">
+                            {% else %}
+                                <div class="w-14 h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black font-teko text-2xl border-2 border-blue-400 shadow-md shrink-0">
+                                    {{ combat.boxeur_bleu.prenom|slice:":1" }}{{ combat.boxeur_bleu.nom|slice:":1" }}
+                                </div>
+                            {% endif %}
+                            <div class="min-w-0 space-y-0.5">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="px-2 py-0.5 bg-blue-600 text-white text-[9px] font-black uppercase rounded-md tracking-wider">Coin Bleu</span>
+                                    <span class="text-sm font-bold text-slate-800">{{ combat.boxeur_bleu.drapeau_emoji }}</span>
+                                </div>
+                                <h3 class="text-xl font-black font-teko text-slate-900 tracking-wide truncate leading-tight mt-0.5">
+                                    {{ combat.boxeur_bleu.prenom }} {{ combat.boxeur_bleu.nom }}
+                                </h3>
+                                <p class="text-[11px] text-slate-500 font-semibold truncate">
+                                    {{ combat.boxeur_bleu.club }} • <span class="text-slate-700 font-bold">{{ combat.boxeur_bleu.pays }}</span>
+                                </p>
+                                <p class="text-[10px] text-slate-400 font-mono">
+                                    {{ combat.boxeur_bleu.poids_pesee|default:"--" }} kg {% if combat.boxeur_bleu.age %}• {{ combat.boxeur_bleu.age }} ans{% endif %}
+                                </p>
+                            </div>
                         </div>
-                        <span class="text-4xl font-black font-teko text-blue-600 bg-white px-3.5 py-1 rounded-xl border border-blue-200 shadow-xs">{{ totaux_juges.bleu }}</span>
+                        <span class="text-4xl font-black font-teko text-blue-600 bg-white px-3 py-1 rounded-xl border border-blue-200 shadow-xs shrink-0">{{ totaux_juges.bleu }}</span>
                     </div>
+                </div>
+            </div>
+
+            <!-- Chronomètre Officiel du Match -->
+            <div class="p-5 bg-slate-950 text-white rounded-2xl border border-slate-800 shadow-md space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-black uppercase text-amber-400 tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-stopwatch animate-pulse"></i>
+                        <span>Chrono Officiel Match</span>
+                    </span>
+                    <span id="label-round-actif" class="text-[11px] font-extrabold uppercase bg-slate-800 px-2.5 py-0.5 rounded-full text-slate-300">
+                        {% if round_actif %}
+                            Round {{ round_actif.numero_round }} en cours
+                        {% else %}
+                            Chrono Prêt (Attente Round)
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="text-center py-2 bg-slate-900 rounded-xl border border-slate-800">
+                    <span id="display-chrono" class="text-5xl font-black font-mono tracking-widest text-amber-400">03:00</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-xs font-extrabold uppercase">
+                    <button onclick="demarrerChronoManuel()" id="btn-start-chrono" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-xs transition-all flex items-center justify-center gap-1 {% if not round_actif %}opacity-50 cursor-not-allowed{% endif %}">
+                        <i class="fa-solid fa-play text-xs"></i> Start
+                    </button>
+                    <button onclick="pauseChrono()" id="btn-pause-chrono" class="py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl shadow-xs transition-all flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-pause text-xs"></i> Pause
+                    </button>
+                    <button onclick="resetChrono()" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl shadow-xs transition-all flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-rotate-left text-xs"></i> Reset
+                    </button>
                 </div>
             </div>
 
             <div class="pt-4 border-t border-slate-100 text-xs text-slate-600 space-y-2.5 font-semibold">
                 <div class="flex justify-between items-center">
                     <span class="text-slate-500">Arbitre Central:</span>
-                    <span class="font-bold text-slate-900">{{ combat.arbitre_central }}</span>
+                    <span class="font-bold text-slate-900">{% if combat.arbitre_central %}{{ combat.arbitre_central.drapeau_emoji }} {{ combat.arbitre_central }}{% else %}Non désigné{% endif %}</span>
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="text-slate-500">Statut du Match:</span>
-                    <span class="px-2.5 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-extrabold uppercase rounded-md">{{ combat.statut }}</span>
+                    {% if combat.statut == 'EN_COURS' %}
+                    <span class="px-3 py-1 bg-emerald-600 text-white font-extrabold text-[10px] uppercase rounded-full shadow-xs flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-white animate-ping"></span>
+                        <span>🟢 EN COURS (EN DIRECT)</span>
+                    </span>
+                    {% elif combat.statut == 'TERMINE' %}
+                    <span class="px-3 py-1 bg-blue-600 text-white font-extrabold text-[10px] uppercase rounded-full shadow-xs">
+                        ✅ TERMINÉ
+                    </span>
+                    {% else %}
+                    <span class="px-3 py-1 bg-amber-500 text-white font-extrabold text-[10px] uppercase rounded-full shadow-xs">
+                        ⏳ EN ATTENTE
+                    </span>
+                    {% endif %}
                 </div>
+
+                {% if combat.decision_qualification %}
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 font-bold space-y-1">
+                    <div class="flex items-center gap-1.5 text-xs text-amber-700">
+                        <i class="fa-solid fa-trophy"></i>
+                        <span>{{ combat.decision_qualification }}</span>
+                    </div>
+                    <div class="text-[11px] font-normal text-slate-700">{{ combat.details_decision }}</div>
+                </div>
+                {% endif %}
             </div>
         </div>
 
+        <!-- Colonne Droite : Tableau des Rounds & Saisie des Juges -->
         <div class="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-6">
             <div>
-                <h2 class="text-lg font-bold font-teko text-slate-900 uppercase tracking-wider mb-6 flex items-center gap-2">
-                    <i class="fa-solid fa-list-check text-amber-500"></i>
-                    <span>Notes attribuées par le Jury (Tableau des Rounds)</span>
+                <h2 class="text-lg font-bold font-teko text-slate-900 uppercase tracking-wider mb-6 flex items-center justify-between">
+                    <span class="flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-amber-500"></i>
+                        <span>Notes attribuées par le Jury (Tableau des Rounds)</span>
+                    </span>
+                    <span class="text-xs font-sans text-slate-500 font-bold">3 Juges de Table Requis</span>
                 </h2>
+
+                {% if combat.statut == 'A_VENIR' %}
+                <div class="mb-6 p-5 bg-amber-500/10 border-2 border-amber-500/30 rounded-2xl flex items-center gap-4 text-amber-900">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-xl shrink-0 shadow-md">
+                        <i class="fa-solid fa-lock"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-black font-teko text-lg uppercase tracking-wide leading-tight text-amber-900">Match #{{ combat.numero_match }} Non Encore Lancé Officiellement</h4>
+                        <p class="text-xs font-semibold text-slate-700 mt-0.5">
+                            Pour afficher la notation et autoriser le lancement des rounds, veuillez d'abord cliquer sur le bouton vert <strong>"▶ LANCER CE MATCH"</strong> en haut.
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+
 
                 <div class="space-y-4">
                     {% for item in scores_par_round %}
-                    <div class="p-5 bg-slate-50/80 border border-slate-200 hover:bg-white hover:border-slate-300 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all shadow-xs">
-                        <div class="flex items-center gap-4">
-                            <span class="w-12 h-12 rounded-2xl bg-white text-slate-900 flex items-center justify-center font-black font-teko text-2xl border border-slate-300 shadow-xs shrink-0">R{{ item.round.numero_round }}</span>
-                            <div>
-                                <span class="text-[11px] font-extrabold uppercase {% if item.round.statut == 'EN_COURS' %}text-emerald-600{% else %}text-slate-500{% endif %}">Statut: {{ item.round.statut }}</span>
-                                <div class="text-sm font-bold text-slate-900 mt-0.5">Score Total: <span class="text-red-600 font-extrabold">{{ item.round.total_score_rouge }}</span> - <span class="text-blue-600 font-extrabold">{{ item.round.total_score_bleu }}</span></div>
+                    <div class="p-5 bg-slate-50/80 border border-slate-200 hover:bg-white hover:border-slate-300 rounded-2xl flex flex-col space-y-3 transition-all shadow-xs">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div class="flex items-center gap-4">
+                                <span class="w-12 h-12 rounded-2xl bg-white text-slate-900 flex items-center justify-center font-black font-teko text-2xl border border-slate-300 shadow-xs shrink-0">R{{ item.round.numero_round }}</span>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[11px] font-extrabold uppercase {% if item.round.statut == 'EN_COURS' %}text-emerald-600{% elif item.round.statut == 'TERMINE' %}text-blue-600{% else %}text-slate-500{% endif %}">Statut: {{ item.round.statut }}</span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {% if item.est_complet %}bg-emerald-100 text-emerald-800 border border-emerald-200{% else %}bg-amber-100 text-amber-800 border border-amber-200{% endif %}">
+                                            {{ item.nb_valides }}/3 Juges Saisis
+                                        </span>
+                                    </div>
+                                    <div class="text-sm font-bold text-slate-900 mt-0.5">Score Total Round: <span class="text-red-600 font-extrabold">{{ item.round.total_score_rouge }}</span> - <span class="text-blue-600 font-extrabold">{{ item.round.total_score_bleu }}</span></div>
+                                </div>
+                            </div>
+
+                            <!-- Bouton d'Action Lancer / Valider Round avec Sécurité Séquentielle Strict -->
+                            <div class="flex items-center gap-2 shrink-0">
+                                {% if item.round.statut == 'EN_ATTENTE' %}
+                                    {% if combat.statut == 'EN_COURS' and item.peut_etre_lance %}
+                                    <button onclick="actionRound({{ item.round.id }}, 'demarrer')" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-1.5 transition-all">
+                                        <i class="fa-solid fa-play text-xs"></i>
+                                        <span>Lancer Round {{ item.round.numero_round }}</span>
+                                    </button>
+                                    {% elif combat.statut != 'EN_COURS' %}
+                                    <button disabled title="Le match doit être lancé avant de démarrer un round" class="px-5 py-2.5 bg-slate-200 text-slate-400 rounded-xl text-xs font-extrabold uppercase tracking-wider cursor-not-allowed flex items-center gap-1.5 border border-slate-300">
+                                        <i class="fa-solid fa-lock text-xs"></i>
+                                        <span>Lancer Round {{ item.round.numero_round }} (Match non lancé)</span>
+                                    </button>
+                                    {% else %}
+                                    <button disabled title="Le Round précédent doit être validé par le Chef Juge" class="px-5 py-2.5 bg-slate-200 text-slate-400 rounded-xl text-xs font-extrabold uppercase tracking-wider cursor-not-allowed flex items-center gap-1.5 border border-slate-300">
+                                        <i class="fa-solid fa-lock text-xs"></i>
+                                        <span>Lancer Round {{ item.round.numero_round }} (Attente Round {{ item.round.numero_round|add:"-1" }})</span>
+                                    </button>
+                                    {% endif %}
+                                {% elif item.round.statut == 'EN_COURS' %}
+                                    {% if item.est_complet %}
+                                    <button onclick="actionRound({{ item.round.id }}, 'terminer')" class="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white rounded-xl text-xs font-extrabold uppercase tracking-wider shadow-sm flex items-center gap-1.5 animate-pulse">
+                                        <i class="fa-solid fa-check text-xs"></i>
+                                        <span>Valider Round {{ item.round.numero_round }}</span>
+                                    </button>
+                                    {% else %}
+                                    <button disabled title="En attente des notes des 3 juges sur leur tablette" class="px-5 py-2.5 bg-slate-300 text-slate-500 rounded-xl text-xs font-extrabold uppercase tracking-wider cursor-not-allowed flex items-center gap-1.5 border border-slate-400">
+                                        <i class="fa-solid fa-lock text-xs"></i>
+                                        <span>Valider Round ({{ item.nb_valides }}/3 Juges)</span>
+                                    </button>
+                                    {% endif %}
+                                {% else %}
+                                <span class="px-3.5 py-2 bg-emerald-100 text-emerald-800 text-xs font-extrabold rounded-xl border border-emerald-300 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                                    <span>Round {{ item.round.numero_round }} Validé</span>
+                                </span>
+                                {% endif %}
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-2 flex-wrap">
+                        <!-- Liste Individuelle des Notes par Juge -->
+                        <div class="flex items-center gap-2 flex-wrap pt-2 border-t border-slate-200/60">
+                            <span class="text-[11px] font-bold text-slate-500 uppercase mr-1">Juges de table:</span>
                             {% for score in item.scores_juges %}
-                                <span class="px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-mono shadow-xs">
-                                    <span class="text-slate-700 font-bold">{{ score.juge.username }}:</span>
+                                <span class="px-3 py-1 bg-white border border-slate-300 rounded-xl text-xs font-mono shadow-2xs flex items-center gap-1.5">
+                                    <i class="fa-solid fa-circle-check text-emerald-500 text-[10px]"></i>
+                                    <span class="text-slate-800 font-bold">{{ score.juge.username }}:</span>
                                     <span class="text-red-600 font-extrabold">{{ score.points_rouge }}</span>-<span class="text-blue-600 font-extrabold">{{ score.points_bleu }}</span>
                                 </span>
                             {% empty %}
-                                <span class="text-xs text-slate-400 italic">En attente de la saisie des juges...</span>
+                                <span class="text-xs text-amber-600 font-semibold italic flex items-center gap-1">
+                                    <i class="fa-solid fa-hourglass-start animate-spin"></i>
+                                    En attente de la saisie des 3 juges sur leur tablette...
+                                </span>
                             {% endfor %}
-                        </div>
-
-                        <div class="flex items-center gap-2 shrink-0">
-                            {% if item.round.statut == 'EN_ATTENTE' %}
-                            <button onclick="actionRound({{ item.round.id }}, 'demarrer')" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm">Lancer Round</button>
-                            {% elif item.round.statut == 'EN_COURS' %}
-                            <button onclick="actionRound({{ item.round.id }}, 'terminer')" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm">Valider Round</button>
-                            {% else %}
-                            <span class="px-3 py-1.5 bg-emerald-100 text-emerald-700 text-xs font-extrabold rounded-xl border border-emerald-300">Round Terminé</span>
-                            {% endif %}
                         </div>
                     </div>
                     {% endfor %}
                 </div>
             </div>
 
-            <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3 flex-wrap">
-                <button onclick="changerModeTV('DECISION_RECAP')" class="px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-amber-400 font-extrabold rounded-2xl uppercase tracking-wider text-xs shadow-md flex items-center gap-2 border border-amber-500/40 transition-all">
-                    <i class="fa-solid fa-chart-simple text-sm"></i>
-                    <span>📊 1. Afficher Tableau Récapitulatif Scores TV</span>
-                </button>
+            <!-- Barre d'Action Inférieure Ordonnée et Stylisée -->
+            <div class="pt-5 border-t border-slate-200">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Bouton 1 : Arrêt Prématuré du Match -->
+                    {% if tous_rounds_valides %}
+                    <button disabled title="Tous les rounds ont été validés. Le combat est allé au terme du temps et doit être clôturé aux points." class="px-4 py-3 bg-slate-200 text-slate-400 font-extrabold rounded-2xl uppercase tracking-wider text-xs shadow-none flex items-center justify-center gap-2 border border-slate-300 cursor-not-allowed opacity-60">
+                        <i class="fa-solid fa-lock text-sm"></i>
+                        <span>Arrêt Match (Indisponible - 3 Rounds Validés)</span>
+                    </button>
+                    {% else %}
+                    <button onclick="ouvrirModalArret()" class="px-4 py-3 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-extrabold rounded-2xl uppercase tracking-wider text-xs shadow-md flex items-center justify-center gap-2 border border-red-500 transition-all transform hover:scale-[1.02]">
+                        <i class="fa-solid fa-hand-stop text-sm"></i>
+                        <span>Arrêt Match (KO/TKO)</span>
+                    </button>
+                    {% endif %}
 
-                {% if combat.rounds.last and combat.rounds.last.id %}
-                <button onclick="actionRound({{ combat.rounds.last.id }}, 'cloturer_combat')" class="px-8 py-3.5 bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black rounded-2xl uppercase tracking-wider text-xs shadow-lg flex items-center gap-3 transition-all transform hover:scale-105">
-                    <i class="fa-solid fa-trophy text-sm"></i>
-                    <span>🏆 2. Proclamer le Vainqueur & Lancer Musique</span>
-                </button>
-                {% endif %}
+                    <!-- Bouton 2 : Récapitulatif Scores TV -->
+                    <button onclick="changerModeTV('DECISION_RECAP')" class="px-4 py-3 bg-slate-950 hover:bg-slate-900 text-amber-400 font-extrabold rounded-2xl uppercase tracking-wider text-xs shadow-md flex items-center justify-center gap-2 border border-amber-500/40 transition-all transform hover:scale-[1.02]">
+                        <i class="fa-solid fa-chart-line text-sm text-cyan-400"></i>
+                        <span>Récap Scores TV</span>
+                    </button>
+
+                    <!-- Bouton 3 : Décision aux Points & Vainqueur -->
+                    {% if combat.rounds.last and combat.rounds.last.id %}
+                    <button onclick="actionRound({{ combat.rounds.last.id }}, 'cloturer_combat')" class="px-4 py-3 bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-black rounded-2xl uppercase tracking-wider text-xs shadow-lg flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] {% if tous_rounds_valides %}animate-pulse ring-4 ring-amber-400/50{% endif %}">
+                        <i class="fa-solid fa-trophy text-sm text-yellow-200"></i>
+                        <span>Décision Points & Vainqueur</span>
+                    </button>
+                    {% endif %}
+                </div>
             </div>
+
         </div>
     </main>
     {% endif %}
+
+</div>
+
+<!-- Modal d'Arrêt Prématuré avec Détection Automatique -->
+<div id="modal-arret" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50 transition-all">
+    <div class="bg-white w-full max-w-xl rounded-3xl p-6 md:p-8 shadow-2xl border border-slate-200 space-y-6">
+        <div class="flex justify-between items-start border-b border-slate-100 pb-4">
+            <div>
+                <span class="px-3 py-1 bg-red-100 text-red-700 text-xs font-black uppercase rounded-full">Fin Prématurée de Combat</span>
+                <h3 class="text-2xl font-black font-teko text-slate-900 uppercase tracking-wider mt-1">Proclamation par K.O. / Soumission / Arrêt</h3>
+            </div>
+            <button onclick="fermerModalArret()" class="text-slate-400 hover:text-slate-600 p-2"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+
+        <!-- Détection Automatique -->
+        <div class="p-4 bg-slate-900 text-white rounded-2xl flex items-center justify-between border border-slate-800">
+            <div class="flex items-center gap-3">
+                <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+                <div>
+                    <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Round & Chrono Extraits Automatiquement</div>
+                    <div class="text-lg font-black font-mono text-amber-400">
+                        Round <span id="auto-round-num">1</span> — Temps Écoulé : <span id="auto-temps-chrono">01:42</span>
+                    </div>
+                </div>
+            </div>
+            <i class="fa-solid fa-robot text-2xl text-emerald-400"></i>
+        </div>
+
+        <form id="form-arret-premature" onsubmit="soumettreArretPremature(event)" class="space-y-5">
+            <div>
+                <label class="block text-xs font-extrabold uppercase text-slate-700 mb-2">1. Sélectionner le Vainqueur *</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="coin_vainqueur" value="ROUGE" required class="peer hidden">
+                        <div class="p-4 rounded-2xl border-2 border-slate-200 peer-checked:border-red-600 peer-checked:bg-red-50 text-center transition-all">
+                            <span class="px-2.5 py-0.5 bg-red-600 text-white text-[10px] font-black uppercase rounded-full">Coin Rouge</span>
+                            <div class="font-black font-teko text-xl text-slate-900 mt-1">{{ combat.boxeur_rouge.prenom }} {{ combat.boxeur_rouge.nom }}</div>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="coin_vainqueur" value="BLEU" required class="peer hidden">
+                        <div class="p-4 rounded-2xl border-2 border-slate-200 peer-checked:border-blue-600 peer-checked:bg-blue-50 text-center transition-all">
+                            <span class="px-2.5 py-0.5 bg-blue-600 text-white text-[10px] font-black uppercase rounded-full">Coin Bleu</span>
+                            <div class="font-black font-teko text-xl text-slate-900 mt-1">{{ combat.boxeur_bleu.prenom }} {{ combat.boxeur_bleu.nom }}</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-extrabold uppercase text-slate-700 mb-2">2. Type de Victoire *</label>
+                <select id="select-type-decision" name="type_decision" required class="w-full px-4 py-3 rounded-xl border border-slate-300 font-bold text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <option value="KO">K.O. (Knockout)</option>
+                    <option value="TKO">T.K.O. (Technique K.O. / Arrêt Arbitre)</option>
+                    <option value="SOUMISSION">Soumission (Clef / Étranglement)</option>
+                    <option value="ABANDON">Abandon du Combattant / Coin</option>
+                    <option value="ARRET_MEDICAL">Arrêt Médical</option>
+                    <option value="DISQUALIFICATION">Disqualification (DQ)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-extrabold uppercase text-slate-700 mb-2">3. Remarque / Technique (Optionnel)</label>
+                <input type="text" id="input-technique" placeholder="Ex: Étranglement arrière, Crochet du gauche..." class="w-full px-4 py-3 rounded-xl border border-slate-300 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500">
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" onclick="fermerModalArret()" class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs uppercase">Annuler</button>
+                <button type="submit" class="px-7 py-3 bg-red-600 hover:bg-red-700 text-white font-black rounded-xl text-xs uppercase shadow-lg tracking-wider">Confirmer & Proclamer Vainqueur</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script>
+// Chronomètre officiel interactif
+let chronoInterval = null;
+let tempsRestantSecondes = 180; // 3 minutes par défaut
+let chronoEnCours = false;
+
+function formatTemps(secondes) {
+    const mins = Math.floor(secondes / 60);
+    const secs = secondes % 60;
+    return (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+}
+
+function majDisplayChrono() {
+    const display = document.getElementById('display-chrono');
+    if(display) {
+        display.innerText = formatTemps(tempsRestantSecondes);
+    }
+}
+
+function demarrerChronoManuel() {
+    {% if not round_actif %}
+    alert("⛔ IMPOSSIBLE DE DÉMARRER LE CHRONO :\n\nVous devez d'abord cliquer sur 'LANCER ROUND' pour démarrer officiellement le round et son chronomètre.");
+    return;
+    {% else %}
+    demarrerChrono();
+    {% endif %}
+}
+
+function demarrerChrono() {
+    if(chronoEnCours) return;
+    chronoEnCours = true;
+    chronoInterval = setInterval(() => {
+        if(tempsRestantSecondes > 0) {
+            tempsRestantSecondes--;
+            majDisplayChrono();
+        } else {
+            pauseChrono();
+        }
+    }, 1000);
+}
+
+
+function pauseChrono() {
+    chronoEnCours = false;
+    if(chronoInterval) {
+        clearInterval(chronoInterval);
+        chronoInterval = null;
+    }
+}
+
+function resetChrono() {
+    pauseChrono();
+    tempsRestantSecondes = 180;
+    majDisplayChrono();
+}
+
+function getRoundActifNumero() {
+    {% for item in scores_par_round %}
+        {% if item.round.statut == 'EN_COURS' %}
+            return {{ item.round.numero_round }};
+        {% endif %}
+    {% endfor %}
+    {% for item in scores_par_round %}
+        {% if item.round.statut == 'EN_ATTENTE' %}
+            return {{ item.round.numero_round }};
+        {% endif %}
+    {% endfor %}
+    return 1;
+}
+
+function getRoundActifId() {
+    {% for item in scores_par_round %}
+        {% if item.round.statut == 'EN_COURS' %}
+            return {{ item.round.id }};
+        {% endif %}
+    {% endfor %}
+    {% for item in scores_par_round %}
+        {% if item.round.statut == 'EN_ATTENTE' %}
+            return {{ item.round.id }};
+        {% endif %}
+    {% endfor %}
+    return null;
+}
+
+function getTempsEcouleFormatted() {
+    const ecouleSecondes = 180 - tempsRestantSecondes;
+    const mins = Math.floor(ecouleSecondes / 60);
+    const secs = ecouleSecondes % 60;
+    return (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+}
+
+function ouvrirModalArret() {
+    pauseChrono(); // Auto-pause du chrono dès clic sur arrêt
+    const roundNum = getRoundActifNumero();
+    const tempsEcoule = getTempsEcouleFormatted();
+
+    document.getElementById('auto-round-num').innerText = roundNum;
+    document.getElementById('auto-temps-chrono').innerText = tempsEcoule;
+
+    const modal = document.getElementById('modal-arret');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function fermerModalArret() {
+    const modal = document.getElementById('modal-arret');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function soumettreArretPremature(event) {
+    event.preventDefault();
+    const coin = document.querySelector('input[name="coin_vainqueur"]:checked')?.value;
+    const typeDec = document.getElementById('select-type-decision').value;
+    const tech = document.getElementById('input-technique').value;
+    const roundNum = getRoundActifNumero();
+    const tempsEcoule = getTempsEcouleFormatted();
+
+    if(!coin) return;
+
+    fetch('/api/valider-round/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            combat_id: {{ combat.id }},
+            action: 'arret_premature',
+            coin_vainqueur: coin,
+            type_decision: typeDec,
+            round_fin: roundNum,
+            temps_fin_round: tempsEcoule,
+            technique: tech
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.statut === 'succes') {
+            fermerModalArret();
+            location.reload();
+        }
+    });
+}
+
 function actionRound(roundId, action) {
     fetch('/api/valider-round/', {
         method: 'POST',
@@ -124,12 +629,35 @@ function actionRound(roundId, action) {
     .then(res => res.json())
     .then(data => {
         if(data.statut === 'succes') {
+            if(action === 'demarrer') {
+                localStorage.setItem('auto_start_chrono', '1');
+            }
             location.reload();
+        } else {
+            alert("❌ " + (data.message || "Une erreur est survenue."));
         }
     });
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    if (localStorage.getItem('auto_start_chrono') === '1') {
+        localStorage.removeItem('auto_start_chrono');
+        demarrerChrono();
+    }
+});
+
+
 function changerModeTV(mode) {
+    try {
+        const tvChannel = new BroadcastChannel('tv_broadcast_channel');
+        tvChannel.postMessage({ type: 'CHANGER_MODE_TV', mode: mode });
+    } catch(e) {}
+
+    try {
+        localStorage.setItem('mode_tv_signal', JSON.stringify({ mode: mode, timestamp: Date.now() }));
+    } catch(e) {}
+
+
     fetch('/api/changer-mode-tv/', {
         method: 'POST',
         headers: {
@@ -146,8 +674,49 @@ function changerModeTV(mode) {
             toast.innerHTML = '<i class="fa-solid fa-circle-check"></i> Mode TV basculé : ' + mode;
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 2500);
+
+            const tvIframe = document.getElementById('previewTvIframe');
+            if (tvIframe) {
+                try {
+                    tvIframe.contentWindow.location.reload();
+                } catch(e) {
+                    tvIframe.src = tvIframe.src;
+                }
+            }
+        }
+    });
+}
+
+
+function voirCombatSelectionne(combatId) {
+    if (combatId) {
+        window.location.href = '{% url "table_juge_principal" %}?combat_id=' + combatId;
+    }
+}
+
+function lancerCeMatchOfficiel() {
+    const selectEl = document.getElementById('select-match-officiel');
+    const combatId = selectEl ? selectEl.value : null;
+    if (!combatId) return;
+
+    fetch('/api/lancer-match/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ combat_id: combatId })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.statut === 'succes') {
+            alert("🟢 " + data.message);
+            window.location.href = '{% url "table_juge_principal" %}?combat_id=' + combatId;
+        } else {
+            alert("❌ Erreur: " + data.message);
         }
     });
 }
 </script>
 {% endblock %}
+

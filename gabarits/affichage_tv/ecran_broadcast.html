@@ -3,7 +3,11 @@
 {% block title %}Arena TV Broadcast 4K Live - Show MMA & Boxe JAES 2026{% endblock %}
 
 {% block extra_head %}
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <style>
+
     @keyframes pulseGlow {
         0%, 100% { transform: scale(1); filter: brightness(1); }
         50% { transform: scale(1.03); filter: brightness(1.25); }
@@ -16,10 +20,27 @@
         0% { transform: scale(0.88); opacity: 0; }
         100% { transform: scale(1); opacity: 1; }
     }
+    @keyframes flagWave3D {
+        0% { transform: scale(1.15) skewY(-2deg) translateY(-10px); filter: brightness(1) contrast(1.1) drop-shadow(0 0 35px rgba(245,158,11,0.5)); }
+        50% { transform: scale(1.23) skewY(2deg) translateY(10px); filter: brightness(1.3) contrast(1.25) drop-shadow(0 0 65px rgba(245,158,11,0.8)); }
+        100% { transform: scale(1.15) skewY(-2deg) translateY(-10px); filter: brightness(1) contrast(1.1) drop-shadow(0 0 35px rgba(245,158,11,0.5)); }
+    }
+    @keyframes rippleWind {
+        0% { background-position: 0% 0%; }
+        100% { background-position: 200% 100%; }
+    }
     .animate-winner { animation: pulseGlow 1.8s infinite ease-in-out; }
     .animate-banner { animation: bannerSlide 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     .animate-fighter { animation: zoomInFighter 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .animate-flag-3d { animation: flagWave3D 4.5s ease-in-out infinite; }
     
+    .flag-3d-backdrop {
+        background-size: cover;
+        background-position: center;
+        mask-image: radial-gradient(circle at 50% 50%, black 50%, transparent 100%);
+        -webkit-mask-image: radial-gradient(circle at 50% 50%, black 50%, transparent 100%);
+    }
+
     .bg-octagon-grid {
         background-color: #030712;
         background-image: 
@@ -31,6 +52,7 @@
     .glow-blue { box-shadow: 0 0 45px rgba(37, 99, 235, 0.5); }
     .glow-gold { box-shadow: 0 0 55px rgba(245, 158, 11, 0.6); }
     .glow-green { box-shadow: 0 0 45px rgba(16, 185, 129, 0.5); }
+
 </style>
 {% endblock %}
 
@@ -453,7 +475,26 @@
     <!-- MODE 7.B : TABLEAU RÉCAPITULATIF DES SCORES (Photos, Drapeaux & Points) -->
     <!-- ========================================================================= -->
     <main id="viewDecisionRecap" class="mode-view hidden relative z-10 my-auto grid grid-cols-12 gap-8 items-center max-w-7xl mx-auto w-full animate-fighter py-4">
+        <!-- Bannière Décision Officielle & Vainqueur du Match -->
+        <div id="recapDecisionBannerContainer" class="col-span-12 p-4 bg-gradient-to-r from-amber-500/20 via-slate-900 to-amber-500/20 border-2 border-amber-500/70 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 text-white shadow-xl">
+            <div class="flex items-center gap-3">
+                <span class="w-10 h-10 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center text-xl font-black shrink-0">
+                    <i class="fa-solid fa-gavel"></i>
+                </span>
+                <div class="text-left">
+                    <span class="text-[10px] font-black uppercase text-amber-400 tracking-widest block">DÉCISION OFFICIELLE DE L'ARBITRE & DES JUGES</span>
+                    <h4 class="text-2xl font-black font-teko uppercase text-white tracking-wide leading-none" id="recapDecisionBadge">
+                        DÉCISION DU JURY
+                    </h4>
+                </div>
+            </div>
+            <div id="recapWinnerBadge" class="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-md">
+                🏆 VAINQUEUR
+            </div>
+        </div>
+
         <!-- Coin Rouge (Photo, Drapeau, Nom) -->
+
         <div class="col-span-4 bg-gradient-to-b from-red-950/90 via-slate-900 to-slate-950 p-6 rounded-3xl border-2 border-red-600/70 shadow-2xl flex flex-col items-center text-center space-y-3 glow-red">
             <div class="w-40 h-52 rounded-2xl bg-slate-950 border-2 border-red-500 overflow-hidden relative shadow-lg flex items-center justify-center text-5xl text-red-500 font-black" id="recapImgRouge">
                 <i class="fa-solid fa-user-ninja"></i>
@@ -519,25 +560,41 @@
 
 
     <!-- ========================================================================= -->
-    <!-- MODE 8 : PROCLAMATION DU VAINQUEUR AVEC MUSIQUE -->
+    <!-- MODE 8 : PROCLAMATION DU VAINQUEUR AVEC DRAPEAU 3D FLOTTANT & VOIX TV -->
     <!-- ========================================================================= -->
     <main id="viewProclamationVainqueur" class="mode-view hidden relative z-20 flex-1 flex flex-col items-center justify-center text-center py-10 animate-winner space-y-6">
-        <div class="w-32 h-44 rounded-2xl bg-slate-950 border-4 border-amber-400 overflow-hidden relative shadow-2xl glow-gold flex items-center justify-center text-5xl text-amber-400" id="winnerPhotoContainer">
+        <!-- Drapeau National Géant en Arrière-Plan Flottant 3D -->
+        <div id="winnerFlag3DBackdrop" class="absolute inset-0 z-0 pointer-events-none opacity-40 flex items-center justify-center overflow-hidden">
+            <div id="flag3DContainer" class="w-full h-full animate-flag-3d flag-3d-backdrop flex items-center justify-center text-9xl">
+                <!-- Injecté dynamiquement par JS (Image HD ou Emoji Drapeau Géant) -->
+            </div>
+        </div>
+
+        <div class="relative z-10 w-36 h-48 rounded-3xl bg-slate-950 border-4 border-amber-400 overflow-hidden shadow-2xl glow-gold flex items-center justify-center text-6xl text-amber-400" id="winnerPhotoContainer">
             <i class="fa-solid fa-trophy"></i>
         </div>
-        <span class="px-8 py-2.5 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-slate-950 font-black text-base uppercase rounded-full tracking-widest shadow-2xl">
-            VAINQUEUR DE LA RENCONTRE MMA
-        </span>
-        <div>
-            <h1 class="text-8xl font-black font-teko tracking-wider uppercase text-white leading-tight glow-gold" id="winnerName">
+
+        <div class="relative z-10 space-y-2">
+            <span class="px-8 py-2.5 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-slate-950 font-black text-base uppercase rounded-full tracking-widest shadow-2xl inline-block" id="winnerBadgeHeader">
+                🏆 CHAMPION DE LA RENCONTRE MMA 🏆
+            </span>
+            <div id="winnerNationBadge" class="text-sm font-extrabold text-amber-300 uppercase tracking-widest">
+                <!-- Drapeau + Pays -->
+            </div>
+        </div>
+
+        <div class="relative z-10">
+            <h1 class="text-8xl md:text-9xl font-black font-teko tracking-wider uppercase text-white leading-none glow-gold" id="winnerName">
                 --
             </h1>
             <p class="text-3xl font-extrabold text-amber-400 mt-1" id="winnerClub">--</p>
         </div>
-        <div class="px-12 py-4 bg-slate-900/90 border-2 border-amber-500/60 rounded-3xl text-xl font-bold text-slate-200 shadow-2xl">
+
+        <div class="relative z-10 px-10 py-4 bg-slate-950/90 border-2 border-amber-500/80 rounded-3xl text-xl font-bold text-slate-200 shadow-2xl backdrop-blur-md">
             Résultat Officiel : <span class="text-emerald-400 font-black uppercase tracking-wider" id="decisionType">--</span>
         </div>
     </main>
+
 
 
     <!-- Footer Dynamique -->
@@ -548,75 +605,134 @@
 </div>
 
 <script>
-// Draw Octagon Background Canvas Mesh
+// Draw Octagon Background Canvas Mesh (Sécurisé)
 const canvas = document.getElementById('octagonCanvas');
-const ctx = canvas.getContext('2d');
-let angle = 0;
+if (canvas && canvas.getContext) {
+    try {
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            let angle = 0;
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
 
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
+            function drawOctagon(cx, cy, r) {
+                ctx.beginPath();
+                for (let i = 0; i < 8; i++) {
+                    let a = angle + (i * Math.PI / 4);
+                    let x = cx + r * Math.cos(a);
+                    let y = cy + r * Math.sin(a);
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.strokeStyle = '#D97706';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+            }
 
-function drawOctagon(cx, cy, r) {
-    ctx.beginPath();
-    for (let i = 0; i < 8; i++) {
-        let a = angle + (i * Math.PI / 4);
-        let x = cx + r * Math.cos(a);
-        let y = cy + r * Math.sin(a);
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+            function animateCanvas() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                angle += 0.002;
+                drawOctagon(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) * 0.38);
+                drawOctagon(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) * 0.28);
+                requestAnimationFrame(animateCanvas);
+            }
+            animateCanvas();
+        }
+    } catch(e) {
+        console.log('Canvas anim error:', e);
     }
-    ctx.closePath();
-    ctx.strokeStyle = '#D97706';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
 }
 
-function animateCanvas() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    angle += 0.002;
-    drawOctagon(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) * 0.38);
-    drawOctagon(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) * 0.28);
-    requestAnimationFrame(animateCanvas);
-}
-animateCanvas();
 
 
 function masquerTousLesModes() {
-    document.querySelectorAll('.mode-view').forEach(el => el.classList.add('hidden'));
+    const viewIds = [
+        'viewAttentePub',
+        'viewCarteProgramme',
+        'viewPresentationRougeSolo',
+        'viewPresentationBleuSolo',
+        'viewPresentationFaceAFace',
+        'viewPresentationOfficiels',
+        'viewLancementRound',
+        'viewMediaHighlight',
+        'viewDecisionRecap',
+        'viewProclamationVainqueur',
+        'viewCombatEnCours'
+    ];
+    viewIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.classList.add('hidden');
+            el.style.setProperty('display', 'none', 'important');
+        }
+    });
+}
+
+function afficherModeTV(id) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.classList.remove('hidden');
+        if (id === 'viewCarteProgramme') {
+            el.style.setProperty('display', 'block', 'important');
+        } else if (id === 'viewPresentationRougeSolo' || id === 'viewPresentationBleuSolo' || id === 'viewPresentationFaceAFace' || id === 'viewDecisionRecap' || id === 'viewProclamationVainqueur' || id === 'viewCombatEnCours') {
+            el.style.setProperty('display', 'grid', 'important');
+        } else {
+            el.style.setProperty('display', 'flex', 'important');
+        }
+    }
+}
+
+
+
+
+function setElText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.innerText = (val !== null && val !== undefined) ? val : '';
+}
+
+function setElHtml(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = (val !== null && val !== undefined) ? val : '';
 }
 
 // Broadcast Realtime Polling
 function raffraichirBroadcast() {
-    fetch('/api/broadcast-statut/')
+    fetch('/api/broadcast-statut/?_t=' + Date.now(), { cache: 'no-store' })
     .then(res => res.json())
     .then(data => {
-        if(!data.actif) return;
+        if (!data) return;
+        try {
+
+
 
         // Image de fond personnalisée du Ring si présente
         if (data.image_ring_bg) {
-            document.getElementById('mainContainer').style.backgroundImage = `radial-gradient(circle at 50% 50%, rgba(3,7,18,0.85), rgba(3,7,18,0.95)), url('${data.image_ring_bg}')`;
-            document.getElementById('mainContainer').style.backgroundSize = 'cover';
-            document.getElementById('mainContainer').style.backgroundPosition = 'center';
+            const mainContainer = document.getElementById('mainContainer');
+            if (mainContainer) {
+                mainContainer.style.backgroundImage = `radial-gradient(circle at 50% 50%, rgba(3,7,18,0.85), rgba(3,7,18,0.95)), url('${data.image_ring_bg}')`;
+                mainContainer.style.backgroundSize = 'cover';
+                mainContainer.style.backgroundPosition = 'center';
+            }
         }
 
         // Mise à jour dynamique de l'en-tête depuis la BDD (Pas en dur !)
         if(data.evenement) {
-            document.getElementById('tvEvent').innerText = data.evenement.titre;
+            setElText('tvEvent', data.evenement.titre);
             if(data.evenement.federation) {
-                document.getElementById('tvFederationBadge').innerText = data.evenement.federation;
-                document.getElementById('tvFooterFederation').innerText = data.evenement.federation;
+                setElText('tvFederationBadge', data.evenement.federation);
             }
             if(data.evenement.logo_discipline) {
-                document.getElementById('tvHeaderLogoContainer').innerHTML = `<img src="${data.evenement.logo_discipline}" class="w-full h-full object-contain p-1">`;
+                setElHtml('tvHeaderLogoContainer', `<img src="${data.evenement.logo_discipline}" class="w-full h-full object-contain p-1">`);
             }
 
-            document.getElementById('tvAttenteTitre').innerText = data.evenement.titre;
-            document.getElementById('tvAttenteLieu').innerText = data.evenement.lieu;
-            document.getElementById('tvAttenteSub').innerText = (data.evenement.nom_discipline || 'MMA & BOXE') + ' • ' + (data.evenement.edition || 'JAES 2026');
+            setElText('tvAttenteTitre', data.evenement.titre);
+            setElText('tvAttenteLieu', data.evenement.lieu);
+            setElText('tvAttenteSub', (data.evenement.nom_discipline || 'MMA & BOXE') + ' • ' + (data.evenement.edition || 'JAES 2026'));
 
             // Partenaires et logos dynamiques BDD
             let logosHtml = '';
@@ -638,10 +754,10 @@ function raffraichirBroadcast() {
                 logosHtml += `<div class="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl flex items-center gap-3"><i class="fa-solid fa-globe text-2xl text-blue-500"></i><div class="text-left"><span class="text-[10px] uppercase font-extrabold text-slate-400 block">Confédération</span><span class="text-xs font-bold text-white">ALLIANCE DES ÉTATS DU SAHEL</span></div></div>`;
             }
 
-            document.getElementById('tvPartnerGrid').innerHTML = logosHtml;
+            setElHtml('tvPartnerGrid', logosHtml);
         }
 
-        document.getElementById('tvCategory').innerText = data.categorie + ' • MATCH #' + data.numero_match;
+        setElText('tvCategory', (data.categorie || 'MMA') + ' • MATCH #' + (data.numero_match || '1'));
 
         // Correct String Parsing pour Arbitre Ring
         if(data.officiels) {
@@ -651,18 +767,19 @@ function raffraichirBroadcast() {
             } else if (typeof data.officiels.arbitre_central === 'string') {
                 refName = data.officiels.arbitre_central;
             }
-            document.getElementById('tvRef').innerText = refName;
+            setElText('tvRef', refName);
         }
+
 
         // Bascule de Mode TV selon le signal de la Régie
         masquerTousLesModes();
         const mode = data.mode_tv || 'ATTENTE_PUB';
 
         if (mode === 'ATTENTE_PUB') {
-            document.getElementById('viewAttentePub').classList.remove('hidden');
+            afficherModeTV('viewAttentePub');
         } 
         else if (mode === 'CARTE_PROGRAMME') {
-            document.getElementById('viewCarteProgramme').classList.remove('hidden');
+            afficherModeTV('viewCarteProgramme');
             let html = '';
             (data.prochains_combats || []).forEach((c, idx) => {
                 html += `
@@ -681,76 +798,81 @@ function raffraichirBroadcast() {
                     <span class="px-3 py-1 bg-slate-800 text-slate-300 rounded-lg text-xs font-bold uppercase">À Venir</span>
                 </div>`;
             });
-            document.getElementById('listeProchainsCombats').innerHTML = html || '<p class="text-center text-slate-400">Aucun combat programmé pour le moment.</p>';
+            setElHtml('listeProchainsCombats', html || '<p class="text-center text-slate-400">Aucun combat programmé pour le moment.</p>');
         }
         else if (mode === 'PRESENTATION_ROUGE_SOLO') {
-            document.getElementById('viewPresentationRougeSolo').classList.remove('hidden');
-            document.getElementById('soloRougeNom').innerText = data.boxeur_rouge.nom;
-            document.getElementById('soloRougeSurnom').innerText = data.boxeur_rouge.surnom ? `"${data.boxeur_rouge.surnom}"` : '';
-            document.getElementById('soloRougeClub').innerText = data.boxeur_rouge.club;
-            document.getElementById('soloRougeNation').innerText = data.boxeur_rouge.pays;
-            document.getElementById('soloRougePays').innerText = data.boxeur_rouge.pays;
-            document.getElementById('soloRougePoids').innerText = (data.boxeur_rouge.poids || '--') + ' kg';
-            document.getElementById('soloRougeTaille').innerText = (data.boxeur_rouge.taille || '--') + ' cm';
-            document.getElementById('soloRougeAge').innerText = (data.boxeur_rouge.age || '--') + ' ans';
-            if(data.boxeur_rouge.photo) {
-                document.getElementById('imgSoloRouge').innerHTML = `<img src="${data.boxeur_rouge.photo}" class="w-full h-full object-cover">`;
+            afficherModeTV('viewPresentationRougeSolo');
+            if (data.boxeur_rouge) {
+                setElText('soloRougeNom', data.boxeur_rouge.nom);
+                setElText('soloRougeSurnom', data.boxeur_rouge.surnom ? `"${data.boxeur_rouge.surnom}"` : '');
+                setElText('soloRougeClub', data.boxeur_rouge.club);
+                setElText('soloRougePays', data.boxeur_rouge.pays);
+                setElText('soloRougePoids', (data.boxeur_rouge.poids || '--') + ' kg');
+                setElText('soloRougeTaille', (data.boxeur_rouge.taille || '--') + ' cm');
+                setElText('soloRougeAge', (data.boxeur_rouge.age || '--') + ' ans');
+                if(data.boxeur_rouge.photo) {
+                    setElHtml('imgSoloRouge', `<img src="${data.boxeur_rouge.photo}" class="w-full h-full object-cover">`);
+                }
             }
         }
         else if (mode === 'PRESENTATION_BLEU_SOLO') {
-            document.getElementById('viewPresentationBleuSolo').classList.remove('hidden');
-            document.getElementById('soloBleuNom').innerText = data.boxeur_bleu.nom;
-            document.getElementById('soloBleuSurnom').innerText = data.boxeur_bleu.surnom ? `"${data.boxeur_bleu.surnom}"` : '';
-            document.getElementById('soloBleuClub').innerText = data.boxeur_bleu.club;
-            document.getElementById('soloBleuNation').innerText = data.boxeur_bleu.pays;
-            document.getElementById('soloBleuPays').innerText = data.boxeur_bleu.pays;
-            document.getElementById('soloBleuPoids').innerText = (data.boxeur_bleu.poids || '--') + ' kg';
-            document.getElementById('soloBleuTaille').innerText = (data.boxeur_bleu.taille || '--') + ' cm';
-            document.getElementById('soloBleuAge').innerText = (data.boxeur_bleu.age || '--') + ' ans';
-            if(data.boxeur_bleu.photo) {
-                document.getElementById('imgSoloBleu').innerHTML = `<img src="${data.boxeur_bleu.photo}" class="w-full h-full object-cover">`;
+            afficherModeTV('viewPresentationBleuSolo');
+            if (data.boxeur_bleu) {
+                setElText('soloBleuNom', data.boxeur_bleu.nom);
+                setElText('soloBleuSurnom', data.boxeur_bleu.surnom ? `"${data.boxeur_bleu.surnom}"` : '');
+                setElText('soloBleuClub', data.boxeur_bleu.club);
+                setElText('soloBleuPays', data.boxeur_bleu.pays);
+                setElText('soloBleuPoids', (data.boxeur_bleu.poids || '--') + ' kg');
+                setElText('soloBleuTaille', (data.boxeur_bleu.taille || '--') + ' cm');
+                setElText('soloBleuAge', (data.boxeur_bleu.age || '--') + ' ans');
+                if(data.boxeur_bleu.photo) {
+                    setElHtml('imgSoloBleu', `<img src="${data.boxeur_bleu.photo}" class="w-full h-full object-cover">`);
+                }
             }
         }
         else if (mode === 'PRESENTATION_FACE_A_FACE' || mode === 'PRESENTATION_COMBATTANTS') {
-            document.getElementById('viewPresentationFaceAFace').classList.remove('hidden');
-            document.getElementById('tapeNomRouge').innerText = data.boxeur_rouge.nom;
-            document.getElementById('tapeClubRouge').innerText = data.boxeur_rouge.club;
-            document.getElementById('tapePaysRouge').innerText = data.boxeur_rouge.pays;
-            if(data.boxeur_rouge.photo) {
-                document.getElementById('imgContainerRouge').innerHTML = `<img src="${data.boxeur_rouge.photo}" class="w-full h-full object-cover">`;
+            afficherModeTV('viewPresentationFaceAFace');
+            if (data.boxeur_rouge) {
+                setElText('tapeNomRouge', data.boxeur_rouge.nom);
+                setElText('tapeClubRouge', data.boxeur_rouge.club);
+                setElText('tapePaysRouge', data.boxeur_rouge.pays);
+                if(data.boxeur_rouge.photo) {
+                    setElHtml('imgContainerRouge', `<img src="${data.boxeur_rouge.photo}" class="w-full h-full object-cover">`);
+                }
             }
-
-            document.getElementById('tapeNomBleu').innerText = data.boxeur_bleu.nom;
-            document.getElementById('tapeClubBleu').innerText = data.boxeur_bleu.club;
-            document.getElementById('tapePaysBleu').innerText = data.boxeur_bleu.pays;
-            if(data.boxeur_bleu.photo) {
-                document.getElementById('imgContainerBleu').innerHTML = `<img src="${data.boxeur_bleu.photo}" class="w-full h-full object-cover">`;
+            if (data.boxeur_bleu) {
+                setElText('tapeNomBleu', data.boxeur_bleu.nom);
+                setElText('tapeClubBleu', data.boxeur_bleu.club);
+                setElText('tapePaysBleu', data.boxeur_bleu.pays);
+                if(data.boxeur_bleu.photo) {
+                    setElHtml('imgContainerBleu', `<img src="${data.boxeur_bleu.photo}" class="w-full h-full object-cover">`);
+                }
             }
         }
         else if (mode === 'PRESENTATION_OFFICIELS') {
-            document.getElementById('viewPresentationOfficiels').classList.remove('hidden');
+            afficherModeTV('viewPresentationOfficiels');
             if(data.officiels) {
                 const arb = data.officiels.arbitre_central;
                 const jp = data.officiels.juge_principal;
 
                 if (typeof arb === 'object' && arb !== null) {
-                    document.getElementById('offArbitreNom').innerText = arb.nom || 'Arbitre Ring Officiel';
-                    document.getElementById('offArbitrePays').innerText = arb.pays || 'Burkina Faso';
+                    setElText('offArbitreNom', arb.nom || 'Arbitre Ring Officiel');
+                    setElText('offArbitrePays', arb.pays || 'Burkina Faso');
                     if (arb.photo) {
-                        document.getElementById('imgOffArbitre').innerHTML = `<img src="${arb.photo}" class="w-full h-full object-cover">`;
+                        setElHtml('imgOffArbitre', `<img src="${arb.photo}" class="w-full h-full object-cover">`);
                     }
                 } else {
-                    document.getElementById('offArbitreNom').innerText = arb || 'Arbitre Ring Officiel';
+                    setElText('offArbitreNom', arb || 'Arbitre Ring Officiel');
                 }
 
                 if (typeof jp === 'object' && jp !== null) {
-                    document.getElementById('offJugePrincipalNom').innerText = jp.nom || 'Chef Juge Superviseur';
-                    document.getElementById('offJugePrincipalFonction').innerText = jp.fonction || 'Juge Principal';
+                    setElText('offJugePrincipalNom', jp.nom || 'Chef Juge Superviseur');
+                    setElText('offJugePrincipalFonction', jp.fonction || 'Juge Principal');
                     if (jp.photo) {
-                        document.getElementById('imgOffJugePrincipal').innerHTML = `<img src="${jp.photo}" class="w-full h-full object-cover">`;
+                        setElHtml('imgOffJugePrincipal', `<img src="${jp.photo}" class="w-full h-full object-cover">`);
                     }
                 } else {
-                    document.getElementById('offJugePrincipalNom').innerText = jp || 'Chef Juge Superviseur';
+                    setElText('offJugePrincipalNom', jp || 'Chef Juge Superviseur');
                 }
 
                 let jugesHtml = '';
@@ -765,108 +887,231 @@ function raffraichirBroadcast() {
                         </div>
                     </div>`;
                 });
-                document.getElementById('offJugesTableGrid').innerHTML = jugesHtml || '<p class="text-xs text-slate-500">Aucun juge de table affecté à ce match.</p>';
+                setElHtml('offJugesTableGrid', jugesHtml || '<p class="text-xs text-slate-500">Aucun juge de table affecté à ce match.</p>');
             }
         }
         else if (mode === 'LANCEMENT_ROUND') {
-            document.getElementById('viewLancementRound').classList.remove('hidden');
-            document.getElementById('bannerRoundTitle').innerText = 'ROUND ' + (data.round_actif_num || 1);
-            document.getElementById('lancementNomRouge').innerText = data.boxeur_rouge.nom;
-            if(data.boxeur_rouge.photo) {
-                document.getElementById('lancementImgRouge').innerHTML = `<img src="${data.boxeur_rouge.photo}" class="w-full h-full object-cover">`;
+            afficherModeTV('viewLancementRound');
+            setElText('bannerRoundTitle', 'ROUND ' + (data.round_actif_num || 1));
+            if (data.boxeur_rouge) {
+                setElText('lancementNomRouge', data.boxeur_rouge.nom);
+                if(data.boxeur_rouge.photo) {
+                    setElHtml('lancementImgRouge', `<img src="${data.boxeur_rouge.photo}" class="w-full h-full object-cover">`);
+                }
             }
-            document.getElementById('lancementNomBleu').innerText = data.boxeur_bleu.nom;
-            if(data.boxeur_bleu.photo) {
-                document.getElementById('lancementImgBleu').innerHTML = `<img src="${data.boxeur_bleu.photo}" class="w-full h-full object-cover">`;
+            if (data.boxeur_bleu) {
+                setElText('lancementNomBleu', data.boxeur_bleu.nom);
+                if(data.boxeur_bleu.photo) {
+                    setElHtml('lancementImgBleu', `<img src="${data.boxeur_bleu.photo}" class="w-full h-full object-cover">`);
+                }
             }
         }
         else if (mode === 'MEDIA_HIGHLIGHT') {
-            document.getElementById('viewMediaHighlight').classList.remove('hidden');
+            afficherModeTV('viewMediaHighlight');
             if(data.media_regie && data.media_regie.image_url) {
-                document.getElementById('mediaContainer').innerHTML = `<img src="${data.media_regie.image_url}" class="w-full h-full object-contain">`;
-                document.getElementById('mediaTitreHeader').innerText = data.media_regie.titre || 'HIGHLIGHT / REPLAY DU MATCH';
+                setElHtml('mediaContainer', `<img src="${data.media_regie.image_url}" class="w-full h-full object-contain">`);
+                setElText('mediaTitreHeader', data.media_regie.titre || 'HIGHLIGHT / REPLAY DU MATCH');
             }
         }
         else if (mode === 'DECISION_RECAP') {
-            document.getElementById('viewDecisionRecap').classList.remove('hidden');
+            afficherModeTV('viewDecisionRecap');
             
             // Rouge
-            document.getElementById('recapNomRouge').innerText = data.boxeur_rouge.nom;
-            document.getElementById('recapClubRouge').innerText = data.boxeur_rouge.club;
-            document.getElementById('recapPaysRouge').innerText = data.boxeur_rouge.pays;
-            document.getElementById('recapTotalRouge').innerText = data.total_rouge;
-            if(data.boxeur_rouge.photo) {
-                document.getElementById('recapImgRouge').innerHTML = `<img src="${data.boxeur_rouge.photo}" class="w-full h-full object-cover">`;
+            if (data.boxeur_rouge) {
+                setElText('recapNomRouge', data.boxeur_rouge.nom);
+                setElText('recapClubRouge', data.boxeur_rouge.club);
+                setElText('recapPaysRouge', data.boxeur_rouge.pays);
+                setElText('recapTotalRouge', data.rounds_gagnes_rouge !== undefined ? data.rounds_gagnes_rouge : data.total_rouge);
+                if(data.boxeur_rouge.photo) {
+                    setElHtml('recapImgRouge', `<img src="${data.boxeur_rouge.photo}" class="w-full h-full object-cover">`);
+                }
             }
 
             // Bleu
-            document.getElementById('recapNomBleu').innerText = data.boxeur_bleu.nom;
-            document.getElementById('recapClubBleu').innerText = data.boxeur_bleu.club;
-            document.getElementById('recapPaysBleu').innerText = data.boxeur_bleu.pays;
-            document.getElementById('recapTotalBleu').innerText = data.total_bleu;
-            if(data.boxeur_bleu.photo) {
-                document.getElementById('recapImgBleu').innerHTML = `<img src="${data.boxeur_bleu.photo}" class="w-full h-full object-cover">`;
+            if (data.boxeur_bleu) {
+                setElText('recapNomBleu', data.boxeur_bleu.nom);
+                setElText('recapClubBleu', data.boxeur_bleu.club);
+                setElText('recapPaysBleu', data.boxeur_bleu.pays);
+                setElText('recapTotalBleu', data.rounds_gagnes_bleu !== undefined ? data.rounds_gagnes_bleu : data.total_bleu);
+                if(data.boxeur_bleu.photo) {
+                    setElHtml('recapImgBleu', `<img src="${data.boxeur_bleu.photo}" class="w-full h-full object-cover">`);
+                }
             }
 
-            // Rounds Rows
+
+            // Décision Officielle & Banner Vainqueur
+            let decHtml = `${data.decision_qualification || data.type_decision || 'DÉCISION DU JURY'}`;
+            if (data.round_fin && data.temps_fin_round && data.temps_fin_round !== "Fin du combat") {
+                decHtml += ` — ROUND ${data.round_fin} À ${data.temps_fin_round}`;
+            }
+            if (data.total_rouge !== undefined && data.total_bleu !== undefined) {
+                decHtml += ` (<span class="text-red-400 font-extrabold">${data.total_rouge}</span> - <span class="text-blue-400 font-extrabold">${data.total_bleu}</span>)`;
+            } else if (data.details_decision) {
+                decHtml += ` (${data.details_decision})`;
+            }
+            setElHtml('recapDecisionBadge', decHtml);
+
+
+            let winnerText = 'MATCH EN COURS';
+            let winnerBg = 'bg-slate-800 text-slate-300';
+            if (data.coin_vainqueur === 'ROUGE') {
+                winnerText = `🏆 VAINQUEUR : ${data.boxeur_rouge ? data.boxeur_rouge.nom : 'COIN ROUGE'}`;
+                winnerBg = 'bg-red-600 text-white glow-red';
+            } else if (data.coin_vainqueur === 'BLEU') {
+                winnerText = `🏆 VAINQUEUR : ${data.boxeur_bleu ? data.boxeur_bleu.nom : 'COIN BLEU'}`;
+                winnerBg = 'bg-blue-600 text-white glow-blue';
+            } else if (data.nom_vainqueur) {
+                winnerText = `🏆 VAINQUEUR : ${data.nom_vainqueur}`;
+                winnerBg = 'bg-emerald-600 text-white';
+            } else if (data.statut_combat === 'TERMINE') {
+                winnerText = 'ÉGALITÉ / MATCH NUL';
+                winnerBg = 'bg-amber-600 text-slate-950';
+            }
+            const wEl = document.getElementById('recapWinnerBadge');
+            if (wEl) {
+                wEl.className = `px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider shadow-md ${winnerBg}`;
+                wEl.innerText = winnerText;
+            }
+
+            // Rounds Rows (Points par round ou Arrêt Prématuré)
             let rowsHtml = '';
             (data.rounds || []).forEach(r => {
-                rowsHtml += `
-                <div class="flex justify-between items-center p-3 bg-slate-950/80 rounded-xl border border-slate-800">
-                    <span class="w-8 h-8 rounded-lg bg-amber-500 text-slate-950 font-black flex items-center justify-center text-xs">R${r.numero}</span>
-                    <div class="text-base font-black font-teko tracking-wider">
-                        <span class="text-red-400">${r.score_rouge || 0}</span> 
-                        <span class="text-slate-500 px-2">-</span> 
-                        <span class="text-blue-400">${r.score_bleu || 0}</span>
-                    </div>
-                    <span class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded ${r.gagnant === 'ROUGE' ? 'bg-red-600/30 text-red-400' : (r.gagnant === 'BLEU' ? 'bg-blue-600/30 text-blue-400' : 'bg-slate-800 text-slate-400')}">${r.gagnant ? r.gagnant : 'EGAL'}</span>
-                </div>`;
+                const aEteJoue = r.statut === 'TERMINE' || (r.score_rouge > 0 || r.score_bleu > 0);
+                if (aEteJoue) {
+                    rowsHtml += `
+                    <div class="flex justify-between items-center p-3 bg-slate-950/80 rounded-xl border border-slate-800">
+                        <span class="w-8 h-8 rounded-lg bg-amber-500 text-slate-950 font-black flex items-center justify-center text-xs">R${r.numero}</span>
+                        <div class="text-base font-black font-teko tracking-wider">
+                            <span class="text-red-400">${r.score_rouge || 0}</span> 
+                            <span class="text-slate-500 px-2">-</span> 
+                            <span class="text-blue-400">${r.score_bleu || 0}</span>
+                        </div>
+                        <span class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded ${r.gagnant === 'ROUGE' ? 'bg-red-600/30 text-red-400' : (r.gagnant === 'BLEU' ? 'bg-blue-600/30 text-blue-400' : 'bg-slate-800 text-slate-400')}">${r.gagnant ? r.gagnant : 'EGAL'}</span>
+                    </div>`;
+                } else if (data.statut_combat === 'TERMINE') {
+                    rowsHtml += `
+                    <div class="flex justify-between items-center p-3 bg-slate-950/40 rounded-xl border border-slate-900 opacity-60">
+                        <span class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 font-bold flex items-center justify-center text-xs">R${r.numero}</span>
+                        <div class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                            ARRÊT PRÉMATURÉ (MATCH TERMINÉ)
+                        </div>
+                        <span class="text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-slate-900 text-slate-500">NON JOUÉ</span>
+                    </div>`;
+                }
             });
-            document.getElementById('recapRoundsRows').innerHTML = rowsHtml;
-            document.getElementById('recapFinalScoreRouge').innerText = data.total_rouge;
-            document.getElementById('recapFinalScoreBleu').innerText = data.total_bleu;
+            setElHtml('recapRoundsRows', rowsHtml);
+            setElText('recapFinalScoreRouge', data.total_rouge);
+            setElText('recapFinalScoreBleu', data.total_bleu);
         }
-        else if (mode === 'PROCLAMATION_VAINQUEUR' || data.statut_combat === 'TERMINE') {
-            document.getElementById('viewProclamationVainqueur').classList.remove('hidden');
-            
-            let winnerNom = data.nom_vainqueur || (data.coin_vainqueur === 'ROUGE' ? data.boxeur_rouge.nom : data.boxeur_bleu.nom);
-            let winnerClub = data.coin_vainqueur === 'ROUGE' ? data.boxeur_rouge.club + ' (' + data.boxeur_rouge.pays + ')' : data.boxeur_bleu.club + ' (' + data.boxeur_bleu.pays + ')';
-            let winnerPhoto = data.coin_vainqueur === 'ROUGE' ? data.boxeur_rouge.photo : data.boxeur_bleu.photo;
+        else if (mode === 'PROCLAMATION_VAINQUEUR') {
+            afficherModeTV('viewProclamationVainqueur');
 
-            document.getElementById('winnerName').innerText = winnerNom;
-            document.getElementById('winnerClub').innerText = winnerClub;
-            document.getElementById('decisionType').innerText = data.type_decision || 'VICTOIRE HOMOLOGUÉE PAR LE JURY';
+            let winnerNom = "";
+            let winnerPays = "";
+            let winnerClub = "";
+            let winnerPhoto = null;
+            let winnerDrapeauUrl = null;
+            let winnerDrapeauEmoji = "🏆";
+            let descText = "";
 
-            if (winnerPhoto) {
-                document.getElementById('winnerPhotoContainer').innerHTML = `<img src="${winnerPhoto}" class="w-full h-full object-cover">`;
+            const estCloture = (data.statut_combat === 'TERMINE' || data.coin_vainqueur || data.nom_vainqueur);
+
+            if (!estCloture) {
+                // Le combat est toujours en cours / pas encore clôturé officiellement par le Chef Juge
+                winnerNom = "ATTENTE DÉCISION OFFICIELLE";
+                winnerPays = "ARENA LIVE SCORING";
+                winnerClub = `Match #${data.numero_match || '1'} en cours — Délibération des Juges`;
+                winnerDrapeauEmoji = "🥊";
+                descText = "Le combat est actuellement en cours. La décision officielle sera proclamée dès la clôture par le Chef Juge.";
+            } else if (data.coin_vainqueur === 'ROUGE' || (data.nom_vainqueur && data.boxeur_rouge && data.nom_vainqueur.includes(data.boxeur_rouge.nom))) {
+                winnerNom = data.boxeur_rouge ? data.boxeur_rouge.nom : (data.nom_vainqueur || "VAINQUEUR COIN ROUGE");
+                winnerPays = data.boxeur_rouge ? data.boxeur_rouge.pays : "";
+                winnerClub = data.boxeur_rouge ? data.boxeur_rouge.club + (data.boxeur_rouge.pays ? ' (' + data.boxeur_rouge.pays + ')' : '') : "Coin Rouge";
+                winnerPhoto = data.boxeur_rouge ? data.boxeur_rouge.photo : null;
+                winnerDrapeauUrl = data.boxeur_rouge ? data.boxeur_rouge.drapeau_url : null;
+                winnerDrapeauEmoji = data.boxeur_rouge ? (data.boxeur_rouge.drapeau_emoji || "🔴") : "🔴";
+                descText = (data.decision_qualification || data.type_decision || 'VICTOIRE HOMOLOGUÉE');
+            } else if (data.coin_vainqueur === 'BLEU' || (data.nom_vainqueur && data.boxeur_bleu && data.nom_vainqueur.includes(data.boxeur_bleu.nom))) {
+                winnerNom = data.boxeur_bleu ? data.boxeur_bleu.nom : (data.nom_vainqueur || "VAINQUEUR COIN BLEU");
+                winnerPays = data.boxeur_bleu ? data.boxeur_bleu.pays : "";
+                winnerClub = data.boxeur_bleu ? data.boxeur_bleu.club + (data.boxeur_bleu.pays ? ' (' + data.boxeur_bleu.pays + ')' : '') : "Coin Bleu";
+                winnerPhoto = data.boxeur_bleu ? data.boxeur_bleu.photo : null;
+                winnerDrapeauUrl = data.boxeur_bleu ? data.boxeur_bleu.drapeau_url : null;
+                winnerDrapeauEmoji = data.boxeur_bleu ? (data.boxeur_bleu.drapeau_emoji || "🔵") : "🔵";
+                descText = (data.decision_qualification || data.type_decision || 'VICTOIRE HOMOLOGUÉE');
+            } else {
+                // Égalité officielle
+                winnerNom = "MATCH NUL / ÉGALITÉ OFFICIELLE";
+                winnerPays = "DÉCISION DU JURY";
+                winnerClub = "Score Égalité aux Points";
+                winnerDrapeauEmoji = "🤝";
+                descText = (data.decision_qualification || data.type_decision || 'Égalité (Draw)');
             }
 
-            // Audio Player
+            if (data.round_fin && data.temps_fin_round && estCloture) {
+                descText += ` — ROUND ${data.round_fin} À ${data.temps_fin_round}`;
+            }
+            if (data.details_decision && estCloture) {
+                descText += ` (${data.details_decision})`;
+            }
+
+            setElText('winnerName', winnerNom);
+            setElText('winnerClub', winnerClub);
+            setElHtml('winnerNationBadge', `${winnerDrapeauEmoji} <span class="tracking-widest">${winnerPays}</span> ${winnerDrapeauEmoji}`);
+            setElText('decisionType', descText);
+
+            if (winnerPhoto) {
+                setElHtml('winnerPhotoContainer', `<img src="${winnerPhoto}" class="w-full h-full object-cover">`);
+            } else {
+                setElHtml('winnerPhotoContainer', `<i class="fa-solid fa-trophy text-amber-400"></i>`);
+            }
+
+            // Arrière-plan Drapeau 3D Flottant
+            const flagContainer = document.getElementById('flag3DContainer');
+            if (flagContainer) {
+                if (winnerDrapeauUrl) {
+                    flagContainer.innerHTML = `<img src="${winnerDrapeauUrl}" class="w-full h-full object-cover opacity-60 scale-125 filter drop-shadow-2xl">`;
+                } else {
+                    flagContainer.innerHTML = `<div class="text-[18rem] filter drop-shadow-2xl select-none leading-none opacity-80">${winnerDrapeauEmoji}</div>`;
+                }
+            }
+
+            // Declenchement de la Voix de l'Annonceur TV Pro seulement si cloture avec vainqueur
+            if (estCloture && (data.coin_vainqueur === 'ROUGE' || data.coin_vainqueur === 'BLEU')) {
+                prononcerVainqueurVocal(data, winnerNom, winnerPays, descText);
+            }
+
+            // Audio Player Hymne
             const audioPlayer = document.getElementById('audioVictoirePlayer');
-            if (data.audio_victoire) {
+            if (audioPlayer && data.audio_victoire && estCloture) {
                 if (audioPlayer.src !== data.audio_victoire) {
                     audioPlayer.src = data.audio_victoire;
                     audioPlayer.play().catch(err => console.log('Audio Autoplay:', err));
                 }
             }
         }
+
         else {
-            // Mode COMBAT_EN_COURS
-            document.getElementById('viewCombatEnCours').classList.remove('hidden');
-            document.getElementById('nomRouge').innerText = data.boxeur_rouge.nom;
-            document.getElementById('clubRouge').innerText = data.boxeur_rouge.club + ' (' + data.boxeur_rouge.pays + ')';
-            document.getElementById('peseeRouge').innerText = (data.boxeur_rouge.poids || '--') + ' kg';
-            document.getElementById('totRouge').innerText = data.total_rouge;
-            if(data.boxeur_rouge.photo) {
-                document.getElementById('arenaImgRouge').innerHTML = `<img src="${data.boxeur_rouge.photo}" class="w-full h-full object-cover">`;
+            // Mode COMBAT_EN_COURS ou défaut Ring Direct
+            afficherModeTV('viewCombatEnCours');
+            if (data.boxeur_rouge) {
+                setElText('nomRouge', data.boxeur_rouge.nom);
+                setElText('clubRouge', data.boxeur_rouge.club + ' (' + data.boxeur_rouge.pays + ')');
+                setElText('peseeRouge', (data.boxeur_rouge.poids || '--') + ' kg');
+                setElText('totRouge', data.total_rouge);
+                if(data.boxeur_rouge.photo) {
+                    setElHtml('arenaImgRouge', `<img src="${data.boxeur_rouge.photo}" class="w-full h-full object-cover">`);
+                }
             }
 
-            document.getElementById('nomBleu').innerText = data.boxeur_bleu.nom;
-            document.getElementById('clubBleu').innerText = data.boxeur_bleu.club + ' (' + data.boxeur_bleu.pays + ')';
-            document.getElementById('peseeBleu').innerText = (data.boxeur_bleu.poids || '--') + ' kg';
-            document.getElementById('totBleu').innerText = data.total_bleu;
-            if(data.boxeur_bleu.photo) {
-                document.getElementById('arenaImgBleu').innerHTML = `<img src="${data.boxeur_bleu.photo}" class="w-full h-full object-cover">`;
+            if (data.boxeur_bleu) {
+                setElText('nomBleu', data.boxeur_bleu.nom);
+                setElText('clubBleu', data.boxeur_bleu.club + ' (' + data.boxeur_bleu.pays + ')');
+                setElText('peseeBleu', (data.boxeur_bleu.poids || '--') + ' kg');
+                setElText('totBleu', data.total_bleu);
+                if(data.boxeur_bleu.photo) {
+                    setElHtml('arenaImgBleu', `<img src="${data.boxeur_bleu.photo}" class="w-full h-full object-cover">`);
+                }
             }
 
             let badgeHtml = '';
@@ -877,12 +1122,73 @@ function raffraichirBroadcast() {
                 else if(r.gagnant === 'BLEU') bg = 'bg-blue-600 border-blue-400 text-white glow-blue';
                 badgeHtml += `<span class="w-10 h-10 rounded-full ${bg} flex items-center justify-center font-black text-xs">R${r.numero}</span>`;
             });
-            document.getElementById('roundBadges').innerHTML = badgeHtml;
+            setElHtml('roundBadges', badgeHtml);
         }
-    });
+        } catch(err) {
+            console.error("Erreur affichage TV:", err);
+        }
+    })
+    .catch(err => console.error("Erreur HTTP Broadcast:", err));
 }
 
-setInterval(raffraichirBroadcast, 1500);
+
+
+let dernierPrononceKey = null;
+
+function prononcerVainqueurVocal(data, winnerNom, winnerPays, decQualif) {
+    if (!('speechSynthesis' in window)) return;
+    const announceKey = data.combat_id + '_' + winnerNom + '_' + decQualif;
+    if (dernierPrononceKey === announceKey) return;
+    dernierPrononceKey = announceKey;
+
+    try {
+        window.speechSynthesis.cancel(); // Arreter tout discours en cours
+
+        let paysMention = winnerPays ? `défendant avec fierté les couleurs du ${winnerPays}` : '';
+        let annonceTexte = `Mesdames et messieurs, votre attention s'il vous plaît ! Le match numéro ${data.numero_match} opposant ${data.boxeur_rouge.nom} et ${data.boxeur_bleu.nom} est officiellement terminé ! Après un combat remarquable, le vainqueur par ${decQualif} est... ${winnerNom} ! ${paysMention} !`;
+
+        const msg = new SpeechSynthesisUtterance(annonceTexte);
+        msg.lang = 'fr-FR';
+        msg.pitch = 0.95; // Voix solennelle d'arène
+        msg.rate = 0.92;  // Rythme solennel d'annonceur
+        msg.volume = 1.0;
+
+        const voices = window.speechSynthesis.getVoices();
+        const frVoice = voices.find(v => v.lang.includes('fr') || v.lang.includes('FR'));
+        if (frVoice) msg.voice = frVoice;
+
+        window.speechSynthesis.speak(msg);
+    } catch (e) {
+        console.log('Speech synth error:', e);
+    }
+}
+
+window.addEventListener('storage', function(e) {
+    if (e.key === 'mode_tv_signal') {
+        raffraichirBroadcast();
+    }
+});
+
+window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'CHANGER_MODE_TV') {
+        raffraichirBroadcast();
+    }
+});
+
+try {
+    const tvChannel = new BroadcastChannel('tv_broadcast_channel');
+    tvChannel.onmessage = function(e) {
+        if (e.data && (e.data.type === 'CHANGER_MODE_TV' || e.data.type === 'REFRESH_TV')) {
+            raffraichirBroadcast();
+        }
+    };
+} catch(err) {
+    console.log('BroadcastChannel not supported:', err);
+}
+
+setInterval(raffraichirBroadcast, 1000);
 raffraichirBroadcast();
+
 </script>
+
 {% endblock %}

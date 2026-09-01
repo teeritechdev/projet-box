@@ -1,4 +1,21 @@
+# pyrefly: ignore [missing-import]
 from django.db import models
+
+class Pays(models.Model):
+
+    nom = models.CharField(max_length=100, unique=True, verbose_name="Nom du Pays")
+    code_iso = models.CharField(max_length=10, blank=True, null=True, verbose_name="Code ISO (ex: BF)")
+    drapeau = models.ImageField(upload_to='drapeaux_pays/', blank=True, null=True, verbose_name="Image du Drapeau HD")
+    drapeau_emoji = models.CharField(max_length=10, blank=True, default="🏳️", verbose_name="Emoji Drapeau")
+    est_membre_aes = models.BooleanField(default=False, verbose_name="Membre de l'AES")
+
+    class Meta:
+        verbose_name = "Pays / Nation"
+        verbose_name_plural = "Pays / Nations"
+        ordering = ['nom']
+
+    def __str__(self):
+        return f"{self.nom} {self.drapeau_emoji or ''}"
 
 class Categorie(models.Model):
     nom = models.CharField(max_length=100)
@@ -17,13 +34,54 @@ class Boxeur(models.Model):
     surnom = models.CharField(max_length=100, blank=True, null=True)
     sexe = models.CharField(max_length=20, choices=CHOICES_SEXE, default='Masculin')
     pays = models.CharField(max_length=100, default='Burkina Faso')
+    pays_fk = models.ForeignKey(Pays, on_delete=models.SET_NULL, null=True, blank=True, related_name='boxeurs', verbose_name="Pays Officiel")
     club = models.CharField(max_length=150)
     logo_club = models.ImageField(upload_to='logos_clubs/', blank=True, null=True)
     photo = models.ImageField(upload_to='boxeurs/', blank=True, null=True)
-    age = models.PositiveIntegerField(null=True, blank=True)
+    date_naissance = models.DateField(null=True, blank=True, verbose_name="Date de Naissance")
+    age = models.PositiveIntegerField(null=True, blank=True, verbose_name="Âge")
+
+
     taille_cm = models.PositiveIntegerField(null=True, blank=True)
     poids_pesee = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     categorie = models.ForeignKey(Categorie, on_delete=models.SET_NULL, null=True, blank=True)
 
+    def save(self, *args, **kwargs):
+        if self.date_naissance:
+            from datetime import date
+            today = date.today()
+            self.age = today.year - self.date_naissance.year - ((today.month, today.day) < (self.date_naissance.month, self.date_naissance.day))
+        super().save(*args, **kwargs)
+
+
+    @property
+    def drapeau_url(self):
+        if self.pays_fk and self.pays_fk.drapeau:
+            return self.pays_fk.drapeau.url
+        return None
+
+    @property
+    def drapeau_emoji(self):
+        if self.pays_fk and self.pays_fk.drapeau_emoji:
+            return self.pays_fk.drapeau_emoji
+        # Mapping automatique si pas de FK
+        m = {
+            'burkina faso': '🇧🇫',
+            'mali': '🇲🇱',
+            'niger': '🇳🇪',
+            'côte d\'ivoire': '🇨🇮',
+            'cote d\'ivoire': '🇨🇮',
+            'sénégal': '🇸🇳',
+            'senegal': '🇸🇳',
+            'togo': '🇹🇬',
+            'bénin': '🇧🇯',
+            'benin': '🇧🇯',
+            'ghana': '🇬🇭',
+            'cameroun': '🇨🇲',
+            'france': '🇫🇷',
+        }
+        return m.get((self.pays or '').lower().strip(), '🏳️')
+
     def __str__(self):
         return f"{self.prenom} {self.nom} ({self.club})"
+

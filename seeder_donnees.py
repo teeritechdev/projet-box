@@ -16,19 +16,8 @@ r_admin, _ = Role.objects.get_or_create(code='ADMIN', defaults={'nom': 'Administ
 r_chief, _ = Role.objects.get_or_create(code='JUGE_PRINCIPAL', defaults={'nom': 'Juge Principal'})
 r_jury, _ = Role.objects.get_or_create(code='JURY', defaults={'nom': 'Membre du Jury'})
 
-if not Utilisateur.objects.filter(username='admin').exists():
-    u_admin = Utilisateur.objects.create_superuser('admin', 'admin@boxe.bf', 'admin1234', role=r_admin)
-    print("Created superuser: admin / admin1234")
-
-if not Utilisateur.objects.filter(username='juge_principal').exists():
-    u_chief = Utilisateur.objects.create_user('juge_principal', 'chief@boxe.bf', 'chef1234', first_name='Marc', last_name='KABORE', role=r_chief)
-    print("Created chief judge: juge_principal / chef1234")
-
-for i in range(1, 4):
-    uname = f"juge{i}"
-    if not Utilisateur.objects.filter(username=uname).exists():
-        Utilisateur.objects.create_user(uname, uname + "@boxe.bf", 'juge1234', first_name=f"Juge {i}", last_name='Officiel', role=r_jury)
-        print(feCreated jury member: {uname} / juge1234")
+# Optionnel: création de comptes de test désactivée à la demande de l'utilisateur
+# Les comptes personnels réels (admin, jugep, juge10, juge11, juge12) sont conservés dans la base.
 
 ref, _ = ArbitreCentral.objects.get_or_create(nom='OUEDRAOGN', prenom='Issouf')
 

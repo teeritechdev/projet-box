@@ -1,123 +1,224 @@
 {% extends 'base.html' %}
 
-{% block title %}Tablette Saisie Juge{% endblock %}
+{% block title %}Tablette Saisie Juge - Officiel{% endblock %}
 
 {% block body %}
 <div class="min-h-screen bg-slate-100/70 w-full pb-12">
     {% include 'components/navigation_officielle.html' %}
 
-    <div class="p-4 max-w-5xl mx-auto space-y-4">
-        <div class="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center font-bold shadow-sm">
+    <div class="p-4 max-w-5xl mx-auto space-y-5">
+        <!-- Bandeau Supérieur d'Identification du Juge & du Match -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between bg-white p-5 rounded-3xl border border-slate-200 shadow-sm gap-4">
+            <div class="flex items-center gap-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-red-600 text-white flex items-center justify-center font-bold shadow-md text-xl">
                     <i class="fa-solid fa-user-shield"></i>
                 </div>
                 <div>
-                    <h2 class="font-extrabold text-sm text-slate-900">{{ juge.first_name }} {{ juge.last_name }} ({{ juge.username }})</h2>
-                    <span class="text-xs text-red-600 font-extrabold uppercase">Officiel de Table</span>
+                    <div class="flex items-center gap-2">
+                        <h2 class="font-extrabold text-base text-slate-900">{{ juge.first_name }} {{ juge.last_name }}</h2>
+                        <span class="px-2.5 py-0.5 bg-slate-900 text-amber-400 font-mono font-bold text-xs rounded-md">@{{ juge.username }}</span>
+                    </div>
+                    <span class="text-xs text-red-600 font-extrabold uppercase tracking-wider block mt-0.5">Officiel de Table & Scoring</span>
                 </div>
             </div>
-            <div class="text-center">
-                <span class="text-xs uppercase text-slate-500 block font-semibold">Round Actif</span>
-                <span class="text-2xl font-black font-teko text-amber-600">
-                    {% if round_actif %}ROUND {{ round_actif.numero_round }}{% else %}EN ATTENTE{% endif %}
-                </span>
+
+            {% if combat %}
+            <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                <div class="text-center px-3 border-r border-slate-200">
+                    <span class="text-[10px] uppercase text-slate-500 font-bold block">Numéro de Match</span>
+                    <span class="text-xl font-black font-teko text-amber-600">MATCH #{{ combat.numero_match }}</span>
+                </div>
+                <div class="text-center px-3">
+                    <span class="text-[10px] uppercase text-slate-500 font-bold block">Catégorie</span>
+                    <span class="text-xs font-extrabold text-slate-800 uppercase block">{{ combat.categorie }}</span>
+                </div>
+                <div class="text-center px-3 border-l border-slate-200">
+                    <span class="text-[10px] uppercase text-slate-500 font-bold block">Round Actif</span>
+                    <span class="text-xl font-black font-teko {% if round_actif and round_actif.statut == 'EN_COURS' %}text-emerald-600 animate-pulse{% else %}text-slate-600{% endif %}">
+                        {% if round_actif %}ROUND {{ round_actif.numero_round }}{% else %}EN ATTENTE{% endif %}
+                    </span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+    {% if combat and combat.statut == 'TERMINE' %}
+    <!-- Écran Match Terminé pour le Juge -->
+    <div class="bg-gradient-to-br from-slate-900 to-amber-950 p-8 rounded-3xl border-2 border-amber-500 shadow-xl text-center my-8 space-y-4 text-white">
+        <div class="w-16 h-16 rounded-full bg-amber-500/20 border-2 border-amber-400 text-amber-400 flex items-center justify-center text-3xl mx-auto shadow-lg animate-pulse">
+            <i class="fa-solid fa-trophy"></i>
+        </div>
+        <div>
+            <span class="px-3 py-1 bg-amber-500 text-slate-950 font-black text-xs uppercase rounded-full tracking-wider shadow-sm">Match Officiellement Terminé</span>
+            <h2 class="text-3xl font-black font-teko text-amber-400 tracking-wide mt-2">DÉCISION DU COMBAT : {{ combat.decision_qualification|default:"MATCH TERMINÉ" }}</h2>
+            <p class="text-sm text-slate-200 font-semibold max-w-md mx-auto mt-1">
+                {% if combat.vainqueur %}
+                    🏆 Vainqueur : <strong class="text-white font-extrabold text-base">{{ combat.vainqueur.prenom }} {{ combat.vainqueur.nom }}</strong> ({{ combat.details_decision }})
+                {% else %}
+                    {{ combat.details_decision|default:"Le combat a été clôturé par la table centrale." }}
+                {% endif %}
+            </p>
+        </div>
+        <div class="pt-3 border-t border-amber-500/30 text-xs text-amber-300 font-bold">
+            La notation pour ce match est définitivement clôturée. Merci pour vos saisies !
+        </div>
+    </div>
+    {% elif combat and round_actif %}
+    <main class="grid grid-cols-1 md:grid-cols-2 gap-6 my-4 flex-1">
+        <!-- Coin Rouge -->
+        <div class="bg-white p-6 rounded-3xl border-2 border-red-200 flex flex-col justify-between items-center shadow-sm space-y-4">
+            <div class="text-center space-y-2">
+                <div class="flex items-center justify-center gap-2">
+                    <span class="px-3 py-1 bg-red-600 text-white text-xs font-black uppercase rounded-full tracking-wider shadow-xs">Coin Rouge</span>
+                    <span class="text-lg">{{ combat.boxeur_rouge.drapeau_emoji }}</span>
+                </div>
+                <h3 class="text-3xl font-black font-teko tracking-wide text-slate-900">{{ combat.boxeur_rouge.prenom }} {{ combat.boxeur_rouge.nom }}</h3>
+                <p class="text-xs text-slate-500 font-semibold">{{ combat.boxeur_rouge.club }} • <span class="text-slate-700 font-bold">{{ combat.boxeur_rouge.pays }}</span></p>
+            </div>
+
+            <div class="w-full">
+                <label class="block text-center text-xs uppercase font-extrabold text-slate-600 mb-3">Note Attribuée (Round System)</label>
+                <div class="grid grid-cols-3 gap-3">
+                    <button type="button" id="btn-rouge-10" onclick="setScore('rouge', 10)" {% if score_deja_soumis %}disabled{% endif %} class="py-5 bg-red-600 text-white font-black text-2xl rounded-2xl border-2 border-red-400 shadow-md {% if score_deja_soumis %}opacity-60 cursor-not-allowed{% endif %}">10</button>
+                    <button type="button" id="btn-rouge-9" onclick="setScore('rouge', 9)" {% if score_deja_soumis %}disabled{% endif %} class="py-5 bg-slate-100 text-slate-700 font-bold text-xl rounded-2xl border border-slate-300 hover:bg-slate-200 {% if score_deja_soumis %}opacity-60 cursor-not-allowed{% endif %}">9</button>
+                    <button type="button" id="btn-rouge-8" onclick="setScore('rouge', 8)" {% if score_deja_soumis %}disabled{% endif %} class="py-5 bg-slate-100 text-slate-700 font-bold text-xl rounded-2xl border border-slate-300 hover:bg-slate-200 {% if score_deja_soumis %}opacity-60 cursor-not-allowed{% endif %}">8</button>
+                </div>
             </div>
         </div>
 
-
-    {% if combat and round_actif %}
-    <main class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6 flex-1">
-        <div class="bg-white p-6 rounded-3xl border-2 border-red-200 flex flex-col justify-between items-center shadow-sm">
-            <div class="text-center">
-                <span class="px-3 py-1 bg-red-600 text-white text-xs font-black uppercase rounded-full tracking-wider shadow-sm">Coin Rouge</span>
-                <h3 class="text-3xl font-black font-teko tracking-wide mt-2 text-slate-900">{{ combat.boxeur_rouge.prenom }} {{ combat.boxeur_rouge.nom }}</h3>
-                <p class="text-xs text-slate-500 font-semibold mt-1">{{ combat.boxeur_rouge.club }} • {{ combat.boxeur_rouge.pays }}</p>
-            </div>
-
-            <div class="w-full my-6">
-                <label class="block text-center text-xs uppercase font-extrabold text-slate-600 mb-3">Note Attribuée (Round System)</label>
-                <div class="grid grid-cols-3 gap-3">
-                    <button type="button" id="btn-rouge-10" onclick="setScore('rouge', 10)" class="py-5 bg-red-600 text-white font-black text-2xl rounded-2xl border-2 border-red-400 shadow-md">10</button>
-                    <button type="button" id="btn-rouge-9" onclick="setScore('rouge', 9)" class="py-5 bg-slate-100 text-slate-700 font-bold text-xl rounded-2xl border border-slate-300 hover:bg-slate-200">9</button>
-                    <button type="button" id="btn-rouge-8" onclick="setScore('rouge', 8)" class="py-5 bg-slate-100 text-slate-700 font-bold text-xl rounded-2xl border border-slate-300 hover:bg-slate-200">8</button>
+        <!-- Coin Bleu -->
+        <div class="bg-white p-6 rounded-3xl border-2 border-blue-200 flex flex-col justify-between items-center shadow-sm space-y-4">
+            <div class="text-center space-y-2">
+                <div class="flex items-center justify-center gap-2">
+                    <span class="px-3.5 py-1 bg-blue-600 text-white text-xs font-black uppercase rounded-full tracking-wider shadow-xs">Coin Bleu</span>
+                    <span class="text-lg">{{ combat.boxeur_bleu.drapeau_emoji }}</span>
                 </div>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-3xl border-2 border-blue-200 flex flex-col justify-between items-center shadow-sm">
-            <div class="text-center">
-                <span class="px-3.5 py-1 bg-blue-600 text-white text-xs font-black uppercase rounded-full tracking-wider shadow-sm">Coin Bleu</span>
-                <h3 class="text-3xl font-black font-teko tracking-wide mt-2 text-slate-900">{{ combat.boxeur_bleu.prenom }} {{ combat.boxeur_bleu.nom }}</h3>
-                <p class="text-xs text-slate-500 font-semibold mt-1">{{ combat.boxeur_bleu.club }} • {{ combat.boxeur_bleu.pays }}</p>
+                <h3 class="text-3xl font-black font-teko tracking-wide text-slate-900">{{ combat.boxeur_bleu.prenom }} {{ combat.boxeur_bleu.nom }}</h3>
+                <p class="text-xs text-slate-500 font-semibold">{{ combat.boxeur_bleu.club }} • <span class="text-slate-700 font-bold">{{ combat.boxeur_bleu.pays }}</span></p>
             </div>
 
-            <div class="w-full my-6">
+            <div class="w-full">
                 <label class="block text-center text-xs uppercase font-extrabold text-slate-600 mb-3">Note Attribuée (Round System)</label>
                 <div class="grid grid-cols-3 gap-3">
-                    <button type="button" id="btn-bleu-10" onclick="setScore('bleu', 10)" class="py-5 bg-slate-100 text-slate-700 font-bold text-xl rounded-2xl border border-slate-300 hover:bg-slate-200">10</button>
-                    <button type="button" id="btn-bleu-9" onclick="setScore('bleu', 9)" class="py-5 bg-blue-600 text-white font-black text-2xl rounded-2xl border-2 border-blue-400 shadow-md">9</button>
-                    <button type="button" id="btn-bleu-8" onclick="setScore('bleu', 8)" class="py-5 bg-slate-100 text-slate-700 font-bold text-xl rounded-2xl border border-slate-300 hover:bg-slate-200">8</button>
+                    <button type="button" id="btn-bleu-10" onclick="setScore('bleu', 10)" {% if score_deja_soumis %}disabled{% endif %} class="py-5 bg-slate-100 text-slate-700 font-bold text-xl rounded-2xl border border-slate-300 hover:bg-slate-200 {% if score_deja_soumis %}opacity-60 cursor-not-allowed{% endif %}">10</button>
+                    <button type="button" id="btn-bleu-9" onclick="setScore('bleu', 9)" {% if score_deja_soumis %}disabled{% endif %} class="py-5 bg-blue-600 text-white font-black text-2xl rounded-2xl border-2 border-blue-400 shadow-md {% if score_deja_soumis %}opacity-60 cursor-not-allowed{% endif %}">9</button>
+                    <button type="button" id="btn-bleu-8" onclick="setScore('bleu', 8)" {% if score_deja_soumis %}disabled{% endif %} class="py-5 bg-slate-100 text-slate-700 font-bold text-xl rounded-2xl border border-slate-300 hover:bg-slate-200 {% if score_deja_soumis %}opacity-60 cursor-not-allowed{% endif %}">8</button>
                 </div>
             </div>
         </div>
     </main>
 
-    <footer class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+    <!-- Zone de Validation des Notes avec Sécurité Anti-Double Soumission -->
+    <footer class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
         <div class="text-sm font-semibold">
-            <span class="text-slate-600">Score Saisi: </span>
-            <span id="displayScore" class="font-extrabold text-slate-900">ROUGE: <span id="rVal" class="text-red-600 font-black">10</span> | BLEU: <span id="bVal" class="text-blue-600 font-black">9</span></span>
+            <span class="text-slate-600">Score à transmettre : </span>
+            <span id="displayScore" class="font-extrabold text-slate-900">
+                ROUGE: <span id="rVal" class="text-red-600 font-black">{% if score_existant %}{{ score_existant.pts_rouge }}{% else %}10{% endif %}</span> 
+                | 
+                BLEU: <span id="bVal" class="text-blue-600 font-black">{% if score_existant %}{{ score_existant.pts_bleu }}{% else %}9{% endif %}</span>
+            </span>
         </div>
-        <button type="button" onclick="soumettreScore()" class="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl uppercase tracking-wider text-base shadow-md flex items-center gap-2">
+
+        {% if score_deja_soumis %}
+        <div class="flex items-center gap-3">
+            <span class="px-5 py-3 bg-emerald-100 text-emerald-800 font-black rounded-2xl uppercase tracking-wider text-xs border border-emerald-300 flex items-center gap-2">
+                <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
+                <span>NOTE ENREGISTRÉE POUR LE ROUND {{ round_actif.numero_round }} (ROUGE: {{ score_existant.pts_rouge }} | BLEU: {{ score_existant.pts_bleu }})</span>
+            </span>
+        </div>
+        {% else %}
+        <button type="button" id="btn-valider-score" onclick="soumettreScore()" class="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl uppercase tracking-wider text-sm shadow-md flex items-center gap-2 transition-all transform hover:scale-[1.02]">
             <i class="fa-solid fa-paper-plane"></i>
-            <span>Valider le Round</span>
+            <span>Valider & Transmettre le Round {{ round_actif.numero_round }}</span>
         </button>
+        {% endif %}
     </footer>
     {% else %}
-    <div class="flex-1 flex flex-col items-center justify-center text-center py-20">
-        <i class="fa-solid fa-clock text-6xl text-slate-400 mb-4"></i>
-        <h2 class="text-2xl font-bold text-slate-600">Aucun Combat en cours de scoring</h2>
+    <div class="bg-white p-12 rounded-3xl border border-slate-200 shadow-sm text-center my-8 space-y-3">
+        <i class="fa-solid fa-clock text-6xl text-amber-500 mb-2 animate-bounce"></i>
+        <h2 class="text-2xl font-black text-slate-800">En attente du lancement du Round par la Table Centrale</h2>
+        <p class="text-sm text-slate-500 max-w-md mx-auto">Veuillez patienter pendant que le Chef Juge déclenche le round sur sa console...</p>
+    </div>
+    {% endif %}
+
+    <!-- Tableau d'Historique des Notes pour le Juge Connecté -->
+    {% if mes_scores_histoire %}
+    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 my-6">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-sm font-black font-teko uppercase text-slate-900 tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-history text-amber-500"></i>
+                <span>Historique de mes notes pour le Match #{{ combat.numero_match }}</span>
+            </h3>
+            <span class="text-xs text-slate-500 font-bold">Consultez vos décisions passées</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {% for item in mes_scores_histoire %}
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="w-9 h-9 rounded-xl bg-slate-900 text-amber-400 flex items-center justify-center font-black font-teko text-lg">R{{ item.round_combat.numero_round }}</span>
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase block">Round {{ item.round_combat.numero_round }}</span>
+                        <div class="text-xs font-black text-slate-900 mt-0.5">
+                            <span class="text-red-600">Coin Rouge: {{ item.pts_rouge }}</span> • <span class="text-blue-600">Coin Bleu: {{ item.pts_bleu }}</span>
+                        </div>
+                    </div>
+                </div>
+                <span class="text-[10px] font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-200">
+                    <i class="fa-solid fa-check text-[9px]"></i> Transmis
+                </span>
+            </div>
+            {% endfor %}
+        </div>
     </div>
     {% endif %}
 </div>
 
 <script>
-let scoreRouge = 10;
-let scoreBleu = 9;
-const roundId = {% if round_actif %}{{ round_actif.id }}{% else %}null{% endif %};
+let activeScoreRouge = {% if score_existant %}{{ score_existant.pts_rouge }}{% else %}10{% endif %};
+let activeScoreBleu = {% if score_existant %}{{ score_existant.pts_bleu }}{% else %}9{% endif %};
+let currentRoundId = {% if round_actif %}{{ round_actif.id }}{% else %}null{% endif %};
+let currentMatchStatut = '{{ combat.statut }}';
 
-function setScore(coin, pts) {
+function setScore(coin, val) {
+    {% if score_deja_soumis %}
+    return;
+    {% endif %}
+
     if (coin === 'rouge') {
-        scoreRouge = pts;
-        document.getElementById('rVal').innerText = pts;
-        [10, 9, 8].forEach(p => {
-            const btn = document.getElementById(`btn-rouge-${p}`);
-            if (btn) {
-                if (p === pts) {
-                    btn.className = "py-5 bg-red-600 text-white font-black text-2xl rounded-2xl border-2 border-red-400 shadow-md scale-[1.03] transition-all";
-                } else {
-                    btn.className = "py-5 bg-slate-100 text-slate-700 font-bold text-xl rounded-2xl border border-slate-300 hover:bg-slate-200 transition-all";
-                }
+        activeScoreRouge = val;
+        [10, 9, 8].forEach(v => {
+            const btn = document.getElementById(`btn-rouge-${v}`);
+            if (v === val) {
+                btn.className = "py-5 bg-red-600 text-white font-black text-2xl rounded-2xl border-2 border-red-400 shadow-md";
+            } else {
+                btn.className = "py-5 bg-slate-100 text-slate-700 font-bold text-xl rounded-2xl border border-slate-300 hover:bg-slate-200";
             }
         });
-    } else {
-        scoreBleu = pts;
-        document.getElementById('bVal').innerText = pts;
-        [10, 9, 8].forEach(p => {
-            const btn = document.getElementById(`btn-bleu-${p}`);
-            if (btn) {
-                if (p === pts) {
-                    btn.className = "py-5 bg-blue-600 text-white font-black text-2xl rounded-2xl border-2 border-blue-400 shadow-md scale-[1.03] transition-all";
-                } else {
-                    btn.className = "py-5 bg-slate-100 text-slate-700 font-bold text-xl rounded-2xl border border-slate-300 hover:bg-slate-200 transition-all";
-                }
+    } else if (coin === 'bleu') {
+        activeScoreBleu = val;
+        [10, 9, 8].forEach(v => {
+            const btn = document.getElementById(`btn-bleu-${v}`);
+            if (v === val) {
+                btn.className = "py-5 bg-blue-600 text-white font-black text-2xl rounded-2xl border-2 border-blue-400 shadow-md";
+            } else {
+                btn.className = "py-5 bg-slate-100 text-slate-700 font-bold text-xl rounded-2xl border border-slate-300 hover:bg-slate-200";
             }
         });
     }
+
+    document.getElementById('rVal').innerText = activeScoreRouge;
+    document.getElementById('bVal').innerText = activeScoreBleu;
 }
 
 function soumettreScore() {
-    if (!roundId) return;
+    {% if not round_actif or score_deja_soumis %}
+    return;
+    {% endif %}
+
+    const btnVal = document.getElementById('btn-valider-score');
+    if (btnVal) btnVal.disabled = true;
+
     fetch('/api/enregistrer-score/', {
         method: 'POST',
         headers: {
@@ -125,19 +226,39 @@ function soumettreScore() {
             'X-CSRFToken': '{{ csrf_token }}'
         },
         body: JSON.stringify({
-            round_id: roundId,
-            points_rouge: scoreRouge,
-            points_bleu: scoreBleu
+            round_id: {{ round_actif.id }},
+            score_rouge: activeScoreRouge,
+            score_bleu: activeScoreBleu
         })
     })
     .then(res => res.json())
     .then(data => {
         if(data.statut === 'succes') {
-            alert('Score transmis à la Table Centrale avec succès !');
+            location.reload();
         } else {
-            alert('Erreur: ' + data.message);
+            alert("❌ Erreur: " + data.message);
+            if (btnVal) btnVal.disabled = false;
         }
+    })
+    .catch(err => {
+        alert("❌ Erreur de réseau.");
+        if (btnVal) btnVal.disabled = false;
     });
 }
+
+// Synchronisation Automatique de la Tablette avec le Chef Juge (Polling toutes les 3 sec)
+setInterval(() => {
+    fetch('/api/broadcast-statut/')
+    .then(res => res.json())
+    .then(data => {
+        if (data.combat) {
+            // Si le statut du match change (ex: de EN_COURS a TERMINE par KO) ou si un nouveau round est lance
+            if (data.combat.statut !== currentMatchStatut || (data.round && data.round.id !== currentRoundId) || (!data.round && currentRoundId !== null)) {
+                location.reload();
+            }
+        }
+    })
+    .catch(err => console.log(err));
+}, 3000);
 </script>
 {% endblock %}

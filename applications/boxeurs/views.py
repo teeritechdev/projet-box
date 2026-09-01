@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .models import Boxeur, Categorie
+from .models import Boxeur, Categorie, Pays
 
 @login_required
 def inscription_combattant_vue(request):
@@ -10,25 +10,65 @@ def inscription_combattant_vue(request):
     Jeux de l'Alliance des États du Sahel (JAES) 2026.
     """
     categories = Categorie.objects.all().order_by('genre', 'poids_maximum')
-    combattants = Boxeur.objects.all().order_by('-id')
+    combattants = Boxeur.objects.all().select_related('categorie', 'pays_fk').order_by('-id')
+    pays_list = Pays.objects.all().order_by('nom')
 
     if request.method == 'POST':
         action = request.POST.get('action', 'creer')
         
-        if action == 'creer':
+        if action == 'creer_pays':
+            nom_p = request.POST.get('nom_pays')
+            code_p = request.POST.get('code_iso', '')
+            emoji_p = request.POST.get('drapeau_emoji', '🏳️')
+            aes_p = request.POST.get('est_membre_aes') == 'on'
+            if nom_p:
+                p_obj, created = Pays.objects.get_or_create(nom=nom_p, defaults={
+                    'code_iso': code_p,
+                    'drapeau_emoji': emoji_p,
+                    'est_membre_aes': aes_p
+                })
+                if 'drapeau' in request.FILES:
+                    p_obj.drapeau = request.FILES['drapeau']
+                    p_obj.save()
+                messages.success(request, f"Le pays {p_obj.nom} {p_obj.drapeau_emoji} a été ajouté avec succès !")
+            return redirect('inscription_combattant')
+
+        elif action == 'creer':
             nom = request.POST.get('nom')
             prenom = request.POST.get('prenom')
             surnom = request.POST.get('surnom', '')
             sexe = request.POST.get('sexe', 'Masculin')
-            pays = request.POST.get('pays', 'Burkina Faso')
+            pays_id = request.POST.get('pays_fk')
+            pays_nom_brut = request.POST.get('pays', 'Burkina Faso')
             club = request.POST.get('club')
+            date_naissance = request.POST.get('date_naissance') or None
             age = request.POST.get('age') or None
             taille_cm = request.POST.get('taille_cm') or None
             poids_pesee = request.POST.get('poids_pesee') or None
             categorie_id = request.POST.get('categorie')
 
             categorie = Categorie.objects.filter(id=categorie_id).first() if categorie_id else None
+            pays_obj = Pays.objects.filter(id=pays_id).first() if pays_id else None
             
+            if pays_obj:
+                pays_nom_brut = pays_obj.nom
+
+            b = Boxeur.objects.create(
+                nom=nom,
+                prenom=prenom,
+                surnom=surnom,
+                sexe=sexe,
+                pays=pays_nom_brut,
+                pays_fk=pays_obj,
+                club=club,
+                date_naissance=date_naissance,
+                age=age,
+                taille_cm=taille_cm,
+                poids_pesee=poids_pesee,
+                categorie=categorie
+            )
+
+
             # Auto-assign category by weigh-in if not explicitly chosen
             if not categorie and poids_pesee:
                 try:
@@ -43,7 +83,8 @@ def inscription_combattant_vue(request):
                 prenom=prenom,
                 surnom=surnom,
                 sexe=sexe,
-                pays=pays,
+                pays=pays_nom_brut,
+                pays_fk=pays_obj,
                 club=club,
                 age=age,
                 taille_cm=taille_cm,
@@ -57,7 +98,7 @@ def inscription_combattant_vue(request):
                 b.logo_club = request.FILES['logo_club']
             b.save()
 
-            messages.success(request, f"Le combattant MMA {b.prenom} {b.nom} ({b.pays}) a été inscrit avec succès !")
+            messages.success(request, f"Le combattant MMA {b.prenom} {b.nom} ({b.drapeau_emoji} {b.pays}) a été inscrit avec succès !")
             return redirect('inscription_combattant')
         
         elif action == 'supprimer':
@@ -72,5 +113,7 @@ def inscription_combattant_vue(request):
     context = {
         'categories': categories,
         'combattants': combattants,
+        'pays_list': pays_list,
     }
     return render(request, 'boxeurs/inscription_combattant.html', context)
+

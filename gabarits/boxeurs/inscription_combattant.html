@@ -64,15 +64,16 @@
 
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-1">
-                        <label class="block text-xs font-bold text-slate-700 uppercase">Pays Représenté *</label>
-                        <select name="pays" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-extrabold text-slate-900 focus:bg-white focus:border-red-600 focus:outline-none">
-                            <option value="Burkina Faso" selected>🇧🇫 Burkina Faso (Hôte)</option>
-                            <option value="Mali">🇲🇱 Mali</option>
-                            <option value="Niger">🇳🇪 Niger</option>
-                            <option value="Côte d'Ivoire">🇨🇮 Côte d'Ivoire</option>
-                            <option value="Togo">🇹🇬 Togo</option>
-                            <option value="Bénin">🇧🇯 Bénin</option>
+                        <div class="flex justify-between items-center">
+                            <label class="block text-xs font-bold text-slate-700 uppercase">Pays Représenté *</label>
+                            <button type="button" onclick="ouvrirModalNouveauPays()" class="text-[10px] font-black text-red-600 hover:text-red-800 uppercase underline">+ Ajouter Pays</button>
+                        </div>
+                        <select name="pays_fk" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-extrabold text-slate-900 focus:bg-white focus:border-red-600 focus:outline-none">
+                            {% for p in pays_list %}
+                            <option value="{{ p.id }}" {% if p.code_iso == 'BF' or p.nom == 'BURKINA FASO' %}selected{% endif %}>{{ p.drapeau_emoji }} {{ p.nom }} {% if p.est_membre_aes %}(AES){% endif %}</option>
+                            {% endfor %}
                         </select>
+
                     </div>
                     <div class="space-y-1">
                         <label class="block text-xs font-bold text-slate-700 uppercase">Club / Équipe MMA *</label>
@@ -80,20 +81,40 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-3">
-                    <div class="space-y-1">
-                        <label class="block text-[11px] font-bold text-slate-700 uppercase">Poids Pesée (kg) *</label>
-                        <input type="number" step="0.10" name="poids_pesee" required placeholder="Ex: 70.30" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono font-bold text-slate-900 focus:bg-white focus:border-red-600 focus:outline-none">
+
+                <div class="grid grid-cols-4 gap-2.5">
+                    <div class="space-y-1 col-span-2">
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase">Date de Naissance *</label>
+                        <input type="date" name="date_naissance" id="input_date_naissance" onchange="calculerAgeAuto()" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:border-red-600 focus:outline-none">
                     </div>
                     <div class="space-y-1">
-                        <label class="block text-[11px] font-bold text-slate-700 uppercase">Taille (cm)</label>
-                        <input type="number" name="taille_cm" placeholder="Ex: 178" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono font-bold text-slate-900 focus:bg-white focus:border-red-600 focus:outline-none">
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase">Âge (Ans)</label>
+                        <input type="number" name="age" id="input_age_auto" readonly placeholder="Auto" class="w-full px-3 py-2 bg-amber-50 border border-amber-300 rounded-xl text-sm font-mono font-black text-amber-900 focus:outline-none">
                     </div>
                     <div class="space-y-1">
-                        <label class="block text-[11px] font-bold text-slate-700 uppercase">Âge</label>
-                        <input type="number" name="age" placeholder="Ex: 24" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono font-bold text-slate-900 focus:bg-white focus:border-red-600 focus:outline-none">
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase">Poids (kg) *</label>
+                        <input type="number" step="0.10" name="poids_pesee" required placeholder="Ex: 70.30" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono font-bold text-slate-900 focus:bg-white focus:border-red-600 focus:outline-none">
                     </div>
                 </div>
+
+                <script>
+                function calculerAgeAuto() {
+                    const dob = document.getElementById('input_date_naissance').value;
+                    if (dob) {
+                        const birth = new Date(dob);
+                        const today = new Date();
+                        let age = today.getFullYear() - birth.getFullYear();
+                        const m = today.getMonth() - birth.getMonth();
+                        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+                            age--;
+                        }
+                        if (age >= 0) {
+                            document.getElementById('input_age_auto').value = age;
+                        }
+                    }
+                }
+                </script>
+
 
                 <div class="space-y-1">
                     <label class="block text-xs font-bold text-slate-700 uppercase">Catégorie Officielle (GAMMA MMA) *</label>
@@ -197,4 +218,65 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Création d'un Nouveau Pays & Drapeau -->
+<div id="modal-nouveau-pays" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+    <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-4">
+        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+            <h3 class="text-xl font-black font-teko uppercase text-slate-900 tracking-wider">Ajouter un Nouveau Pays / Nation</h3>
+            <button onclick="fermerModalNouveauPays()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+
+        <form method="POST" action="" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="creer_pays">
+
+            <div class="space-y-1">
+                <label class="block text-xs font-bold text-slate-700 uppercase">Nom Officiel du Pays *</label>
+                <input type="text" name="nom_pays" required placeholder="Ex: Cameroun, Guinée, France..." class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1">
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase">Code ISO (2 lettres)</label>
+                    <input type="text" name="code_iso" placeholder="Ex: CM" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono font-bold text-slate-900">
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase">Emoji Drapeau</label>
+                    <input type="text" name="drapeau_emoji" placeholder="Ex: 🇨🇲" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-900">
+                </div>
+            </div>
+
+            <div class="space-y-1">
+                <label class="block text-[11px] font-bold text-slate-700 uppercase">Image Drapeau HD (Optionnel)</label>
+                <input type="file" name="drapeau" accept="image/*" class="w-full text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-100 file:text-slate-700">
+            </div>
+
+            <div class="flex items-center gap-2 pt-1">
+                <input type="checkbox" id="chk-aes" name="est_membre_aes" class="rounded border-slate-300 text-red-600 focus:ring-red-500">
+                <label for="chk-aes" class="text-xs font-bold text-slate-700">Pays membre de la Confédération AES</label>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <button type="button" onclick="fermerModalNouveauPays()" class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs uppercase">Annuler</button>
+                <button type="submit" class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs uppercase shadow-md">Enregistrer Pays</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function ouvrirModalNouveauPays() {
+    const modal = document.getElementById('modal-nouveau-pays');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function fermerModalNouveauPays() {
+    const modal = document.getElementById('modal-nouveau-pays');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+</script>
 {% endblock %}
+

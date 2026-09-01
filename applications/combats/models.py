@@ -90,6 +90,10 @@ class Combat(models.Model):
     vainqueur = models.ForeignKey(Boxeur, on_delete=models.SET_NULL, null=True, blank=True, related_name='combats_gagnes')
     coin_vainqueur = models.CharField(max_length=10, choices=CHOICES_COIN, null=True, blank=True)
     type_decision = models.CharField(max_length=100, choices=CHOICES_TYPE_VICTOIRE, blank=True, null=True, default='POINTS')
+    round_fin = models.PositiveIntegerField(null=True, blank=True, verbose_name="Round d'arrêt du combat")
+    temps_fin_round = models.CharField(max_length=20, blank=True, null=True, verbose_name="Temps / Minute de l'arrêt", help_text="Temps exact du chrono au moment de l'arrêt (ex: 01:42)")
+    details_decision = models.CharField(max_length=250, blank=True, null=True, verbose_name="Détails de la décision", help_text="Technique ou récapitulatif des cartes (ex: 30-27, 29-28, 30-27)")
+    decision_qualification = models.CharField(max_length=50, blank=True, null=True, verbose_name="Qualification officielle", help_text="Décision Unanime, Décision Partagée, Décision Majoritaire, KO, TKO, Soumission, etc.")
 
 
     def __str__(self):
@@ -118,18 +122,6 @@ class Round(models.Model):
     def __str__(self):
         return f"{self.combat} - Round {self.numero_round}"
 
-class ScoreJury(models.Model):
-    round = models.ForeignKey(Round, on_delete=models.CASCADE, related_name='scores_jury')
-    juge = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='scores_attribues')
-    points_rouge = models.PositiveIntegerField()
-    points_bleu = models.PositiveIntegerField()
-    date_saisie = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ('round', 'juge')
-
-    def __str__(self):
-        return f"{self.juge.username} - {self.round} ({self.points_rouge}-{self.points_bleu})"
 
 
 from django.db.models.signals import post_save
