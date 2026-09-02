@@ -4,3 +4,5 @@ psycopg2-binary>=2.9.0
 asgiref>=3.7.0
 sqlparse>=0.4.0
 tzdata
+gunicorn>=21.2.0
+whitenoise>=6.6.0
