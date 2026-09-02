@@ -143,7 +143,7 @@ LOGIN_REDIRECT_URL = 'admin_dashboard'
 
 STATICFILES_DIRS = [BASE_DIR / 'statiques']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
