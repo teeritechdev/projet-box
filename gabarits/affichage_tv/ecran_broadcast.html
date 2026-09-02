@@ -42,16 +42,29 @@
     }
 
     .bg-octagon-grid {
-        background-color: #030712;
+        background-color: #041226;
         background-image: 
-            radial-gradient(circle at 50% 50%, rgba(220, 38, 38, 0.18) 0%, transparent 65%),
-            radial-gradient(circle at 80% 20%, rgba(37, 99, 235, 0.18) 0%, transparent 60%);
+            radial-gradient(circle at 50% 30%, rgba(11, 94, 215, 0.45) 0%, transparent 70%),
+            radial-gradient(circle at 15% 85%, rgba(8, 66, 152, 0.35) 0%, transparent 65%),
+            radial-gradient(circle at 85% 85%, rgba(220, 38, 38, 0.3) 0%, transparent 65%),
+            linear-gradient(180deg, #061838 0%, #030C1E 100%);
     }
 
     .glow-red { box-shadow: 0 0 45px rgba(220, 38, 38, 0.5); }
     .glow-blue { box-shadow: 0 0 45px rgba(37, 99, 235, 0.5); }
     .glow-gold { box-shadow: 0 0 55px rgba(245, 158, 11, 0.6); }
     .glow-green { box-shadow: 0 0 45px rgba(16, 185, 129, 0.5); }
+
+    @keyframes footerScroll {
+        0% { transform: translateX(0%); }
+        100% { transform: translateX(-33.333%); }
+    }
+
+    .animate-footer-scroll {
+        display: flex;
+        width: max-content;
+        animation: footerScroll 22s linear infinite;
+    }
 
 </style>
 {% endblock %}
@@ -65,7 +78,7 @@
     <!-- Top Header Broadcast Banner (Dynamique) -->
     <header class="relative z-20 flex justify-between items-center bg-slate-900/90 backdrop-blur-xl px-6 md:px-8 py-3.5 rounded-3xl border border-slate-800 shadow-2xl">
         <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-red-600 border-2 border-amber-400 text-white flex items-center justify-center font-black text-2xl shadow-lg shrink-0 overflow-hidden" id="tvHeaderLogoContainer">
+            <div class="w-14 h-14 rounded-full bg-gradient-to-br from-amber-500 to-red-600 border-2 border-amber-400 text-white flex items-center justify-center font-black text-2xl shadow-xl shrink-0 overflow-hidden p-0.5" id="tvHeaderLogoContainer">
                 <i class="fa-solid fa-octagon-plus"></i>
             </div>
             <div>
@@ -121,11 +134,6 @@
                 2ÉME ÉDITION DES JEUX DE L'ALLIANCE DES ÉTATS DU SAHEL (JAES 2026)
             </h1>
             <p class="text-lg font-bold text-slate-400" id="tvAttenteLieu">Palais des Sports de Ouagadougou • Burkina Faso</p>
-        </div>
-
-        <!-- Partenaires & Logos Bannières (Dynamique) -->
-        <div class="pt-8 flex items-center justify-center gap-8 flex-wrap max-w-4xl" id="tvPartnerGrid">
-            <!-- Injecté dynamiquement par JS selon la BDD -->
         </div>
     </main>
 
@@ -597,10 +605,26 @@
 
 
 
-    <!-- Footer Dynamique -->
-    <footer class="relative z-10 bg-slate-900/90 py-3 px-8 rounded-2xl border border-slate-800 flex justify-between items-center text-xs font-extrabold text-slate-400">
-        <span>BROADCAST TV 4K 16:9 • SCORING TEMPS RÉEL (GAMMA MMA)</span>
-        <span id="tvFooterFederation">COMITÉ NATIONAL PROVISOIRE DE MMA ET DISCIPLINES ASSOCIÉES (CNP-MMA/DA)</span>
+    <!-- Footer Dynamique avec Arrière-plan Lisible, Logos Circulaires XL et Pause au Survol -->
+    <footer class="relative z-20 bg-slate-950/95 py-3 px-6 rounded-2xl border-2 border-slate-700/80 shadow-2xl overflow-hidden flex items-center gap-6 backdrop-blur-xl">
+        <!-- Badge Fixe à Gauche -->
+        <div class="shrink-0 flex items-center gap-2 bg-red-600/40 px-3.5 py-1.5 rounded-xl border border-red-500/60 text-red-300 text-xs font-black uppercase tracking-wider shadow-md">
+            <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
+            <span>OFFICIEL</span>
+        </div>
+
+        <!-- Zone Défilante Ticker Infini (Pause au survol du curseur) -->
+        <div class="overflow-hidden flex-1 relative">
+            <div class="animate-footer-scroll flex items-center gap-12 whitespace-nowrap" id="tvFooterTicker">
+                <!-- Injecté dynamiquement par JS (Logos Circulaires XL + Infos) -->
+            </div>
+        </div>
+
+        <!-- Badge Fixe à Droite -->
+        <div class="shrink-0 hidden md:flex items-center gap-2 bg-slate-900 px-4 py-1.5 rounded-xl border border-slate-700 text-xs font-black text-slate-200 shadow-md">
+            <i class="fa-solid fa-tv text-amber-400 text-sm"></i>
+            <span>BROADCAST 4K</span>
+        </div>
     </footer>
 </div>
 
@@ -700,15 +724,10 @@ function setElHtml(id, val) {
     if (el) el.innerHTML = (val !== null && val !== undefined) ? val : '';
 }
 
-// Broadcast Realtime Polling
-function raffraichirBroadcast() {
-    fetch('/api/broadcast-statut/?_t=' + Date.now(), { cache: 'no-store' })
-    .then(res => res.json())
-    .then(data => {
-        if (!data) return;
-        try {
-
-
+// Broadcast Realtime Rendering Logic
+function mettreAJourTV(data) {
+    if (!data) return;
+    try {
 
         // Image de fond personnalisée du Ring si présente
         if (data.image_ring_bg) {
@@ -727,34 +746,70 @@ function raffraichirBroadcast() {
                 setElText('tvFederationBadge', data.evenement.federation);
             }
             if(data.evenement.logo_discipline) {
-                setElHtml('tvHeaderLogoContainer', `<img src="${data.evenement.logo_discipline}" class="w-full h-full object-contain p-1">`);
+                setElHtml('tvHeaderLogoContainer', `<img src="${data.evenement.logo_discipline}" class="w-full h-full object-cover rounded-full">`);
             }
 
             setElText('tvAttenteTitre', data.evenement.titre);
             setElText('tvAttenteLieu', data.evenement.lieu);
             setElText('tvAttenteSub', (data.evenement.nom_discipline || 'MMA & BOXE') + ' • ' + (data.evenement.edition || 'JAES 2026'));
 
-            // Partenaires et logos dynamiques BDD
-            let logosHtml = '';
-            if (data.evenement.logo_ministere) {
-                logosHtml += `<div class="p-4 bg-slate-900/90 border border-slate-800 rounded-2xl flex items-center gap-3"><img src="${data.evenement.logo_ministere}" class="h-12 object-contain"><div class="text-left"><span class="text-[10px] uppercase font-extrabold text-slate-400 block">Organisateur</span><span class="text-xs font-bold text-white">${data.evenement.organisateur}</span></div></div>`;
-            } else {
-                logosHtml += `<div class="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl flex items-center gap-3"><i class="fa-solid fa-flag text-2xl text-red-500"></i><div class="text-left"><span class="text-[10px] uppercase font-extrabold text-slate-400 block">Organisateur</span><span class="text-xs font-bold text-white">${data.evenement.organisateur}</span></div></div>`;
-            }
+            // Génération des éléments défilants dans le Footer (Logos Cercle XL + Textes Lisibles)
+            let tickerUnitHtml = '';
+            
+            // 1. Organisateur (MSJE)
+            let logoOrg = data.evenement.logo_ministere ? `<img src="${data.evenement.logo_ministere}" class="w-full h-full object-cover rounded-full">` : `<i class="fa-solid fa-building-columns text-red-400 text-base"></i>`;
+            tickerUnitHtml += `
+            <div class="inline-flex items-center gap-3.5 bg-slate-900/95 px-5 py-2 rounded-full border border-slate-700/90 shadow-lg">
+                <div class="w-11 h-11 rounded-full border-2 border-red-500 overflow-hidden shrink-0 bg-slate-950 p-0.5 flex items-center justify-center shadow-md">
+                    ${logoOrg}
+                </div>
+                <div class="text-left">
+                    <span class="text-[10px] uppercase font-black text-red-400 tracking-wider block leading-none">ORGANISATEUR</span>
+                    <span class="text-sm font-black text-white">${data.evenement.organisateur}</span>
+                </div>
+            </div>`;
 
-            if (data.evenement.logo_evenement) {
-                logosHtml += `<div class="p-4 bg-slate-900/90 border border-slate-800 rounded-2xl flex items-center gap-3"><img src="${data.evenement.logo_evenement}" class="h-12 object-contain"><div class="text-left"><span class="text-[10px] uppercase font-extrabold text-slate-400 block">Fédération</span><span class="text-xs font-bold text-white">${data.evenement.federation}</span></div></div>`;
-            } else {
-                logosHtml += `<div class="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl flex items-center gap-3"><i class="fa-solid fa-shield-halved text-2xl text-amber-500"></i><div class="text-left"><span class="text-[10px] uppercase font-extrabold text-slate-400 block">Fédération</span><span class="text-xs font-bold text-white">${data.evenement.federation}</span></div></div>`;
-            }
+            // 2. Fédération / Discipline
+            let logoFed = data.evenement.logo_discipline ? `<img src="${data.evenement.logo_discipline}" class="w-full h-full object-cover rounded-full">` : `<i class="fa-solid fa-hand-fist text-emerald-400 text-base"></i>`;
+            tickerUnitHtml += `
+            <div class="inline-flex items-center gap-3.5 bg-slate-900/95 px-5 py-2 rounded-full border border-slate-700/90 shadow-lg">
+                <div class="w-11 h-11 rounded-full border-2 border-emerald-500 overflow-hidden shrink-0 bg-slate-950 p-0.5 flex items-center justify-center shadow-md">
+                    ${logoFed}
+                </div>
+                <div class="text-left">
+                    <span class="text-[10px] uppercase font-black text-emerald-400 tracking-wider block leading-none">FÉDÉRATION & DISCIPLINE</span>
+                    <span class="text-sm font-black text-white">${data.evenement.federation}</span>
+                </div>
+            </div>`;
 
-            if (data.evenement.logo_aes) {
-                logosHtml += `<div class="p-4 bg-slate-900/90 border border-slate-800 rounded-2xl flex items-center gap-3"><img src="${data.evenement.logo_aes}" class="h-12 object-contain"><div class="text-left"><span class="text-[10px] uppercase font-extrabold text-slate-400 block">Confédération</span><span class="text-xs font-bold text-white">ALLIANCE DES ÉTATS DU SAHEL</span></div></div>`;
-            } else {
-                logosHtml += `<div class="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl flex items-center gap-3"><i class="fa-solid fa-globe text-2xl text-blue-500"></i><div class="text-left"><span class="text-[10px] uppercase font-extrabold text-slate-400 block">Confédération</span><span class="text-xs font-bold text-white">ALLIANCE DES ÉTATS DU SAHEL</span></div></div>`;
-            }
+            // 3. Événement JAES
+            let logoEv = data.evenement.logo_evenement ? `<img src="${data.evenement.logo_evenement}" class="w-full h-full object-cover rounded-full">` : `<i class="fa-solid fa-trophy text-amber-400 text-base"></i>`;
+            tickerUnitHtml += `
+            <div class="inline-flex items-center gap-3.5 bg-slate-900/95 px-5 py-2 rounded-full border border-slate-700/90 shadow-lg">
+                <div class="w-11 h-11 rounded-full border-2 border-amber-500 overflow-hidden shrink-0 bg-slate-950 p-0.5 flex items-center justify-center shadow-md">
+                    ${logoEv}
+                </div>
+                <div class="text-left">
+                    <span class="text-[10px] uppercase font-black text-amber-400 tracking-wider block leading-none">COMPÉTITION OFFICIELLE</span>
+                    <span class="text-sm font-black text-white">${data.evenement.titre}</span>
+                </div>
+            </div>`;
 
-            setElHtml('tvPartnerGrid', logosHtml);
+            // 4. Confédération AES
+            let logoAes = data.evenement.logo_aes ? `<img src="${data.evenement.logo_aes}" class="w-full h-full object-cover rounded-full">` : `<i class="fa-solid fa-shield-halved text-blue-400 text-base"></i>`;
+            tickerUnitHtml += `
+            <div class="inline-flex items-center gap-3.5 bg-slate-900/95 px-5 py-2 rounded-full border border-slate-700/90 shadow-lg">
+                <div class="w-11 h-11 rounded-full border-2 border-blue-500 overflow-hidden shrink-0 bg-slate-950 p-0.5 flex items-center justify-center shadow-md">
+                    ${logoAes}
+                </div>
+                <div class="text-left">
+                    <span class="text-[9px] uppercase font-black text-blue-400 tracking-wider block leading-none">CONFÉDÉRATION</span>
+                    <span class="text-sm font-black text-white">ALLIANCE DES ÉTATS DU SAHEL (AES)</span>
+                </div>
+            </div>`;
+
+            // Duplication x3 pour un défilement infini sans coupure
+            setElHtml('tvFooterTicker', tickerUnitHtml + tickerUnitHtml + tickerUnitHtml);
         }
 
         setElText('tvCategory', (data.categorie || 'MMA') + ' • MATCH #' + (data.numero_match || '1'));
@@ -774,6 +829,11 @@ function raffraichirBroadcast() {
         // Bascule de Mode TV selon le signal de la Régie
         masquerTousLesModes();
         const mode = data.mode_tv || 'ATTENTE_PUB';
+
+        // Arreter immédiatement la synthèse vocale si on quitte le mode Victoire
+        if (mode !== 'PROCLAMATION_VAINQUEUR' && ('speechSynthesis' in window)) {
+            window.speechSynthesis.cancel();
+        }
 
         if (mode === 'ATTENTE_PUB') {
             afficherModeTV('viewAttentePub');
@@ -1124,13 +1184,40 @@ function raffraichirBroadcast() {
             });
             setElHtml('roundBadges', badgeHtml);
         }
-        } catch(err) {
-            console.error("Erreur affichage TV:", err);
-        }
-    })
+    } catch(err) {
+        console.error("Erreur affichage TV:", err);
+    }
+}
+
+// Broadcast HTTP Polling (Fallback)
+function raffraichirBroadcast() {
+    fetch('/api/broadcast-statut/?_t=' + Date.now(), { cache: 'no-store' })
+    .then(res => res.json())
+    .then(data => mettreAJourTV(data))
     .catch(err => console.error("Erreur HTTP Broadcast:", err));
 }
 
+// Server-Sent Events (SSE) Stream temps réel instantané
+let sseActive = false;
+if (window.EventSource) {
+    try {
+        const evtSource = new EventSource('/api/broadcast-stream/');
+        evtSource.onmessage = function(event) {
+            sseActive = true;
+            try {
+                const data = JSON.parse(event.data);
+                mettreAJourTV(data);
+            } catch(e) {
+                console.error("Erreur SSE JSON:", e);
+            }
+        };
+        evtSource.onerror = function() {
+            sseActive = false;
+        };
+    } catch(e) {
+        console.warn("SSE stream non supporté, fallback sur le polling HTTP:", e);
+    }
+}
 
 
 let dernierPrononceKey = null;
@@ -1186,7 +1273,12 @@ try {
     console.log('BroadcastChannel not supported:', err);
 }
 
-setInterval(raffraichirBroadcast, 1000);
+setInterval(function() {
+    if (!sseActive) {
+        raffraichirBroadcast();
+    }
+}, 1500);
+
 raffraichirBroadcast();
 
 </script>

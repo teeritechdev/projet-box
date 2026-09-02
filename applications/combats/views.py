@@ -148,9 +148,24 @@ def table_juge_principal_vue(request):
 
 
 
-@csrf_exempt
+def est_juge_principal_ou_admin(user):
+    if not user.is_authenticated:
+        return False
+    if user.is_superuser or user.is_staff:
+        return True
+    if user.role:
+        code = str(user.role.code).upper()
+        nom = str(user.role.nom).lower()
+        if code in ['JUGE_PRINCIPAL', 'ADMIN'] or 'principal' in nom or 'admin' in nom:
+            return True
+    return False
+
+
 @login_required
 def lancer_match_api(request):
+    if not est_juge_principal_ou_admin(request.user):
+        return JsonResponse({'statut': 'erreur', 'message': 'Accès refusé : privilèges insuffisants.'}, status=403)
+
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -190,6 +205,9 @@ def lancer_match_api(request):
 
 @login_required
 def valider_round_api(request):
+    if not est_juge_principal_ou_admin(request.user):
+        return JsonResponse({'statut': 'erreur', 'message': 'Accès refusé : privilèges insuffisants.'}, status=403)
+
     if request.method == 'POST':
         data = json.loads(request.body)
         action = data.get('action')

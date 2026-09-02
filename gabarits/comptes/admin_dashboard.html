@@ -7,90 +7,84 @@
     <!-- Navigation & En-tête Officiel JAES 2026 -->
     {% include 'components/navigation_officielle.html' %}
 
-    <!-- CONSOLE DE CONTRÔLE RÉGIE TV BROADCAST (Adaptée 100% au Header Officiel) -->
-    <div class="bg-slate-950 text-white px-6 md:px-10 py-5 border-b border-slate-800 shadow-md space-y-4">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-4">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-2xl bg-red-600 text-white flex items-center justify-center font-bold text-lg shadow-sm animate-pulse">
-                    <i class="fa-solid fa-tower-broadcast"></i>
-                </div>
-                <div>
-                    <h2 class="text-xl font-black font-teko uppercase text-white tracking-wider flex items-center gap-2">
-                        <span>CONSOLE DE CONTRÔLE RÉGIE BROADCAST TV</span>
-                        <span class="px-2.5 py-0.5 bg-red-600 text-white text-[10px] font-extrabold uppercase rounded-full tracking-widest animate-pulse">EN DIRECT</span>
-                    </h2>
-                    <p class="text-xs text-slate-400 font-semibold">Commutation dynamique des séquences visuelles projetées sur l'écran géant de l'Arena</p>
-                </div>
+    <!-- CONSOLE DE CONTRÔLE RÉGIE TV BROADCAST (Bande 3 - Cyan/Bleu • Boutons occupy 100% de la ligne) -->
+    <div class="bg-gradient-to-r from-sky-600 via-cyan-600 to-sky-700 text-white px-4 md:px-6 py-2.5 border-b border-sky-500 shadow-md flex items-center justify-between gap-3 w-full">
+        
+        <!-- Gauche : Zone Cercle Logo MMA (Burkina Faso) -->
+        <div class="flex items-center gap-2.5 shrink-0">
+            <div class="w-10 h-10 rounded-full bg-white/20 border-2 border-white/40 shadow-inner flex items-center justify-center overflow-hidden shrink-0">
+                {% if evenement_actif.logo_discipline %}
+                    <img src="{{ evenement_actif.logo_discipline.url }}" alt="Logo MMA Burkina Faso" class="w-full h-full object-cover">
+                {% else %}
+                    <i class="fa-solid fa-hand-fist text-base text-white"></i>
+                {% endif %}
             </div>
-
-            <!-- Bouton TV Isolé -->
-            <div class="flex items-center gap-3">
-                <a href="{% url 'ecran_broadcast' %}" target="_blank" class="px-6 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-2xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-lg transition-all transform hover:scale-105 border border-cyan-400/40">
-                    <i class="fa-solid fa-tv text-sm"></i>
-                    <span>TV</span>
-                </a>
+            <div class="hidden xl:block">
+                <span class="text-[11px] font-black uppercase text-white tracking-wider block leading-none">RÉGIE TV</span>
+                <span class="text-[9px] font-extrabold text-cyan-100 uppercase tracking-widest">MMA BURKINA</span>
             </div>
         </div>
 
-        <!-- Navigation par Onglets Horizontaux Régie TV (Style Header Capture 3) -->
-        <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-none" id="regieTabNavbar">
-            <button onclick="changerModeTV('ATTENTE_PUB', this)" class="regie-tab px-4 py-2.5 rounded-xl text-xs font-extrabold text-amber-400 bg-slate-900 border border-slate-700 shadow-md hover:text-white transition-all flex items-center gap-2 whitespace-nowrap">
+        <!-- Centre : Boutons Régie TV (Style Image Référence : Inactifs épurés sans fond/champs, Actif Rectangle Rouge Pur) -->
+        <div class="flex-1 flex items-center justify-between gap-1 sm:gap-1.5 overflow-x-auto scrollbar-none py-0.5" id="regieTabNavbar">
+            <button onclick="changerModeTV('ATTENTE_PUB', this)" class="regie-tab flex-1 px-3 py-2 rounded-lg text-xs font-black text-white bg-red-600 shadow-md flex items-center justify-center gap-1.5 whitespace-nowrap text-center transition-all">
                 <i class="fa-solid fa-tv"></i>
                 <span>Pubs & Logos</span>
             </button>
-            <button onclick="changerModeTV('CARTE_PROGRAMME', this)" class="regie-tab px-4 py-2.5 rounded-xl text-xs font-extrabold text-slate-300 hover:text-white hover:bg-slate-900 transition-all flex items-center gap-2 whitespace-nowrap">
-                <i class="fa-solid fa-list-ol text-blue-400"></i>
+            <button onclick="changerModeTV('CARTE_PROGRAMME', this)" class="regie-tab flex-1 px-3 py-2 rounded-lg text-xs font-extrabold text-white bg-transparent hover:text-amber-300 flex items-center justify-center gap-1.5 whitespace-nowrap text-center transition-all">
+                <i class="fa-solid fa-list-ol"></i>
                 <span>5 Prochains</span>
             </button>
-            <button onclick="changerModeTV('PRESENTATION_ROUGE_SOLO', this)" class="regie-tab px-4 py-2.5 rounded-xl text-xs font-extrabold text-slate-300 hover:text-white hover:bg-slate-900 transition-all flex items-center gap-2 whitespace-nowrap">
-                <i class="fa-solid fa-user text-red-500"></i>
+            <button onclick="changerModeTV('PRESENTATION_ROUGE_SOLO', this)" class="regie-tab flex-1 px-3 py-2 rounded-lg text-xs font-extrabold text-white bg-transparent hover:text-amber-300 flex items-center justify-center gap-1.5 whitespace-nowrap text-center transition-all">
+                <i class="fa-solid fa-user"></i>
                 <span>Solo Rouge</span>
             </button>
-            <button onclick="changerModeTV('PRESENTATION_BLEU_SOLO', this)" class="regie-tab px-4 py-2.5 rounded-xl text-xs font-extrabold text-slate-300 hover:text-white hover:bg-slate-900 transition-all flex items-center gap-2 whitespace-nowrap">
-                <i class="fa-solid fa-user text-blue-500"></i>
+            <button onclick="changerModeTV('PRESENTATION_BLEU_SOLO', this)" class="regie-tab flex-1 px-3 py-2 rounded-lg text-xs font-extrabold text-white bg-transparent hover:text-amber-300 flex items-center justify-center gap-1.5 whitespace-nowrap text-center transition-all">
+                <i class="fa-solid fa-user"></i>
                 <span>Solo Bleu</span>
             </button>
-            <button onclick="changerModeTV('PRESENTATION_FACE_A_FACE', this)" class="regie-tab px-4 py-2.5 rounded-xl text-xs font-extrabold text-slate-300 hover:text-white hover:bg-slate-900 transition-all flex items-center gap-2 whitespace-nowrap">
-                <i class="fa-solid fa-hand-fist text-amber-400"></i>
+            <button onclick="changerModeTV('PRESENTATION_FACE_A_FACE', this)" class="regie-tab flex-1 px-3 py-2 rounded-lg text-xs font-extrabold text-white bg-transparent hover:text-amber-300 flex items-center justify-center gap-1.5 whitespace-nowrap text-center transition-all">
+                <i class="fa-solid fa-hand-fist"></i>
                 <span>Face-à-Face</span>
             </button>
-            <button onclick="changerModeTV('PRESENTATION_OFFICIELS', this)" class="regie-tab px-4 py-2.5 rounded-xl text-xs font-extrabold text-slate-300 hover:text-white hover:bg-slate-900 transition-all flex items-center gap-2 whitespace-nowrap">
-                <i class="fa-solid fa-user-shield text-emerald-400"></i>
+            <button onclick="changerModeTV('PRESENTATION_OFFICIELS', this)" class="regie-tab flex-1 px-3 py-2 rounded-lg text-xs font-extrabold text-white bg-transparent hover:text-amber-300 flex items-center justify-center gap-1.5 whitespace-nowrap text-center transition-all">
+                <i class="fa-solid fa-user-shield"></i>
                 <span>Officiels</span>
             </button>
-            <button onclick="changerModeTV('LANCEMENT_ROUND', this)" class="regie-tab px-4 py-2.5 rounded-xl text-xs font-extrabold text-slate-300 hover:text-white hover:bg-slate-900 transition-all flex items-center gap-2 whitespace-nowrap">
-                <i class="fa-solid fa-bullhorn text-orange-400"></i>
+            <button onclick="changerModeTV('LANCEMENT_ROUND', this)" class="regie-tab flex-1 px-3 py-2 rounded-lg text-xs font-extrabold text-white bg-transparent hover:text-amber-300 flex items-center justify-center gap-1.5 whitespace-nowrap text-center transition-all">
+                <i class="fa-solid fa-bullhorn"></i>
                 <span>Annonce Round</span>
             </button>
-            <button onclick="changerModeTV('COMBAT_EN_COURS', this)" class="regie-tab px-4 py-2.5 rounded-xl text-xs font-extrabold text-slate-300 hover:text-white hover:bg-slate-900 transition-all flex items-center gap-2 whitespace-nowrap">
-                <i class="fa-solid fa-stopwatch text-cyan-400"></i>
+            <button onclick="changerModeTV('COMBAT_EN_COURS', this)" class="regie-tab flex-1 px-3 py-2 rounded-lg text-xs font-extrabold text-white bg-transparent hover:text-amber-300 flex items-center justify-center gap-1.5 whitespace-nowrap text-center transition-all">
+                <i class="fa-solid fa-stopwatch"></i>
                 <span>Direct Ring</span>
             </button>
-            <button onclick="changerModeTV('MEDIA_HIGHLIGHT', this)" class="regie-tab px-4 py-2.5 rounded-xl text-xs font-extrabold text-slate-300 hover:text-white hover:bg-slate-900 transition-all flex items-center gap-2 whitespace-nowrap">
-                <i class="fa-solid fa-camera text-purple-400"></i>
+            <button onclick="changerModeTV('MEDIA_HIGHLIGHT', this)" class="regie-tab flex-1 px-3 py-2 rounded-lg text-xs font-extrabold text-white bg-transparent hover:text-amber-300 flex items-center justify-center gap-1.5 whitespace-nowrap text-center transition-all">
+                <i class="fa-solid fa-camera"></i>
                 <span>Photo Coup</span>
             </button>
-            <button onclick="changerModeTV('PROCLAMATION_VAINQUEUR', this)" class="regie-tab px-4 py-2.5 rounded-xl text-xs font-extrabold text-slate-300 hover:text-white hover:bg-slate-900 transition-all flex items-center gap-2 whitespace-nowrap">
-                <i class="fa-solid fa-trophy text-yellow-400"></i>
+            <button onclick="changerModeTV('PROCLAMATION_VAINQUEUR', this)" class="regie-tab flex-1 px-3 py-2 rounded-lg text-xs font-extrabold text-white bg-transparent hover:text-amber-300 flex items-center justify-center gap-1.5 whitespace-nowrap text-center transition-all">
+                <i class="fa-solid fa-trophy"></i>
                 <span>Victoire</span>
             </button>
         </div>
+
+    </div>
 
         <!-- Moniteur d'Aperçu en Direct de l'Écran TV Broadcast -->
 
         <div class="mt-3 p-4 bg-slate-900/90 border border-slate-800 rounded-2xl space-y-2 shadow-inner">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-black uppercase text-amber-400 tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-tv"></i>
-                    <span>MONITEUR D'APERÇU EN DIRECT DU SIGNAL TV BROADCAST (ARENA 4K)</span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-                </span>
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="text-xs font-black uppercase text-white tracking-wider">Aperçu Monitor Régie (Flux TV Live Direct)</span>
+                </div>
                 <a href="{% url 'ecran_broadcast' %}" target="_blank" class="px-3.5 py-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md">
                     <i class="fa-solid fa-expand"></i>
                     <span>Ouvrir Plein Écran (4K)</span>
                 </a>
             </div>
-            <div class="w-full h-[380px] rounded-xl overflow-hidden border border-slate-800 bg-slate-950 relative shadow-2xl">
+            <div class="w-full h-[600px] lg:h-[680px] rounded-xl overflow-hidden border border-slate-800 bg-slate-950 relative shadow-2xl">
                 <iframe id="previewTvIframe" src="{% url 'ecran_broadcast' %}" class="w-full h-full border-0"></iframe>
             </div>
         </div>
@@ -99,13 +93,17 @@
 
     <script>
     function changerModeTV(mode, btnEl) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
+
         if (btnEl) {
             document.querySelectorAll('.regie-tab').forEach(b => {
-                b.classList.remove('bg-slate-900', 'border', 'border-slate-700', 'shadow-md', 'text-amber-400');
-                b.classList.add('text-slate-300');
+                b.classList.remove('bg-red-600', 'shadow-md', 'font-black');
+                b.classList.add('bg-transparent', 'hover:text-amber-300', 'font-extrabold');
             });
-            btnEl.classList.add('bg-slate-900', 'border', 'border-slate-700', 'shadow-md', 'text-amber-400');
-            btnEl.classList.remove('text-slate-300');
+            btnEl.classList.add('bg-red-600', 'shadow-md', 'font-black');
+            btnEl.classList.remove('bg-transparent', 'hover:text-amber-300');
         }
 
         // Signal Hardware Inter-Onglets (BroadcastChannel 0ms) pour passer à travers le bridage navigateur

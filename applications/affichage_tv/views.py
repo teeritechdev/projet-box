@@ -71,16 +71,13 @@ def get_combat_diffusion_actif(combat_id=None):
 
 
 
-@never_cache
-def api_statut_broadcast(request):
-
-    combat_id = request.GET.get('combat_id')
+def construire_donnees_broadcast(combat_id=None):
     combat = get_combat_diffusion_actif(combat_id)
     
     if not combat:
         # Fallback si aucun combat
         evenement = Evenement.objects.filter(est_actif=True).first()
-        return JsonResponse({
+        return {
             'actif': False,
             'mode_tv': 'ATTENTE_PUB',
             'evenement': {
@@ -90,7 +87,7 @@ def api_statut_broadcast(request):
                 'lieu': evenement.lieu if evenement else "Palais des Sports",
             },
             'prochains_combats': []
-        })
+        }
 
     # Obtenir la liste des prochains combats créés (À VENIR) ou tous les autres combats
     prochains_qs = Combat.objects.filter(statut='A_VENIR').select_related('boxeur_rouge', 'boxeur_bleu', 'categorie').order_by('numero_match')[:10]
@@ -168,7 +165,7 @@ def api_statut_broadcast(request):
     }
 
     ev = combat.evenement
-    data = {
+    return {
         'actif': True,
         'combat_id': combat.id,
         'mode_tv': combat.mode_tv or 'ATTENTE_PUB',
@@ -236,12 +233,61 @@ def api_statut_broadcast(request):
         'prochains_combats': prochains_combats
     }
 
+
+@never_cache
+def api_statut_broadcast(request):
+    combat_id = request.GET.get('combat_id')
+    data = construire_donnees_broadcast(combat_id)
     return JsonResponse(data)
 
 
+import time
+from django.http import StreamingHttpResponse
+
 @never_cache
-@csrf_exempt
+def api_sse_broadcast(request):
+    """
+    Flux Server-Sent Events (SSE) pour diffuser les mises à jour TV instantanément.
+    """
+    combat_id = request.GET.get('combat_id')
+
+    def event_stream():
+        dernier_state = None
+        while True:
+            try:
+                data = construire_donnees_broadcast(combat_id)
+                current_state = json.dumps(data, sort_keys=True)
+                if current_state != dernier_state:
+                    dernier_state = current_state
+                    yield f"data: {json.dumps(data)}\n\n"
+            except Exception as e:
+                pass
+            time.sleep(0.3)
+
+    response = StreamingHttpResponse(event_stream(), content_type='text/event-stream')
+    response['Cache-Control'] = 'no-cache'
+    response['X-Accel-Buffering'] = 'no'
+    return response
+
+
+def est_juge_principal_ou_admin(user):
+    if not user.is_authenticated:
+        return False
+    if user.is_superuser or user.is_staff:
+        return True
+    if user.role:
+        code = str(user.role.code).upper()
+        nom = str(user.role.nom).lower()
+        if code in ['JUGE_PRINCIPAL', 'ADMIN'] or 'principal' in nom or 'admin' in nom:
+            return True
+    return False
+
+
+@never_cache
+@login_required
 def api_changer_mode_tv(request):
+    if not est_juge_principal_ou_admin(request.user):
+        return JsonResponse({'statut': 'erreur', 'message': 'Accès refusé : privilèges insuffisants.'}, status=403)
 
     if request.method == 'POST':
         try:

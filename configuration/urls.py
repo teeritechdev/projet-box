@@ -8,7 +8,7 @@ from applications.boxeurs.views import inscription_combattant_vue
 from applications.scoring.views import tablette_juge_vue, enregistrer_score_api
 from applications.combats.views import table_juge_principal_vue, valider_round_api, creer_combat_vue, lancer_match_api
 
-from applications.affichage_tv.views import ecran_tv_broadcast_vue, api_statut_broadcast, api_changer_mode_tv
+from applications.affichage_tv.views import ecran_tv_broadcast_vue, api_statut_broadcast, api_changer_mode_tv, api_sse_broadcast
 
 admin.site.site_header = "FÉDÉRATION NATIONALE DE MMA — CNP-MMA/DA"
 admin.site.site_title = "Admin MMA Scoring JAES 2026"
@@ -37,6 +37,7 @@ urlpatterns = [
     # Broadcast Arena TV
     path('broadcast-tv/', ecran_tv_broadcast_vue, name='ecran_broadcast'),
     path('api/broadcast-statut/', api_statut_broadcast, name='api_statut_broadcast'),
+    path('api/broadcast-stream/', api_sse_broadcast, name='api_sse_broadcast'),
     path('api/changer-mode-tv/', api_changer_mode_tv, name='api_changer_mode_tv'),
 ]
 

@@ -48,8 +48,24 @@ def tablette_juge_vue(request):
     return render(request, 'scoring/tablette_juge.html', context)
 
 
+def est_autorise_scoring(user):
+    if not user.is_authenticated:
+        return False
+    if user.is_superuser or user.is_staff:
+        return True
+    if user.role:
+        code = str(user.role.code).upper()
+        nom = str(user.role.nom).lower()
+        if code in ['JUGE', 'JURY', 'JUGE_PRINCIPAL', 'ADMIN', '01'] or 'juge' in nom or 'jury' in nom or 'admin' in nom:
+            return True
+    return False
+
+
 @login_required
 def enregistrer_score_api(request):
+    if not est_autorise_scoring(request.user):
+        return JsonResponse({'statut': 'erreur', 'message': 'Accès refusé : privilèges insuffisants.'}, status=403)
+
     if request.method == 'POST':
         data = json.loads(request.body)
         round_id = data.get('round_id')
