@@ -23,8 +23,13 @@ class Categorie(models.Model):
     poids_minimum = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
     poids_maximum = models.DecimalField(max_digits=5, decimal_places=2)
 
+    class Meta:
+        verbose_name = "Catégorie de Poids"
+        verbose_name_plural = "Catégories de Poids"
+        ordering = ['genre', 'poids_maximum']
+
     def __str__(self):
-        return f"{self.nom} ({self.genre})"
+        return f"{self.nom} (Genre: {self.genre} • Poids: {self.poids_minimum} kg à {self.poids_maximum} kg)"
 
 class Boxeur(models.Model):
     CHOICES_SEXE = [('Masculin', 'Masculin'), ('Féminin', 'Féminin')]
@@ -35,7 +40,7 @@ class Boxeur(models.Model):
     sexe = models.CharField(max_length=20, choices=CHOICES_SEXE, default='Masculin')
     pays = models.CharField(max_length=100, default='Burkina Faso')
     pays_fk = models.ForeignKey(Pays, on_delete=models.SET_NULL, null=True, blank=True, related_name='boxeurs', verbose_name="Pays Officiel")
-    club = models.CharField(max_length=150)
+    club = models.CharField(max_length=150, blank=True, null=True, default='', verbose_name="Club / Équipe")
     logo_club = models.ImageField(upload_to='logos_clubs/', blank=True, null=True)
     photo = models.ImageField(upload_to='boxeurs/', blank=True, null=True)
     date_naissance = models.DateField(null=True, blank=True, verbose_name="Date de Naissance")
@@ -64,7 +69,6 @@ class Boxeur(models.Model):
     def drapeau_emoji(self):
         if self.pays_fk and self.pays_fk.drapeau_emoji:
             return self.pays_fk.drapeau_emoji
-        # Mapping automatique si pas de FK
         m = {
             'burkina faso': '🇧🇫',
             'mali': '🇲🇱',
@@ -83,5 +87,8 @@ class Boxeur(models.Model):
         return m.get((self.pays or '').lower().strip(), '🏳️')
 
     def __str__(self):
-        return f"{self.prenom} {self.nom} ({self.club})"
+        if self.club:
+            return f"{self.prenom} {self.nom} ({self.club})"
+        return f"{self.prenom} {self.nom}"
+
 

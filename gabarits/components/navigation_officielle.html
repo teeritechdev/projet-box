@@ -69,10 +69,19 @@
             <!-- BOUTONS POUR JUGE DE TABLE / JURY TABLETTE -->
             {% if user.role and user.role.code == 'JURY' or user.role and 'juge' in user.role.nom|lower or user.role and 'jury' in user.role.nom|lower %}
                 {% if not user.is_superuser and user.role.code != 'JUGE_PRINCIPAL' %}
-                <a href="{% url 'tablette_juge' %}" class="text-slate-800 hover:text-emerald-600 flex items-center gap-1.5 transition-colors">
-                    <i class="fa-solid fa-tablet-screen-button text-sm text-emerald-600"></i>
-                    <span>Ma Tablette</span>
+                <a href="{% url 'tablette_juge' %}" class="text-slate-800 hover:text-emerald-600 flex items-center gap-1.5 transition-colors text-sm font-black uppercase tracking-wider">
+                    <i class="fa-solid fa-tablet-screen-button text-base text-emerald-600"></i>
+                    <span>MA TABLETTE</span>
                 </a>
+                <span class="text-slate-300 hidden sm:inline">•</span>
+                <button type="button" onclick="if(typeof ouvrirModalMesMatchsJuge === 'function'){ ouvrirModalMesMatchsJuge(); } else { window.location.href='{% url 'tablette_juge' %}?open_history=1'; }" class="text-slate-800 hover:text-amber-600 flex items-center gap-1.5 transition-colors cursor-pointer border-0 bg-transparent text-sm font-black uppercase tracking-wider">
+                    <i class="fa-solid fa-clock-rotate-left text-base text-amber-600"></i>
+                    <span>MES MATCHS</span>
+                </button>
+
+
+
+
                 {% endif %}
             {% endif %}
 

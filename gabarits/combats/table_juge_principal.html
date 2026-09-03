@@ -31,6 +31,11 @@
                     {% endfor %}
                 </select>
 
+                <button type="button" onclick="ouvrirModalHistoriqueGala()" class="px-4 py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-black text-xs uppercase rounded-xl shadow-sm flex items-center gap-1.5 shrink-0 transition-all cursor-pointer">
+                    <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                    <span>HISTORIQUE GALA</span>
+                </button>
+
                 {% if combat.statut == 'EN_COURS' %}
                 <button onclick="lancerCeMatchOfficiel()" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white font-black text-xs uppercase rounded-xl shadow-md flex items-center gap-2 shrink-0 border border-emerald-400">
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-300 animate-ping"></span>
@@ -298,7 +303,13 @@
                                             {{ item.nb_valides }}/3 Juges Saisis
                                         </span>
                                     </div>
-                                    <div class="text-sm font-bold text-slate-900 mt-0.5">Score Total Round: <span class="text-red-600 font-extrabold">{{ item.round.total_score_rouge }}</span> - <span class="text-blue-600 font-extrabold">{{ item.round.total_score_bleu }}</span></div>
+                                    <div class="text-sm font-bold text-slate-900 mt-0.5">
+                                        {% if item.round.valide %}
+                                            Score Total Round: <span class="text-red-600 font-extrabold">{{ item.round.total_score_rouge }}</span> - <span class="text-blue-600 font-extrabold">{{ item.round.total_score_bleu }}</span> <span class="text-xs text-emerald-600 font-bold ml-1">(Officiel Validé)</span>
+                                        {% else %}
+                                            <span class="text-xs font-semibold text-slate-500">Score Total Round: <em class="text-amber-600 font-extrabold">En attente de validation (Cliquez sur "✓ VALIDER ROUND")</em></span>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
 
@@ -363,32 +374,56 @@
                 </div>
             </div>
 
-            <!-- Barre d'Action Inférieure Ordonnée et Stylisée -->
+            <!-- Barre d'Action Inférieure Ordonnée et Contrôlée -->
             <div class="pt-5 border-t border-slate-200">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <!-- Bouton 1 : Arrêt Prématuré du Match -->
-                    {% if tous_rounds_valides %}
-                    <button disabled title="Tous les rounds ont été validés. Le combat est allé au terme du temps et doit être clôturé aux points." class="px-4 py-3 bg-slate-200 text-slate-400 font-extrabold rounded-2xl uppercase tracking-wider text-xs shadow-none flex items-center justify-center gap-2 border border-slate-300 cursor-not-allowed opacity-60">
-                        <i class="fa-solid fa-lock text-sm"></i>
-                        <span>Arrêt Match (Indisponible - 3 Rounds Validés)</span>
-                    </button>
-                    {% else %}
+                    <!-- Bouton 1 : Arrêt Prématuré du Match (KO / TKO / Soumission) -->
+                    {% if peut_arreter_ko %}
                     <button onclick="ouvrirModalArret()" class="px-4 py-3 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-extrabold rounded-2xl uppercase tracking-wider text-xs shadow-md flex items-center justify-center gap-2 border border-red-500 transition-all transform hover:scale-[1.02]">
                         <i class="fa-solid fa-hand-stop text-sm"></i>
+                        <span>Arrêt Match (KO/TKO)</span>
+                    </button>
+                    {% elif tous_rounds_valides %}
+                    <button disabled title="Tous les rounds ont été validés par le jury. Le combat est allé au terme du temps et doit être clôturé aux points." class="px-4 py-3 bg-slate-200 text-slate-400 font-extrabold rounded-2xl uppercase tracking-wider text-xs shadow-none flex items-center justify-center gap-2 border border-slate-300 cursor-not-allowed opacity-60">
+                        <i class="fa-solid fa-lock text-sm"></i>
+                        <span>Arrêt Match (3 Rounds Validés)</span>
+                    </button>
+                    {% else %}
+                    <button disabled title="Démarrer d'abord le premier round pour pouvoir déclarer un arrêt prématuré (KO/TKO)." class="px-4 py-3 bg-slate-200 text-slate-400 font-extrabold rounded-2xl uppercase tracking-wider text-xs shadow-none flex items-center justify-center gap-2 border border-slate-300 cursor-not-allowed opacity-60">
+                        <i class="fa-solid fa-lock text-sm"></i>
                         <span>Arrêt Match (KO/TKO)</span>
                     </button>
                     {% endif %}
 
                     <!-- Bouton 2 : Récapitulatif Scores TV -->
+                    {% if peut_afficher_recap_tv %}
                     <button onclick="changerModeTV('DECISION_RECAP')" class="px-4 py-3 bg-slate-950 hover:bg-slate-900 text-amber-400 font-extrabold rounded-2xl uppercase tracking-wider text-xs shadow-md flex items-center justify-center gap-2 border border-amber-500/40 transition-all transform hover:scale-[1.02]">
                         <i class="fa-solid fa-chart-line text-sm text-cyan-400"></i>
                         <span>Récap Scores TV</span>
                     </button>
+                    {% else %}
+                    <button disabled title="Le récapitulatif des scores sur l'écran TV sera disponible dès qu'au moins un round aura été validé par le jury." class="px-4 py-3 bg-slate-200 text-slate-400 font-extrabold rounded-2xl uppercase tracking-wider text-xs shadow-none flex items-center justify-center gap-2 border border-slate-300 cursor-not-allowed opacity-60">
+                        <i class="fa-solid fa-lock text-sm"></i>
+                        <span>Récap Scores TV</span>
+                    </button>
+                    {% endif %}
 
                     <!-- Bouton 3 : Décision aux Points & Vainqueur -->
-                    {% if combat.rounds.last and combat.rounds.last.id %}
-                    <button onclick="actionRound({{ combat.rounds.last.id }}, 'cloturer_combat')" class="px-4 py-3 bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-black rounded-2xl uppercase tracking-wider text-xs shadow-lg flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] {% if tous_rounds_valides %}animate-pulse ring-4 ring-amber-400/50{% endif %}">
+                    {% if combat.statut == 'TERMINE' %}
+                    <button onclick="changerModeTV('PROCLAMATION_VAINQUEUR')" class="px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black rounded-2xl uppercase tracking-wider text-xs shadow-lg flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02]">
                         <i class="fa-solid fa-trophy text-sm text-yellow-200"></i>
+                        <span>Proclamer Vainqueur TV</span>
+                    </button>
+                    {% elif peut_cloturer_points %}
+                    {% if combat.rounds.last and combat.rounds.last.id %}
+                    <button onclick="actionRound({{ combat.rounds.last.id }}, 'cloturer_combat')" class="px-4 py-3 bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-black rounded-2xl uppercase tracking-wider text-xs shadow-lg flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] animate-pulse ring-4 ring-amber-400/50">
+                        <i class="fa-solid fa-trophy text-sm text-yellow-200"></i>
+                        <span>Clôturer & Décision Points</span>
+                    </button>
+                    {% endif %}
+                    {% else %}
+                    <button disabled title="Les 3 rounds doivent impérativement être validés par le jury avant de pouvoir clôturer le combat aux points." class="px-4 py-3 bg-slate-200 text-slate-400 font-extrabold rounded-2xl uppercase tracking-wider text-xs shadow-none flex items-center justify-center gap-2 border border-slate-300 cursor-not-allowed opacity-60">
+                        <i class="fa-solid fa-lock text-sm"></i>
                         <span>Décision Points & Vainqueur</span>
                     </button>
                     {% endif %}
@@ -710,6 +745,13 @@ function lancerCeMatchOfficiel() {
     .then(res => res.json())
     .then(data => {
         if(data.statut === 'succes') {
+            try {
+                const tvChannel = new BroadcastChannel('tv_broadcast_channel');
+                tvChannel.postMessage({ type: 'CHANGER_MODE_TV', combat_id: combatId });
+            } catch(e) {}
+            try {
+                localStorage.setItem('mode_tv_signal', JSON.stringify({ combat_id: combatId, timestamp: Date.now() }));
+            } catch(e) {}
             alert("🟢 " + data.message);
             window.location.href = '{% url "table_juge_principal" %}?combat_id=' + combatId;
         } else {
@@ -717,6 +759,282 @@ function lancerCeMatchOfficiel() {
         }
     });
 }
+
+function ouvrirModalHistoriqueGala() {
+    const modal = document.getElementById('modalHistoriqueGala');
+    if (modal) {
+        modal.classList.remove('hidden');
+        changerMatchHistoriqueDirect(0);
+    }
+}
+
+function fermerModalHistoriqueGala() {
+    const modal = document.getElementById('modalHistoriqueGala');
+    if (modal) modal.classList.add('hidden');
+}
+
+function changerMatchHistoriqueDirect(idx) {
+    document.querySelectorAll('.detail-match-item').forEach(el => el.classList.add('hidden'));
+    
+    const target = document.getElementById('detail-match-' + idx);
+    if (target) target.classList.remove('hidden');
+
+    const selectElem = document.getElementById('selecteurMatchHistorique');
+    if (selectElem) selectElem.value = idx;
+}
+
+function rechercherParNumeroMatch(query) {
+    const val = query.trim().toLowerCase().replace('#', '').replace('match', '').trim();
+    if (!val) return;
+
+    const selectElem = document.getElementById('selecteurMatchHistorique');
+    if (!selectElem) return;
+
+    for (let i = 0; i < selectElem.options.length; i++) {
+        const option = selectElem.options[i];
+        const matchNum = (option.getAttribute('data-num') || '').toLowerCase().trim();
+        const optionText = option.text.toLowerCase();
+
+        if (matchNum === val || optionText.includes(val)) {
+            changerMatchHistoriqueDirect(option.value);
+            break;
+        }
+    }
+}
 </script>
+
+<!-- Full-Screen Modal Historique des Matchs du Gala (Sélection Directe du Match) -->
+<div id="modalHistoriqueGala" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 hidden flex flex-col w-screen h-screen overflow-hidden text-slate-900">
+    <!-- Barre de Titre Supérieure (Fond Blanc Pur) -->
+    <div class="px-6 py-4 bg-white border-b border-slate-200 flex items-center justify-between shrink-0 shadow-xs">
+        <div class="flex items-center gap-3.5">
+            <span class="w-11 h-11 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center text-xl font-black shadow-md">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </span>
+            <div>
+                <h2 class="text-2xl font-black font-teko uppercase text-slate-900 tracking-wide leading-none">HISTORIQUE DES MATCHS DU GALA (VERDICTS & ARBITRAGE)</h2>
+                <p class="text-xs font-bold text-slate-500 mt-0.5">Sélectionnez le combat souhaité pour afficher immédiatement son rapport d'arbitrage complet.</p>
+            </div>
+        </div>
+        <button type="button" onclick="fermerModalHistoriqueGala()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 rounded-xl text-xs font-extrabold uppercase flex items-center gap-2 border border-slate-300 transition-all cursor-pointer">
+            <i class="fa-solid fa-xmark text-sm"></i>
+            <span>Fermer (Échap)</span>
+        </button>
+    </div>
+
+    <!-- Barre de Sélection Unique du Match & Recherche par N° de Combat -->
+    <div class="px-6 py-3.5 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
+        <!-- Menu Déroulant de Sélection Directe -->
+        <div class="flex items-center gap-3 flex-1 max-w-xl">
+            <label for="selecteurMatchHistorique" class="text-xs font-black uppercase text-amber-800 shrink-0 flex items-center gap-1.5">
+                <i class="fa-solid fa-hand-pointer text-amber-600"></i>
+                <span>SÉLECTIONNER UN MATCH :</span>
+            </label>
+            <select id="selecteurMatchHistorique" onchange="changerMatchHistoriqueDirect(this.value)" class="w-full px-4 py-2 bg-white border-2 border-amber-400 rounded-xl font-extrabold text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-xs cursor-pointer">
+                {% for item in historique_gala %}
+                <option value="{{ item.index }}" data-num="{{ item.combat.numero_match }}">
+                    MATCH #{{ item.combat.numero_match }} : {{ item.combat.boxeur_rouge.prenom }} {{ item.combat.boxeur_rouge.nom }} VS {{ item.combat.boxeur_bleu.prenom }} {{ item.combat.boxeur_bleu.nom }} ({% if item.combat.statut == 'TERMINE' %}✅ TERMINÉ{% elif item.combat.statut == 'EN_COURS' %}🟢 EN DIRECT{% else %}⏳ À VENIR{% endif %})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Barre de Recherche par N° du Combat -->
+        <div class="w-full md:w-80 flex items-center gap-2">
+            <div class="relative w-full">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                <input type="text" id="inputSearchMatchNum" onkeyup="rechercherParNumeroMatch(this.value)" placeholder="Rechercher par N° du combat (ex: 1, 2, 3)..." class="w-full pl-9 pr-4 py-2 bg-white border-2 border-slate-300 rounded-xl font-extrabold text-xs text-slate-900 focus:outline-none focus:border-amber-500 shadow-xs">
+            </div>
+        </div>
+    </div>
+
+    <!-- Zone Principale : Fiche Unique du Match Sélectionné (Plein Largeur) -->
+    <div class="p-6 flex-1 overflow-y-auto bg-slate-100 custom-scrollbar">
+        <div class="max-w-6xl mx-auto">
+            {% for item in historique_gala %}
+            <div id="detail-match-{{ item.index }}" class="detail-match-item space-y-6 hidden bg-white border border-slate-200 rounded-3xl p-6 shadow-md">
+                
+                <!-- Carte d'En-tête de la Confrontation (Photos + Noms + Drapeaux HD) -->
+                <div class="p-5 bg-gradient-to-r from-red-50 via-slate-50 to-blue-50 border-2 border-slate-200 rounded-2xl shadow-xs">
+                    <div class="flex items-center justify-between gap-4">
+                        <!-- Boxeur Rouge -->
+                        <div class="flex items-center gap-3.5">
+                            {% if item.combat.boxeur_rouge.photo %}
+                                <img src="{{ item.combat.boxeur_rouge.photo.url }}" class="w-16 h-16 rounded-full object-cover border-4 border-red-500 shadow-md shrink-0">
+                            {% else %}
+                                <span class="w-16 h-16 rounded-full bg-red-100 text-red-600 font-black text-2xl flex items-center justify-center border-2 border-red-400 shrink-0">🔴</span>
+                            {% endif %}
+                            <div>
+                                <span class="px-2.5 py-0.5 bg-red-600 text-white font-black text-[10px] uppercase rounded tracking-wider">COIN ROUGE</span>
+                                <h3 class="text-xl font-black text-slate-900 mt-1 leading-tight">
+                                    {{ item.combat.boxeur_rouge.prenom }} {{ item.combat.boxeur_rouge.nom }}
+                                </h3>
+                                <span class="text-xs font-bold text-slate-600 flex items-center gap-1.5 mt-0.5">
+                                    {% if item.combat.boxeur_rouge.pays_fk %}
+                                        <span class="text-base">{{ item.combat.boxeur_rouge.pays_fk.drapeau_emoji }}</span>
+                                        <strong>{{ item.combat.boxeur_rouge.pays_fk.nom }}</strong>
+                                    {% else %}
+                                        <span>🇧🇫</span> <strong>{{ item.combat.boxeur_rouge.pays }}</strong>
+                                    {% endif %}
+                                    <span class="text-slate-300">•</span>
+                                    <span>{{ item.combat.boxeur_rouge.club }}</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Centre VS & Catégorie -->
+                        <div class="text-center px-4">
+                            <span class="px-3.5 py-1 bg-amber-500 text-slate-950 font-black text-xs uppercase rounded-full shadow-xs">MATCH #{{ item.combat.numero_match }}</span>
+                            <div class="text-3xl font-black font-teko text-amber-600 mt-1">VS</div>
+                            <span class="text-xs font-extrabold uppercase text-slate-500 block">{{ item.combat.categorie.nom|default:"GALA MMA" }}</span>
+                        </div>
+
+                        <!-- Boxeur Bleu -->
+                        <div class="flex items-center gap-3.5 text-right">
+                            <div>
+                                <span class="px-2.5 py-0.5 bg-blue-600 text-white font-black text-[10px] uppercase rounded tracking-wider">COIN BLEU</span>
+                                <h3 class="text-xl font-black text-slate-900 mt-1 leading-tight">
+                                    {{ item.combat.boxeur_bleu.prenom }} {{ item.combat.boxeur_bleu.nom }}
+                                </h3>
+                                <span class="text-xs font-bold text-slate-600 flex items-center justify-end gap-1.5 mt-0.5">
+                                    <span>{{ item.combat.boxeur_bleu.club }}</span>
+                                    <span class="text-slate-300">•</span>
+                                    {% if item.combat.boxeur_bleu.pays_fk %}
+                                        <strong>{{ item.combat.boxeur_bleu.pays_fk.nom }}</strong>
+                                        <span class="text-base">{{ item.combat.boxeur_bleu.pays_fk.drapeau_emoji }}</span>
+                                    {% else %}
+                                        <strong>{{ item.combat.boxeur_bleu.pays }}</strong> <span>🇲🇱</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            {% if item.combat.boxeur_bleu.photo %}
+                                <img src="{{ item.combat.boxeur_bleu.photo.url }}" class="w-16 h-16 rounded-full object-cover border-4 border-blue-500 shadow-md shrink-0">
+                            {% else %}
+                                <span class="w-16 h-16 rounded-full bg-blue-100 text-blue-600 font-black text-2xl flex items-center justify-center border-2 border-blue-400 shrink-0">🔵</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Verdict Officiel & Proclamation du Vainqueur avec Photo -->
+                {% if item.combat.statut == 'TERMINE' %}
+                <div class="p-5 bg-gradient-to-br from-amber-500/15 via-amber-50 to-amber-100/50 border-2 border-amber-400 rounded-2xl space-y-3 text-slate-900 shadow-sm">
+                    <div class="flex items-center justify-between border-b border-amber-200 pb-2">
+                        <span class="text-xs font-black uppercase text-amber-900 tracking-widest flex items-center gap-1.5">
+                            <i class="fa-solid fa-trophy text-amber-600 text-sm"></i>
+                            <span>VERDICT OFFICIEL & PROCLAMATION DU JURY</span>
+                        </span>
+                        {% if item.combat.round_fin and item.temps_fin_round %}
+                            <span class="text-xs font-black font-mono bg-white px-3 py-1 rounded-lg border border-amber-300 text-slate-800">
+                                Temps d'arrêt : Round {{ item.combat.round_fin }} à {{ item.temps_fin_round }}
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="flex items-center justify-between gap-4">
+                        <div>
+                            <h4 class="text-3xl font-black font-teko text-amber-900 tracking-wide leading-none">
+                                {{ item.combat.decision_qualification|default:"Victoire Officielle" }}
+                            </h4>
+                            <p class="text-sm font-extrabold text-slate-800 mt-1">
+                                Vainqueur Proclamé : 
+                                {% if item.combat.vainqueur %}
+                                    <strong class="text-emerald-700 font-black text-base ml-1">{{ item.combat.vainqueur.prenom }} {{ item.combat.vainqueur.nom }}</strong>
+                                {% else %}
+                                    <strong class="text-amber-800 font-black ml-1">ÉGALITÉ OFFICIELLE (DRAW)</strong>
+                                {% endif %}
+                            </p>
+                            {% if item.combat.details_decision %}
+                            <div class="text-xs text-slate-600 font-bold italic mt-1">
+                                Scorecards Juges : {{ item.combat.details_decision }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Photo du Vainqueur dans le Verdict -->
+                        {% if item.combat.vainqueur and item.combat.vainqueur.photo %}
+                            <div class="flex flex-col items-center shrink-0">
+                                <img src="{{ item.combat.vainqueur.photo.url }}" class="w-16 h-16 rounded-full object-cover border-4 border-emerald-500 shadow-md">
+                                <span class="text-[9px] font-black uppercase bg-emerald-600 text-white px-2 py-0.5 rounded-full mt-1">Gagnant 🏆</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Corps d'Arbitrage et Membres de la Table -->
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                    <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider block border-b border-slate-200 pb-1.5">MEMBRES OFFICIELS DE LA TABLE SUR CE MATCH</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                        <div>
+                            <span class="text-slate-500 font-bold block">Chef Juge / Principal :</span>
+                            <strong class="text-slate-900 text-sm">{% if item.combat.juge_principal %}{{ item.combat.juge_principal.first_name|default:item.combat.juge_principal.username }} {{ item.combat.juge_principal.last_name|default:"" }} (@{{ item.combat.juge_principal.username }}){% else %}Non spécifié{% endif %}</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 font-bold block">Arbitre Central Ring :</span>
+                            <strong class="text-slate-900 text-sm">{% if item.combat.arbitre_central %}{{ item.combat.arbitre_central.drapeau_emoji }} {{ item.combat.arbitre_central.prenom }} {{ item.combat.arbitre_central.nom }}{% else %}Non spécifié{% endif %}</strong>
+                        </div>
+                    </div>
+                    <div class="text-xs border-t border-slate-200/80 pt-2">
+                        <span class="text-slate-500 font-bold block mb-1">Juges de Table Attribués :</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            {% for j in item.juges_liste %}
+                                <span class="px-2.5 py-1 bg-white text-slate-800 font-mono font-bold text-xs rounded-lg border border-slate-250 shadow-2xs">@{{ j.username }} ({{ j.first_name|default:"" }} {{ j.last_name|default:"" }})</span>
+                            {% empty %}
+                                <span class="text-slate-400 font-semibold italic">Tous les juges habilités du gala</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Matrices des Notes par Round -->
+                {% if item.rounds %}
+                <div class="space-y-2">
+                    <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider block">MATRICE DES NOTES ET SCORES PAR ROUND :</span>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {% for r_data in item.rounds %}
+                        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs space-y-2">
+                            <div class="flex items-center justify-between font-bold border-b border-slate-200 pb-1.5">
+                                <span class="text-slate-900 font-black font-teko text-lg">Round {{ r_data.round.numero_round }}</span>
+                                <span class="text-[10px] font-extrabold {% if r_data.round.valide %}text-emerald-700{% elif item.combat.statut == 'TERMINE' %}text-amber-800{% else %}text-amber-700{% endif %}">
+                                    {% if r_data.round.valide %}
+                                        Total: {{ r_data.round.total_score_rouge }} - {{ r_data.round.total_score_bleu }}
+                                    {% elif item.combat.statut == 'TERMINE' and item.combat.round_fin and item.combat.round_fin == r_data.round.numero_round %}
+                                        ⚠️ Arrêt Arbitre / {{ item.combat.decision_qualification|default:"TKO" }} ({{ item.combat.temps_fin_round|default:"Arrêt" }})
+                                    {% elif item.combat.statut == 'TERMINE' and item.combat.round_fin and r_data.round.numero_round > item.combat.round_fin %}
+                                        Non joué
+                                    {% else %}
+                                        En attente
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="text-xs text-slate-700 space-y-1">
+                                {% for sj in r_data.scores_juges %}
+                                <div class="flex items-center justify-between font-mono bg-white px-2.5 py-1 rounded-lg border border-slate-200">
+                                    <span class="text-slate-500 font-semibold">@{{ sj.juge.username }}</span>
+                                    <span class="font-extrabold text-slate-900"><strong class="text-red-600">{{ sj.pts_rouge }}</strong> - <strong class="text-blue-600">{{ sj.pts_bleu }}</strong></span>
+                                </div>
+                                {% empty %}
+                                <span class="italic text-slate-400 text-[10px]">Aucune note enregistrée</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Bouton d'Action Charger sur la Console -->
+                <div class="flex justify-end pt-4 border-t border-slate-200">
+                    <a href="?combat_id={{ item.combat.id }}" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-amber-400 hover:text-amber-300 rounded-xl text-xs font-black uppercase tracking-wider shadow-md flex items-center gap-2 transition-all">
+                        <i class="fa-solid fa-eye text-sm"></i>
+                        <span>Charger ce combat sur la console du Juge Principal</span>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
 {% endblock %}
 

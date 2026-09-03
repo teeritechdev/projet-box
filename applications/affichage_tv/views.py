@@ -55,13 +55,13 @@ def get_combat_diffusion_actif(combat_id=None):
         if c:
             return c
 
-    # 4. Dernier combat TERMINE
-    c = Combat.objects.filter(statut='TERMINE').select_related('boxeur_rouge', 'boxeur_bleu', 'arbitre_central', 'juge_principal', 'evenement', 'categorie').order_by('-id').first()
+    # 4. Premier combat A_VENIR à lancer
+    c = Combat.objects.filter(statut='A_VENIR').select_related('boxeur_rouge', 'boxeur_bleu', 'arbitre_central', 'juge_principal', 'evenement', 'categorie').order_by('numero_match').first()
     if c:
         return c
 
-    # 5. Premier combat A_VENIR
-    c = Combat.objects.filter(statut='A_VENIR').select_related('boxeur_rouge', 'boxeur_bleu', 'arbitre_central', 'juge_principal', 'evenement', 'categorie').order_by('numero_match').first()
+    # 5. Dernier combat TERMINE (Fallback uniquement si aucun combat à venir)
+    c = Combat.objects.filter(statut='TERMINE').select_related('boxeur_rouge', 'boxeur_bleu', 'arbitre_central', 'juge_principal', 'evenement', 'categorie').order_by('-id').first()
     if c:
         return c
 

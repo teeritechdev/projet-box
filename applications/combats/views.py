@@ -78,7 +78,7 @@ def creer_combat_vue(request):
 
 @login_required
 def table_juge_principal_vue(request):
-    tous_les_combats = Combat.objects.all().select_related('boxeur_rouge', 'boxeur_bleu', 'categorie').order_by('numero_match')
+    tous_les_combats = Combat.objects.all().select_related('boxeur_rouge', 'boxeur_bleu', 'categorie', 'vainqueur', 'arbitre_central').prefetch_related('juges', 'rounds__scores_juges__juge').order_by('numero_match')
 
     combat_id = request.GET.get('combat_id')
     if combat_id:
@@ -134,15 +134,46 @@ def table_juge_principal_vue(request):
     round_actif = combat.rounds.filter(statut='EN_COURS').first() if combat else None
     tous_rounds_valides = (rounds.count() > 0) and not rounds.filter(valide=False).exists() if combat else False
 
+    au_moins_un_round_demarre = combat.rounds.filter(statut__in=['EN_COURS', 'TERMINE']).exists() if combat else False
+    au_moins_un_round_termine = combat.rounds.filter(statut='TERMINE', valide=True).exists() if combat else False
+
+    peut_arreter_ko = bool(combat and combat.statut == 'EN_COURS' and au_moins_un_round_demarre and not tous_rounds_valides)
+    peut_afficher_recap_tv = bool(combat and (au_moins_un_round_termine or combat.statut == 'TERMINE' or tous_rounds_valides))
+    peut_cloturer_points = bool(combat and combat.statut == 'EN_COURS' and tous_rounds_valides)
+
+    # Préparation de l'historique des matchs terminés et en cours pour le Chef Juge
+    combats_historique = Combat.objects.filter(statut__in=['TERMINE', 'EN_COURS']).select_related('boxeur_rouge', 'boxeur_bleu', 'categorie', 'vainqueur', 'arbitre_central', 'juge_principal').prefetch_related('juges', 'rounds__scores_juges__juge').order_by('numero_match')
+
+    historique_gala = []
+    for idx, c in enumerate(combats_historique):
+        c_rounds = []
+        for r in c.rounds.all().order_by('numero_round'):
+            c_rounds.append({
+                'round': r,
+                'scores_juges': list(r.scores_juges.all()),
+            })
+        historique_gala.append({
+            'index': idx,
+            'combat': c,
+            'juges_liste': list(c.juges.all()),
+            'rounds': c_rounds,
+        })
+
     context = {
         'combat': combat,
         'tous_les_combats': tous_les_combats,
+        'historique_gala': historique_gala,
         'juges': juges,
         'nb_juges_totaux': nb_juges_totaux,
         'scores_par_round': scores_par_round,
         'totaux_juges': totaux_juges,
         'round_actif': round_actif,
         'tous_rounds_valides': tous_rounds_valides,
+        'au_moins_un_round_demarre': au_moins_un_round_demarre,
+        'au_moins_un_round_termine': au_moins_un_round_termine,
+        'peut_arreter_ko': peut_arreter_ko,
+        'peut_afficher_recap_tv': peut_afficher_recap_tv,
+        'peut_cloturer_points': peut_cloturer_points,
     }
     return render(request, 'combats/table_juge_principal.html', context)
 
@@ -364,21 +395,29 @@ def valider_round_api(request):
 def calculer_decision_carte_par_carte(combat):
     """
     Calcule la décision aux points (Unanime, Partagée, Majoritaire ou Égalité)
-    en comptabilisant les cartes individuelles des juges de table sur l'ensemble des rounds.
+    en comptabilisant uniquement les cartes individuelles COMPLÈTES des juges de table sur l'ensemble des rounds.
     """
-    rounds = combat.rounds.all()
-    vrais_juges_scores = {}  # juge_id: {'rouge': 0, 'bleu': 0}
+    rounds = combat.rounds.all().order_by('numero_round')
+    nb_rounds_totaux = rounds.count()
+
+    vrais_juges_scores = {}  # juge_id: {'rouge': 0, 'bleu': 0, 'nb_rounds': 0}
 
     for r in rounds:
         for s in r.scores_juges.all():
             j_id = s.juge_id
             if j_id not in vrais_juges_scores:
-                vrais_juges_scores[j_id] = {'rouge': 0, 'bleu': 0}
+                vrais_juges_scores[j_id] = {'rouge': 0, 'bleu': 0, 'nb_rounds': 0}
             vrais_juges_scores[j_id]['rouge'] += s.pts_rouge
             vrais_juges_scores[j_id]['bleu'] += s.pts_bleu
+            vrais_juges_scores[j_id]['nb_rounds'] += 1
 
-    if not vrais_juges_scores:
-        # Fallback par total des rounds si pas de juges individuels enregistrés
+    # Filtrer uniquement les juges ayant complété TOUS les rounds
+    juges_complets = {j_id: sc for j_id, sc in vrais_juges_scores.items() if sc['nb_rounds'] >= nb_rounds_totaux}
+
+    if not juges_complets:
+        juges_complets = vrais_juges_scores
+
+    if not juges_complets:
         tot_rouge = sum(1 for r in rounds if r.coin_gagnant_round == 'ROUGE')
         tot_bleu = sum(1 for r in rounds if r.coin_gagnant_round == 'BLEU')
         if tot_rouge > tot_bleu:
@@ -393,7 +432,7 @@ def calculer_decision_carte_par_carte(combat):
     votes_egalite = 0
     cartes_list = []
 
-    for j_id, sc in vrais_juges_scores.items():
+    for j_id, sc in juges_complets.items():
         cartes_list.append(f"{sc['rouge']}-{sc['bleu']}")
         if sc['rouge'] > sc['bleu']:
             votes_rouge += 1
@@ -403,7 +442,7 @@ def calculer_decision_carte_par_carte(combat):
             votes_egalite += 1
 
     details_cartes = ", ".join(cartes_list)
-    total_juges = len(vrais_juges_scores)
+    total_juges = len(juges_complets)
 
     if votes_rouge > votes_bleu and votes_rouge >= votes_egalite:
         coin_v = 'ROUGE'

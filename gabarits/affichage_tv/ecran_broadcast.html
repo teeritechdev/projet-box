@@ -1033,10 +1033,12 @@ function mettreAJourTV(data) {
                 wEl.innerText = winnerText;
             }
 
-            // Rounds Rows (Points par round ou Arrêt Prématuré)
+            // Rounds Rows (Points par round ou Arrêt Prématuré TKO/KO)
             let rowsHtml = '';
             (data.rounds || []).forEach(r => {
-                const aEteJoue = r.statut === 'TERMINE' || (r.score_rouge > 0 || r.score_bleu > 0);
+                const aEteJoue = (r.score_rouge > 0 || r.score_bleu > 0);
+                const estRoundFin = (data.round_fin && Number(data.round_fin) === Number(r.numero));
+                
                 if (aEteJoue) {
                     rowsHtml += `
                     <div class="flex justify-between items-center p-3 bg-slate-950/80 rounded-xl border border-slate-800">
@@ -1047,6 +1049,18 @@ function mettreAJourTV(data) {
                             <span class="text-blue-400">${r.score_bleu || 0}</span>
                         </div>
                         <span class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded ${r.gagnant === 'ROUGE' ? 'bg-red-600/30 text-red-400' : (r.gagnant === 'BLEU' ? 'bg-blue-600/30 text-blue-400' : 'bg-slate-800 text-slate-400')}">${r.gagnant ? r.gagnant : 'EGAL'}</span>
+                    </div>`;
+                } else if (estRoundFin && data.statut_combat === 'TERMINE') {
+                    const motifArret = data.decision_qualification || data.type_decision || 'ARRÊT ARBITRE / TKO';
+                    const tempsArret = (data.temps_fin_round && data.temps_fin_round !== 'Fin du combat') ? ` (${data.temps_fin_round})` : '';
+                    rowsHtml += `
+                    <div class="flex justify-between items-center p-3 bg-amber-500/10 rounded-xl border border-amber-500/40">
+                        <span class="w-8 h-8 rounded-lg bg-amber-500 text-slate-950 font-black flex items-center justify-center text-xs">R${r.numero}</span>
+                        <div class="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                            <i class="fa-solid fa-hand text-amber-500 text-xs mr-1"></i>
+                            ${motifArret}${tempsArret}
+                        </div>
+                        <span class="text-[10px] uppercase font-black px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40">TKO / ARRÊT</span>
                     </div>`;
                 } else if (data.statut_combat === 'TERMINE') {
                     rowsHtml += `

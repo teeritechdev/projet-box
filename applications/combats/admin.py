@@ -29,15 +29,59 @@ class RoundInline(admin.TabularInline):
     extra = 0
 
 from applications.comptes.models import Utilisateur
+from applications.boxeurs.models import Boxeur, Categorie
+from django import forms
+
+class BoxeurChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        cat_nom = obj.categorie.nom if obj.categorie else "Catégorie non spécifiée"
+        club_info = f" ({obj.club})" if obj.club else ""
+        return f"{obj.prenom} {obj.nom}{club_info} • {obj.pays} [{cat_nom}]"
+
+class BoxeurSelectWidget(forms.Select):
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex=subindex, attrs=attrs)
+        if value:
+            try:
+                b_id = int(value.value if hasattr(value, 'value') else value)
+                b = Boxeur.objects.filter(id=b_id).select_related('categorie').first()
+                if b and b.categorie_id:
+                    option['attrs']['data-categorie-id'] = str(b.categorie_id)
+            except (ValueError, TypeError):
+                pass
+        return option
+
+class CombatAdminForm(forms.ModelForm):
+    boxeur_rouge = BoxeurChoiceField(
+        queryset=Boxeur.objects.select_related('categorie', 'pays_fk').all(),
+        widget=BoxeurSelectWidget,
+        required=True,
+        label="Boxeur Rouge"
+    )
+    boxeur_bleu = BoxeurChoiceField(
+        queryset=Boxeur.objects.select_related('categorie', 'pays_fk').all(),
+        widget=BoxeurSelectWidget,
+        required=True,
+        label="Boxeur Bleu"
+    )
+
+    class Meta:
+        model = Combat
+        fields = '__all__'
+
 
 @admin.register(Combat)
 class CombatAdmin(admin.ModelAdmin):
+    form = CombatAdminForm
     list_display = ('id', 'numero_match', 'date_combat', 'heure_combat', 'evenement', 'boxeur_rouge', 'boxeur_bleu', 'categorie', 'arbitre_central', 'juge_principal', 'statut', 'coin_vainqueur')
     list_display_links = ('id', 'numero_match', 'boxeur_rouge', 'boxeur_bleu')
     list_filter = ('statut', 'date_combat', 'categorie', 'evenement', 'coin_vainqueur')
     search_fields = ('boxeur_rouge__nom', 'boxeur_rouge__prenom', 'boxeur_bleu__nom', 'boxeur_bleu__prenom')
     filter_horizontal = ('juges',)
     inlines = [RoundInline]
+
+    class Media:
+        js = ('js/admin_filtrer_boxeurs.js',)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "juge_principal":
@@ -70,6 +114,7 @@ class CombatAdmin(admin.ModelAdmin):
             'fields': (('statut', 'coin_vainqueur'), ('type_decision', 'vainqueur'))
         }),
     )
+
 
 
 @admin.register(Round)

@@ -12,6 +12,16 @@ def tablette_juge_vue(request):
     combat_id = request.GET.get('combat_id')
     combat = get_combat_diffusion_actif(combat_id)
     
+    # Vérifier l'attribution officielle du juge connecté
+    est_juge_attribue = False
+    if combat:
+        if request.user.is_superuser or request.user.is_staff:
+            est_juge_attribue = True
+        elif combat.juges.exists():
+            est_juge_attribue = combat.juges.filter(id=request.user.id).exists()
+        else:
+            est_juge_attribue = True
+
     rounds = combat.rounds.all() if combat else []
     
     # Un round est actif sur la tablette SEULEMENT SI le combat est EN_COURS et le round est EN_COURS
@@ -27,6 +37,35 @@ def tablette_juge_vue(request):
         if score_existant:
             score_deja_soumis = True
 
+    # Historique personnel des combats terminés et en cours pour le juge avec détection du rôle
+    combats_historique = Combat.objects.filter(statut__in=['TERMINE', 'EN_COURS']).select_related('boxeur_rouge', 'boxeur_bleu', 'categorie', 'vainqueur', 'juge_principal').prefetch_related('juges', 'rounds__scores_juges').order_by('numero_match')
+    
+    mes_combats_histoire = []
+    for idx, c in enumerate(combats_historique):
+        scores_juge_c = ScoreJuge.objects.filter(round_combat__combat=c, juge=request.user).select_related('round_combat').order_by('round_combat__numero_round')
+        est_juge_de_table = c.juges.filter(id=request.user.id).exists() if c.juges.exists() else True
+        est_juge_principal = (c.juge_principal == request.user)
+        
+        # Déterminer le rôle exact du juge sur ce match
+        if est_juge_principal and est_juge_de_table:
+            role_affiche = "Juge Principal & Juge de Table"
+        elif est_juge_principal:
+            role_affiche = "Juge Principal (Chef de Table)"
+        elif est_juge_de_table:
+            role_affiche = "Juge de Table (Jury Officiel)"
+        else:
+            role_affiche = "Observateur / Officiel"
+
+        mes_combats_histoire.append({
+            'index': idx,
+            'combat': c,
+            'role_affiche': role_affiche,
+            'est_juge_principal': est_juge_principal,
+            'est_juge_de_table': est_juge_de_table,
+            'mes_scores_rounds': list(scores_juge_c),
+        })
+
+
     mes_scores_histoire = ScoreJuge.objects.filter(
         round_combat__combat=combat,
         juge=request.user
@@ -39,7 +78,9 @@ def tablette_juge_vue(request):
         'score_deja_soumis': score_deja_soumis,
         'score_existant': score_existant,
         'mes_scores_histoire': mes_scores_histoire,
+        'mes_combats_histoire': mes_combats_histoire,
         'juge': request.user,
+        'est_juge_attribue': est_juge_attribue,
     }
     return render(request, 'scoring/tablette_juge.html', context)
 
@@ -72,13 +113,23 @@ def enregistrer_score_api(request):
             return JsonResponse({'statut': 'erreur', 'message': 'Données incomplètes.'}, status=400)
 
         round_obj = Round.objects.get(id=round_id)
+        combat = round_obj.combat
         
-        # Sécurité : Vérifier que le match n'est pas TERMINE et que le round est EN_COURS
-        if round_obj.combat.statut == 'TERMINE':
+        # Sécurité 1 : Vérifier que le match n'est pas TERMINE et que le round est EN_COURS
+        if combat.statut == 'TERMINE':
             return JsonResponse({'statut': 'erreur', 'message': 'Ce match est officiellement terminé. Saisie impossible.'}, status=400)
 
         if round_obj.statut != 'EN_COURS':
             return JsonResponse({'statut': 'erreur', 'message': 'Ce round n\'est pas actif. Attendez que le Chef Juge le lance.'}, status=400)
+
+        # Sécurité 2 : Contrôle strict de l'attribution officielle des 3 juges
+        if combat.juges.exists() and not (request.user.is_superuser or request.user.is_staff or combat.juges.filter(id=request.user.id).exists()):
+            return JsonResponse({'statut': 'erreur', 'message': 'Vous n\'êtes pas attribué comme juge de table pour ce combat.'}, status=403)
+
+        # Sécurité 3 : Limite stricte de 3 juges de table par round (Sauf si le juge modifie sa propre note déjà saisie)
+        deja_soumis_par_moi = ScoreJuge.objects.filter(round_combat=round_obj, juge=request.user).exists()
+        if not deja_soumis_par_moi and round_obj.scores_juges.count() >= 3:
+            return JsonResponse({'statut': 'erreur', 'message': 'Les 3 juges de table ont déjà soumis leurs notes pour ce round.'}, status=400)
 
         score_juge, created = ScoreJuge.objects.get_or_create(
             round_combat=round_obj,

@@ -40,7 +40,7 @@ def inscription_combattant_vue(request):
             sexe = request.POST.get('sexe', 'Masculin')
             pays_id = request.POST.get('pays_fk')
             pays_nom_brut = request.POST.get('pays', 'Burkina Faso')
-            club = request.POST.get('club')
+            club = request.POST.get('club', '') or ''
             date_naissance = request.POST.get('date_naissance') or None
             age = request.POST.get('age') or None
             taille_cm = request.POST.get('taille_cm') or None
@@ -53,23 +53,7 @@ def inscription_combattant_vue(request):
             if pays_obj:
                 pays_nom_brut = pays_obj.nom
 
-            b = Boxeur.objects.create(
-                nom=nom,
-                prenom=prenom,
-                surnom=surnom,
-                sexe=sexe,
-                pays=pays_nom_brut,
-                pays_fk=pays_obj,
-                club=club,
-                date_naissance=date_naissance,
-                age=age,
-                taille_cm=taille_cm,
-                poids_pesee=poids_pesee,
-                categorie=categorie
-            )
-
-
-            # Auto-assign category by weigh-in if not explicitly chosen
+            # Auto-attribution de la catégorie par le poids si non sélectionnée
             if not categorie and poids_pesee:
                 try:
                     poids_val = float(poids_pesee)
@@ -86,6 +70,7 @@ def inscription_combattant_vue(request):
                 pays=pays_nom_brut,
                 pays_fk=pays_obj,
                 club=club,
+                date_naissance=date_naissance,
                 age=age,
                 taille_cm=taille_cm,
                 poids_pesee=poids_pesee,
@@ -100,6 +85,7 @@ def inscription_combattant_vue(request):
 
             messages.success(request, f"Le combattant MMA {b.prenom} {b.nom} ({b.drapeau_emoji} {b.pays}) a été inscrit avec succès !")
             return redirect('inscription_combattant')
+
         
         elif action == 'supprimer':
             b_id = request.POST.get('boxeur_id')
