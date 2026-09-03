@@ -1197,27 +1197,8 @@ function raffraichirBroadcast() {
     .catch(err => console.error("Erreur HTTP Broadcast:", err));
 }
 
-// Server-Sent Events (SSE) Stream temps réel instantané
+// Rafraîchissement HTTP léger non bloquant
 let sseActive = false;
-if (window.EventSource) {
-    try {
-        const evtSource = new EventSource('/api/broadcast-stream/');
-        evtSource.onmessage = function(event) {
-            sseActive = true;
-            try {
-                const data = JSON.parse(event.data);
-                mettreAJourTV(data);
-            } catch(e) {
-                console.error("Erreur SSE JSON:", e);
-            }
-        };
-        evtSource.onerror = function() {
-            sseActive = false;
-        };
-    } catch(e) {
-        console.warn("SSE stream non supporté, fallback sur le polling HTTP:", e);
-    }
-}
 
 
 let dernierPrononceKey = null;

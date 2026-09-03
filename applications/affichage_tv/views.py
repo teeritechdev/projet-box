@@ -247,27 +247,13 @@ from django.http import StreamingHttpResponse
 @never_cache
 def api_sse_broadcast(request):
     """
-    Flux Server-Sent Events (SSE) pour diffuser les mises à jour TV instantanément.
+    Diffusion des données TV en réponse directe ultra-rapide non bloquante.
+    Évite de bloquer les workers Gunicorn/WSGI avec des boucles infinies.
     """
     combat_id = request.GET.get('combat_id')
+    data = construire_donnees_broadcast(combat_id)
+    return JsonResponse(data)
 
-    def event_stream():
-        dernier_state = None
-        while True:
-            try:
-                data = construire_donnees_broadcast(combat_id)
-                current_state = json.dumps(data, sort_keys=True)
-                if current_state != dernier_state:
-                    dernier_state = current_state
-                    yield f"data: {json.dumps(data)}\n\n"
-            except Exception as e:
-                pass
-            time.sleep(0.3)
-
-    response = StreamingHttpResponse(event_stream(), content_type='text/event-stream')
-    response['Cache-Control'] = 'no-cache'
-    response['X-Accel-Buffering'] = 'no'
-    return response
 
 
 def est_juge_principal_ou_admin(user):
