@@ -82,12 +82,12 @@ def table_juge_principal_vue(request):
 
     combat_id = request.GET.get('combat_id')
     if combat_id:
-        combat = Combat.objects.filter(id=combat_id).select_related('boxeur_rouge', 'boxeur_bleu', 'arbitre_central', 'evenement', 'categorie').first()
-    else:
-        combat = Combat.objects.filter(statut='EN_COURS').select_related('boxeur_rouge', 'boxeur_bleu', 'arbitre_central', 'evenement', 'categorie').first()
-    
-    if combat:
         from applications.affichage_tv.views import set_combat_diffusion_actif
+        set_combat_diffusion_actif(combat_id)
+
+    from applications.affichage_tv.views import get_combat_diffusion_actif, set_combat_diffusion_actif
+    combat = get_combat_diffusion_actif(combat_id)
+    if combat:
         set_combat_diffusion_actif(combat.id)
 
     from django.db.models import Q

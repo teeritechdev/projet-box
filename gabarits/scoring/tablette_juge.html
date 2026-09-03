@@ -246,19 +246,37 @@ function soumettreScore() {
     });
 }
 
-// Synchronisation Automatique de la Tablette avec le Chef Juge (Polling toutes les 3 sec)
-setInterval(() => {
-    fetch('/api/broadcast-statut/')
+// Synchronisation Automatique de la Tablette avec le Chef Juge
+function verifierSynchroTablette() {
+    fetch('/api/broadcast-statut/?_t=' + Date.now())
     .then(res => res.json())
     .then(data => {
-        if (data.combat) {
-            // Si le statut du match change (ex: de EN_COURS a TERMINE par KO) ou si un nouveau round est lance
-            if (data.combat.statut !== currentMatchStatut || (data.round && data.round.id !== currentRoundId) || (!data.round && currentRoundId !== null)) {
+        if (data && data.combat_id) {
+            const serverMatchId = data.combat_id;
+            const serverStatut = data.statut_combat;
+            const serverRound = data.round_actif_num;
+            const localMatchId = {% if combat %}{{ combat.id }}{% else %}0{% endif %};
+            const localRound = {% if round_actif %}{{ round_actif.numero_round }}{% else %}0{% endif %};
+            
+            if (serverMatchId !== localMatchId || serverStatut !== currentMatchStatut || (data.actif && serverRound !== localRound)) {
                 location.reload();
             }
         }
     })
     .catch(err => console.log(err));
-}, 3000);
+}
+
+window.addEventListener('storage', function(e) {
+    if (e.key === 'mode_tv_signal') verifierSynchroTablette();
+});
+
+try {
+    const tvChannel = new BroadcastChannel('tv_broadcast_channel');
+    tvChannel.onmessage = function(e) {
+        verifierSynchroTablette();
+    };
+} catch(err) {}
+
+setInterval(verifierSynchroTablette, 2000);
 </script>
 {% endblock %}

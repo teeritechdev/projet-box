@@ -5,16 +5,12 @@ from django.contrib.auth.decorators import login_required
 from applications.combats.models import Combat, Round
 from .models import ScoreJuge
 
+from applications.affichage_tv.views import get_combat_diffusion_actif
+
 @login_required
 def tablette_juge_vue(request):
     combat_id = request.GET.get('combat_id')
-    if combat_id:
-        combat = Combat.objects.filter(id=combat_id).select_related('boxeur_rouge', 'boxeur_bleu', 'evenement', 'categorie').first()
-    else:
-        combat = Combat.objects.filter(statut='EN_COURS').select_related('boxeur_rouge', 'boxeur_bleu', 'evenement', 'categorie').first()
-    
-    if not combat:
-        combat = Combat.objects.select_related('boxeur_rouge', 'boxeur_bleu', 'evenement', 'categorie').first()
+    combat = get_combat_diffusion_actif(combat_id)
     
     rounds = combat.rounds.all() if combat else []
     
