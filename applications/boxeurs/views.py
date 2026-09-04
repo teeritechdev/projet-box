@@ -3,6 +3,18 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .models import Boxeur, Categorie, Pays
 
+def convertir_date_fr_vers_iso(date_str):
+    if not date_str:
+        return None
+    date_str = date_str.strip()
+    import re
+    # Convertir JJ/MM/AAAA ou JJ-MM-AAAA -> AAAA-MM-JJ
+    m_fr = re.match(r'^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$', date_str)
+    if m_fr:
+        jour, mois, annee = m_fr.groups()
+        return f"{annee}-{int(mois):02d}-{int(jour):02d}"
+    return date_str
+
 @login_required
 def inscription_combattant_vue(request):
     """
@@ -41,7 +53,8 @@ def inscription_combattant_vue(request):
             pays_id = request.POST.get('pays_fk')
             pays_nom_brut = request.POST.get('pays', 'Burkina Faso')
             club = request.POST.get('club', '') or ''
-            date_naissance = request.POST.get('date_naissance') or None
+            date_naissance_brut = request.POST.get('date_naissance') or None
+            date_naissance = convertir_date_fr_vers_iso(date_naissance_brut)
             age = request.POST.get('age') or None
             taille_cm = request.POST.get('taille_cm') or None
             poids_pesee = request.POST.get('poids_pesee') or None
@@ -81,6 +94,8 @@ def inscription_combattant_vue(request):
                 b.photo = request.FILES['photo']
             if 'logo_club' in request.FILES:
                 b.logo_club = request.FILES['logo_club']
+            if 'musique_victoire' in request.FILES:
+                b.musique_victoire = request.FILES['musique_victoire']
             b.save()
 
             messages.success(request, f"Le combattant MMA {b.prenom} {b.nom} ({b.drapeau_emoji} {b.pays}) a été inscrit avec succès !")

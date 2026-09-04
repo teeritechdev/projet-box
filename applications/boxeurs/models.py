@@ -43,6 +43,7 @@ class Boxeur(models.Model):
     club = models.CharField(max_length=150, blank=True, null=True, default='', verbose_name="Club / Équipe")
     logo_club = models.ImageField(upload_to='logos_clubs/', blank=True, null=True)
     photo = models.ImageField(upload_to='boxeurs/', blank=True, null=True)
+    musique_victoire = models.FileField(upload_to='musiques_boxeurs/', blank=True, null=True, verbose_name="Musique / Hymne de Victoire Personnalisé", help_text="Fichier audio (MP3/WAV) propre à ce combattant")
     date_naissance = models.DateField(null=True, blank=True, verbose_name="Date de Naissance")
     age = models.PositiveIntegerField(null=True, blank=True, verbose_name="Âge")
 

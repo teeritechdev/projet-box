@@ -34,7 +34,7 @@
                 </a>
             </div>
 
-            <form method="POST" action="" class="space-y-6">
+            <form method="POST" action="" enctype="multipart/form-data" class="space-y-6">
                 {% csrf_token %}
 
                 <!-- Section 1 : Programmation & Événement -->
@@ -116,7 +116,15 @@
                                 <option value="{{ b.id }}" data-categorie-id="{{ b.categorie.id|default:'' }}">{{ b.prenom }} {{ b.nom }} ({% if b.club %}{{ b.club }} - {% endif %}{{ b.pays }}{% if b.categorie %} • {{ b.categorie.nom }}{% endif %})</option>
                                 {% endfor %}
                             </select>
-                        </div>
+                    </div>
+
+                    <div class="space-y-1.5 pt-2 bg-amber-50/70 p-3.5 rounded-2xl border border-amber-200/80">
+                        <label class="block text-xs font-bold text-amber-900 uppercase flex items-center gap-2">
+                            <i class="fa-solid fa-music text-amber-600"></i>
+                            <span>Musique / Hymne de Victoire Personnalisé pour ce Match (MP3/WAV)</span>
+                        </label>
+                        <input type="file" name="audio_victoire" class="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-amber-600 file:text-white hover:file:bg-amber-700 transition-all">
+                        <p class="text-[10px] text-amber-700 font-medium">Optionnel. Si non renseigné, la musique personnalisée du combattant gagnant (si uploadée lors de son inscription) sera jouée automatiquement.</p>
                     </div>
                 </div>
 

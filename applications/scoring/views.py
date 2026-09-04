@@ -37,8 +37,8 @@ def tablette_juge_vue(request):
         if score_existant:
             score_deja_soumis = True
 
-    # Historique personnel des combats terminés et en cours pour le juge avec détection du rôle
-    combats_historique = Combat.objects.filter(statut__in=['TERMINE', 'EN_COURS']).select_related('boxeur_rouge', 'boxeur_bleu', 'categorie', 'vainqueur', 'juge_principal').prefetch_related('juges', 'rounds__scores_juges').order_by('numero_match')
+    # Historique personnel de tous les combats du gala pour le juge avec détection du rôle
+    combats_historique = Combat.objects.all().select_related('boxeur_rouge', 'boxeur_bleu', 'categorie', 'vainqueur', 'juge_principal').prefetch_related('juges', 'rounds__scores_juges').order_by('numero_match')
     
     mes_combats_histoire = []
     for idx, c in enumerate(combats_historique):
@@ -56,6 +56,48 @@ def tablette_juge_vue(request):
         else:
             role_affiche = "Observateur / Officiel"
 
+        # Détail complet round par round pour le grid de la modal (incluant KO / TKO / Arrêt prématuré)
+        rounds_c = c.rounds.all().order_by('numero_round')
+        rounds_detail = []
+        for r_item in rounds_c:
+            score_obj = ScoreJuge.objects.filter(round_combat=r_item, juge=request.user).first()
+            if score_obj:
+                rounds_detail.append({
+                    'round': r_item,
+                    'statut_affichage': 'SCORED',
+                    'pts_rouge': score_obj.pts_rouge,
+                    'pts_bleu': score_obj.pts_bleu,
+                    'label': 'Transmis avec succès'
+                })
+            elif c.statut == 'TERMINE':
+                if c.round_fin and r_item.numero_round == c.round_fin:
+                    label_arr = f"Arrêt ({c.decision_qualification or c.type_decision or 'K.O.'})"
+                    if c.temps_fin_round:
+                        label_arr += f" à {c.temps_fin_round}"
+                    rounds_detail.append({
+                        'round': r_item,
+                        'statut_affichage': 'ARRET_KO',
+                        'label': label_arr
+                    })
+                elif c.round_fin and r_item.numero_round > c.round_fin:
+                    rounds_detail.append({
+                        'round': r_item,
+                        'statut_affichage': 'NON_DISPUTE',
+                        'label': f"Non disputé (Fin R{c.round_fin})"
+                    })
+                else:
+                    rounds_detail.append({
+                        'round': r_item,
+                        'statut_affichage': 'ARRET_KO',
+                        'label': f"Combat arrêté ({c.decision_qualification or 'K.O.'})"
+                    })
+            else:
+                rounds_detail.append({
+                    'round': r_item,
+                    'statut_affichage': 'EN_ATTENTE',
+                    'label': 'En attente'
+                })
+
         mes_combats_histoire.append({
             'index': idx,
             'combat': c,
@@ -63,6 +105,7 @@ def tablette_juge_vue(request):
             'est_juge_principal': est_juge_principal,
             'est_juge_de_table': est_juge_de_table,
             'mes_scores_rounds': list(scores_juge_c),
+            'rounds_detail': rounds_detail,
         })
 
 

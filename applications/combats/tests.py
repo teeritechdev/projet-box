@@ -96,6 +96,32 @@ class CombatDecisionTestCase(TestCase):
         self.assertEqual(vainq, self.rouge)
         self.assertIn("Décision Majoritaire", qualif)
 
+    def test_departage_par_cumul_points(self):
+        """Test le départage par la somme de tous les rounds (ex: 82 pts vs 81 pts -> Vainqueur Rouge)."""
+        rounds = self.combat.rounds.order_by('numero_round')
+
+        # Juge 10 (juge1) : 8-10, 8-8, 10-8 -> 26-26 (Nul)
+        ScoreJuge.objects.create(round_combat=rounds[0], juge=self.juge1, pts_rouge=8, pts_bleu=10)
+        ScoreJuge.objects.create(round_combat=rounds[1], juge=self.juge1, pts_rouge=8, pts_bleu=8)
+        ScoreJuge.objects.create(round_combat=rounds[2], juge=self.juge1, pts_rouge=10, pts_bleu=8)
+
+        # Juge 11 (juge2) : 10-10, 9-9, 9-10 -> 28-29 (Bleu)
+        ScoreJuge.objects.create(round_combat=rounds[0], juge=self.juge2, pts_rouge=10, pts_bleu=10)
+        ScoreJuge.objects.create(round_combat=rounds[1], juge=self.juge2, pts_rouge=9, pts_bleu=9)
+        ScoreJuge.objects.create(round_combat=rounds[2], juge=self.juge2, pts_rouge=9, pts_bleu=10)
+
+        # Juge 12 (juge3) : 9-8, 9-9, 10-9 -> 28-26 (Rouge)
+        ScoreJuge.objects.create(round_combat=rounds[0], juge=self.juge3, pts_rouge=9, pts_bleu=8)
+        ScoreJuge.objects.create(round_combat=rounds[1], juge=self.juge3, pts_rouge=9, pts_bleu=9)
+        ScoreJuge.objects.create(round_combat=rounds[2], juge=self.juge3, pts_rouge=10, pts_bleu=9)
+
+        # Total Rouge = 26 + 28 + 28 = 82 pts
+        # Total Bleu = 26 + 29 + 26 = 81 pts
+        coin_v, vainq, qualif, details = calculer_decision_carte_par_carte(self.combat)
+        self.assertEqual(coin_v, 'ROUGE')
+        self.assertEqual(vainq, self.rouge)
+        self.assertIn("82-81 pts", qualif)
+
     def test_lancer_match_api_securite(self):
         """Test du lancement de match via API avec sécurité des rôles."""
         client = Client()

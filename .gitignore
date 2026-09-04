@@ -10,13 +10,19 @@ ENV/
 env.bak/
 venv.bak/
 
+# Environment & Secrets
+.env
+.env.local
+
 # Django Database (décommentez si vous souhaitez exclure la base locale)
 # db.sqlite3
 
-# System & IDE
+# System & Media
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
 *.swp
 *.swo
+*.mp4
+staticfiles/

@@ -44,6 +44,13 @@ def creer_combat_vue(request):
                 heure_combat=heure_combat,
                 statut='A_VENIR'
             )
+            if 'audio_victoire' in request.FILES:
+                combat.audio_victoire = request.FILES['audio_victoire']
+                combat.save()
+            elif combat.boxeur_rouge and combat.boxeur_rouge.musique_victoire:
+                combat.audio_victoire = combat.boxeur_rouge.musique_victoire
+                combat.save()
+
             if juges_ids:
                 combat.juges.set(juges_ids)
             
@@ -432,6 +439,9 @@ def calculer_decision_carte_par_carte(combat):
     votes_egalite = 0
     cartes_list = []
 
+    tot_points_rouge = sum(sc['rouge'] for sc in juges_complets.values())
+    tot_points_bleu = sum(sc['bleu'] for sc in juges_complets.values())
+
     for j_id, sc in juges_complets.items():
         cartes_list.append(f"{sc['rouge']}-{sc['bleu']}")
         if sc['rouge'] > sc['bleu']:
@@ -444,7 +454,7 @@ def calculer_decision_carte_par_carte(combat):
     details_cartes = ", ".join(cartes_list)
     total_juges = len(juges_complets)
 
-    if votes_rouge > votes_bleu and votes_rouge >= votes_egalite:
+    if votes_rouge > votes_bleu and votes_rouge > votes_egalite:
         coin_v = 'ROUGE'
         v_obj = combat.boxeur_rouge
         if votes_rouge == total_juges:
@@ -453,7 +463,7 @@ def calculer_decision_carte_par_carte(combat):
             qualif = "Décision Partagée (SD)"
         else:
             qualif = "Décision Majoritaire (MD)"
-    elif votes_bleu > votes_rouge and votes_bleu >= votes_egalite:
+    elif votes_bleu > votes_rouge and votes_bleu > votes_egalite:
         coin_v = 'BLEU'
         v_obj = combat.boxeur_bleu
         if votes_bleu == total_juges:
@@ -463,9 +473,20 @@ def calculer_decision_carte_par_carte(combat):
         else:
             qualif = "Décision Majoritaire (MD)"
     else:
-        coin_v = 'EGALITE'
-        v_obj = None
-        qualif = "Égalité (Draw)"
+        # En cas d'égalité sur les votes des cartes (ex: 1 Rouge, 1 Bleu, 1 Nul)
+        # Déterminer le vainqueur par la somme totale de tous les rounds (Cumul des points)
+        if tot_points_rouge > tot_points_bleu:
+            coin_v = 'ROUGE'
+            v_obj = combat.boxeur_rouge
+            qualif = f"Décision aux Points ({tot_points_rouge}-{tot_points_bleu} pts)"
+        elif tot_points_bleu > tot_points_rouge:
+            coin_v = 'BLEU'
+            v_obj = combat.boxeur_bleu
+            qualif = f"Décision aux Points ({tot_points_bleu}-{tot_points_rouge} pts)"
+        else:
+            coin_v = 'EGALITE'
+            v_obj = None
+            qualif = "Égalité (Draw)"
 
     return coin_v, v_obj, qualif, details_cartes
 

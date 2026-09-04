@@ -74,10 +74,10 @@
                     <span>MA TABLETTE</span>
                 </a>
                 <span class="text-slate-300 hidden sm:inline">•</span>
-                <button type="button" onclick="if(typeof ouvrirModalMesMatchsJuge === 'function'){ ouvrirModalMesMatchsJuge(); } else { window.location.href='{% url 'tablette_juge' %}?open_history=1'; }" class="text-slate-800 hover:text-amber-600 flex items-center gap-1.5 transition-colors cursor-pointer border-0 bg-transparent text-sm font-black uppercase tracking-wider">
+                <a href="{% url 'tablette_juge' %}?open_history=1" onclick="if(typeof window.ouvrirModalMesMatchsJuge === 'function'){ window.ouvrirModalMesMatchsJuge(); return false; }" class="text-slate-800 hover:text-amber-600 flex items-center gap-1.5 transition-colors cursor-pointer border-0 bg-transparent text-sm font-black uppercase tracking-wider">
                     <i class="fa-solid fa-clock-rotate-left text-base text-amber-600"></i>
                     <span>MES MATCHS</span>
-                </button>
+                </a>
 
 
 

@@ -164,13 +164,23 @@ def construire_donnees_broadcast(combat_id=None):
         'juges_table': juges_list
     }
 
+    audio_victoire_url = None
+    if combat.audio_victoire:
+        audio_victoire_url = combat.audio_victoire.url
+    elif combat.vainqueur and combat.vainqueur.musique_victoire:
+        audio_victoire_url = combat.vainqueur.musique_victoire.url
+    elif combat.coin_vainqueur == 'ROUGE' and combat.boxeur_rouge.musique_victoire:
+        audio_victoire_url = combat.boxeur_rouge.musique_victoire.url
+    elif combat.coin_vainqueur == 'BLEU' and combat.boxeur_bleu.musique_victoire:
+        audio_victoire_url = combat.boxeur_bleu.musique_victoire.url
+
     ev = combat.evenement
     return {
         'actif': True,
         'combat_id': combat.id,
         'mode_tv': combat.mode_tv or 'ATTENTE_PUB',
         'image_ring_bg': combat.image_ring_bg.url if combat.image_ring_bg else None,
-        'audio_victoire': combat.audio_victoire.url if combat.audio_victoire else None,
+        'audio_victoire': audio_victoire_url,
         'numero_match': combat.numero_match,
         'evenement': {
             'titre': ev.titre if ev else "JAES 2026",
@@ -200,6 +210,7 @@ def construire_donnees_broadcast(combat_id=None):
             'taille': combat.boxeur_rouge.taille_cm,
             'age': combat.boxeur_rouge.age,
             'photo': combat.boxeur_rouge.photo.url if combat.boxeur_rouge.photo else None,
+            'musique_victoire': combat.boxeur_rouge.musique_victoire.url if combat.boxeur_rouge.musique_victoire else None,
         },
         'boxeur_bleu': {
             'nom': f"{combat.boxeur_bleu.prenom} {combat.boxeur_bleu.nom}",
@@ -212,6 +223,7 @@ def construire_donnees_broadcast(combat_id=None):
             'taille': combat.boxeur_bleu.taille_cm,
             'age': combat.boxeur_bleu.age,
             'photo': combat.boxeur_bleu.photo.url if combat.boxeur_bleu.photo else None,
+            'musique_victoire': combat.boxeur_bleu.musique_victoire.url if combat.boxeur_bleu.musique_victoire else None,
         },
 
         'officiels': officiels_data,
@@ -247,12 +259,23 @@ from django.http import StreamingHttpResponse
 @never_cache
 def api_sse_broadcast(request):
     """
-    Diffusion des données TV en réponse directe ultra-rapide non bloquante.
-    Évite de bloquer les workers Gunicorn/WSGI avec des boucles infinies.
+    Flux Server-Sent Events (SSE) léger et réactif pour la diffusion TV en temps réel.
+    Transmet l'état du match instantanément à l'écran broadcast.
     """
     combat_id = request.GET.get('combat_id')
-    data = construire_donnees_broadcast(combat_id)
-    return JsonResponse(data)
+    
+    def event_stream():
+        # Générer 20 itérations légers (20 secondes) par canal SSE pour libérer proprement les threads WSGI
+        for _ in range(20):
+            data = construire_donnees_broadcast(combat_id)
+            json_str = json.dumps(data)
+            yield f"data: {json_str}\n\n"
+            time.sleep(1.0)
+
+    response = StreamingHttpResponse(event_stream(), content_type='text/event-stream')
+    response['Cache-Control'] = 'no-cache, no-transform'
+    response['X-Accel-Buffering'] = 'no'  # Empêche Nginx de mettre en mémoire tampon le flux en production
+    return response
 
 
 

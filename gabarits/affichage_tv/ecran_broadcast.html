@@ -75,6 +75,12 @@
     <canvas id="octagonCanvas" class="absolute inset-0 pointer-events-none opacity-20 z-0"></canvas>
     <audio id="audioVictoirePlayer" preload="auto" class="hidden"></audio>
 
+    <!-- Floating Audio Broadcast Unlock & Control Bar -->
+    <div id="audioUnlockBanner" class="fixed top-4 right-4 z-50 flex items-center gap-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2.5 rounded-2xl border-2 border-amber-300 shadow-2xl backdrop-blur-md cursor-pointer transition-all transform hover:scale-105" onclick="activerSonArena()">
+        <i class="fa-solid fa-volume-high text-lg animate-pulse"></i>
+        <span class="text-xs uppercase tracking-wider">Activer le Son Arena Broadcast</span>
+    </div>
+
     <!-- Top Header Broadcast Banner (Dynamique) -->
     <header class="relative z-20 flex justify-between items-center bg-slate-900/90 backdrop-blur-xl px-6 md:px-8 py-3.5 rounded-3xl border border-slate-800 shadow-2xl">
         <div class="flex items-center gap-4">
@@ -1212,8 +1218,43 @@ function raffraichirBroadcast() {
 }
 
 // Rafraîchissement HTTP léger non bloquant
-let sseActive = false;
+let sonArenaActive = false;
 
+function activerSonArena() {
+    const audioPlayer = document.getElementById('audioVictoirePlayer');
+    if (audioPlayer) {
+        audioPlayer.play().then(() => {
+            audioPlayer.pause();
+            audioPlayer.currentTime = 0;
+            sonArenaActive = true;
+            const btn = document.getElementById('audioUnlockBanner');
+            if (btn) {
+                btn.className = "fixed top-4 right-4 z-50 flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black px-4 py-2 rounded-2xl border border-emerald-300 shadow-xl backdrop-blur-md transition-all cursor-pointer";
+                btn.onclick = stopperMusiqueArena;
+                btn.innerHTML = '<i class="fa-solid fa-volume-check text-base"></i><span class="text-[11px] uppercase tracking-wider">Son Arena Actif • Couper</span>';
+            }
+        }).catch(err => {
+            console.log('Unlock audio error:', err);
+        });
+    }
+}
+
+function stopperMusiqueArena() {
+    const audioPlayer = document.getElementById('audioVictoirePlayer');
+    if (audioPlayer) {
+        audioPlayer.pause();
+        audioPlayer.currentTime = 0;
+    }
+    if ('speechSynthesis' in window) {
+        try { window.speechSynthesis.cancel(); } catch(e) {}
+    }
+    const btn = document.getElementById('audioUnlockBanner');
+    if (btn) {
+        btn.className = "fixed top-4 right-4 z-50 flex items-center gap-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2.5 rounded-2xl border-2 border-amber-300 shadow-2xl backdrop-blur-md cursor-pointer transition-all transform hover:scale-105";
+        btn.onclick = activerSonArena;
+        btn.innerHTML = '<i class="fa-solid fa-volume-high text-lg animate-pulse"></i><span class="text-xs uppercase tracking-wider">Activer le Son Arena Broadcast</span>';
+    }
+}
 
 let dernierPrononceKey = null;
 
@@ -1244,6 +1285,33 @@ function prononcerVainqueurVocal(data, winnerNom, winnerPays, decQualif) {
         console.log('Speech synth error:', e);
     }
 }
+
+// Connexion Temps Réel Server-Sent Events (SSE)
+function initialiserSSE() {
+    if (typeof(EventSource) !== "undefined") {
+        try {
+            const evtSource = new EventSource('/api/broadcast-stream/');
+            evtSource.onmessage = function(e) {
+                try {
+                    const data = JSON.parse(e.data);
+                    mettreAJourTV(data);
+                    sseActive = true;
+                } catch(err) {
+                    console.error("Erreur parse SSE:", err);
+                }
+            };
+            evtSource.onerror = function() {
+                sseActive = false;
+                evtSource.close();
+                setTimeout(initialiserSSE, 3000);
+            };
+        } catch(err) {
+            sseActive = false;
+        }
+    }
+}
+
+initialiserSSE();
 
 window.addEventListener('storage', function(e) {
     if (e.key === 'mode_tv_signal') {
