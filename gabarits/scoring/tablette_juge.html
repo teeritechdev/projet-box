@@ -637,7 +637,7 @@ function soumettreScore() {
     {% else %}
     const btnSubmit = document.getElementById('btn-valider-score');
     if(btnSubmit) {
-        btnSubmit.disabled = True;
+        btnSubmit.disabled = true;
         btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Transmission...';
     }
 
@@ -649,7 +649,9 @@ function soumettreScore() {
         },
         body: JSON.stringify({
             'round_id': {{ round_actif.id }},
+            'score_rouge': scoreRouge,
             'pts_rouge': scoreRouge,
+            'score_bleu': scoreBleu,
             'pts_bleu': scoreBleu
         })
     })
@@ -659,13 +661,13 @@ function soumettreScore() {
             window.location.reload();
         } else {
             alert(data.message || "Erreur lors de l'enregistrement de la note.");
-            if(btnSubmit) btnSubmit.disabled = False;
+            if(btnSubmit) btnSubmit.disabled = false;
         }
     })
     .catch(err => {
         console.error(err);
         alert("Erreur de connexion serveur.");
-        if(btnSubmit) btnSubmit.disabled = False;
+        if(btnSubmit) btnSubmit.disabled = false;
     });
     {% endif %}
 }

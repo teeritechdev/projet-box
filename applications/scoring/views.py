@@ -149,8 +149,17 @@ def enregistrer_score_api(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         round_id = data.get('round_id')
-        score_rouge = data.get('score_rouge') if data.get('score_rouge') is not None else data.get('points_rouge')
-        score_bleu = data.get('score_bleu') if data.get('score_bleu') is not None else data.get('points_bleu')
+        score_rouge = data.get('score_rouge')
+        if score_rouge is None:
+            score_rouge = data.get('points_rouge')
+        if score_rouge is None:
+            score_rouge = data.get('pts_rouge')
+
+        score_bleu = data.get('score_bleu')
+        if score_bleu is None:
+            score_bleu = data.get('points_bleu')
+        if score_bleu is None:
+            score_bleu = data.get('pts_bleu')
 
         if not round_id or score_rouge is None or score_bleu is None:
             return JsonResponse({'statut': 'erreur', 'message': 'Données incomplètes.'}, status=400)
